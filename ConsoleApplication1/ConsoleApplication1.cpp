@@ -2,9 +2,26 @@
 //
 
 #include <iostream>
+#include <Windows.h>
+#include <SetupAPI.h>
+#pragma comment(lib, "setupapi.lib")
 
 int main()
 {
+	auto hDevInfo = SetupDiGetClassDevs(0L,   //Retrieve all classes
+		0L,  // no enumerator
+		NULL, // Parent Windows, usually set to “0”
+
+ //control options used in building the device information set
+		DIGCF_PRESENT |
+		DIGCF_ALLCLASSES |
+		DIGCF_PROFILE);
+
+
+
+
+
+	::SetupDiDestroyDeviceInfoList(hDevInfo);
     std::cout << "Hello World!\n";
 }
 
