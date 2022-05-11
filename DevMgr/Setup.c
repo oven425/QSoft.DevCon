@@ -226,8 +226,7 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
 //
     wIndex = 0;
     spDevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
-    SendMessage(GetDlgItem(_hDlg, nIdTree), TVM_SETIMAGELIST,
-                TVSIL_NORMAL, (LPARAM)_spImageData.ImageList);
+    SendMessage(GetDlgItem(_hDlg, nIdTree), TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)_spImageData.ImageList);
 //
     while (1)
     {
@@ -239,21 +238,15 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
             short wImageIdx       = 0;
             short wItem           = 0;
 //
-            if (!SetupDiGetDeviceRegistryProperty(hDevInfo,
-                                                  &spDevInfoData,
+            if (!SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData,
                                                   SPDRP_CLASS, //SPDRP_DEVICEDESC,
-                                                  0L,
-                                                  (PBYTE)szBuf,
-                                                  2048,
-                                                  0))
+                                                  0L, (PBYTE)szBuf, 2048, 0))
             {
                 wIndex++;
                 continue;
             };
 //
-            if (SetupDiGetClassImageIndex(&_spImageData,
-                                          &spDevInfoData.ClassGuid,
-                                          (int*)&wImageIdx))
+            if (SetupDiGetClassImageIndex(&_spImageData, &spDevInfoData.ClassGuid, (int*)&wImageIdx))
             {
                 TVINSERTSTRUCT         tvStruct        = {0};
                 HWND                   hTree           = GetDlgItem(_hDlg, nIdTree);
@@ -264,10 +257,7 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
                 DWORD                  dwRequireSize;
                 short                  wOrder;
 //
-                if (!SetupDiGetClassDescription(&spDevInfoData.ClassGuid,
-                                                szBuf,
-                                                MAX_PATH,
-                                                &dwRequireSize))
+                if (!SetupDiGetClassDescription(&spDevInfoData.ClassGuid, szBuf, MAX_PATH, &dwRequireSize))
                 {
                     wIndex++;
                     continue;
@@ -295,24 +285,12 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
                 GetDeviceInstanceID(hDevInfo, &spDevInfoData, szID);
                 GetDeviceInterfaceInfo(hDevInfo, spDevInfoData, szPath);
 //
-                if (SetupDiGetDeviceRegistryProperty(hDevInfo,
-                                                     &spDevInfoData,
-                                                     SPDRP_FRIENDLYNAME,
-                                                     0L,
-                                                     (PBYTE)szName,
-                                                     63,
-                                                     0))
+                if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_FRIENDLYNAME, 0L, (PBYTE)szName, 63, 0))
                 {
                     DisplayDriverDetailInfo(hItem, nIdTree, szName, wImageIdx, wImageIdx);
                     AddNewDeviceNode(spDevInfoData.ClassGuid, szName, szID, szPath, wIndex, wOrder);
                 }
-                else if (SetupDiGetDeviceRegistryProperty(hDevInfo,
-                                                     &spDevInfoData,
-                                                     SPDRP_DEVICEDESC,
-                                                     0L,
-                                                     (PBYTE)szName,
-                                                     63,
-                                                     0))
+                else if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_DEVICEDESC, 0L, (PBYTE)szName, 63, 0))
                 {
                     DisplayDriverDetailInfo(hItem, nIdTree, szName, wImageIdx, wImageIdx);
                     AddNewDeviceNode(spDevInfoData.ClassGuid, szName, szID, szPath, wIndex, wOrder);

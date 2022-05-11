@@ -6,22 +6,42 @@
 #include <SetupAPI.h>
 #pragma comment(lib, "setupapi.lib")
 
+
 int main()
 {
-	auto hDevInfo = SetupDiGetClassDevs(0L,   //Retrieve all classes
-		0L,  // no enumerator
-		NULL, // Parent Windows, usually set to “0”
+	//從 EnumWDMDriver 開始找
+	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
 
- //control options used in building the device information set
-		DIGCF_PRESENT |
-		DIGCF_ALLCLASSES |
-		DIGCF_PROFILE);
+	int index = 0;
+	SP_DEVINFO_DATA spDevInfoData = { 0 };
+	spDevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+	while (true)
+	{
+		TCHAR device_desc[MAXCHAR] = { 0 };
+		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == true)
+		{
+			if (!SetupDiGetDeviceRegistryProperty(hDevInfo,
+				&spDevInfoData,
+				SPDRP_CLASS, //SPDRP_DEVICEDESC,
+				0L,
+				(PBYTE)device_desc,
+				2048,
+				0))
+			{
+				index++;
+				continue;
+			};
+		}
+		else
+		{
+			break;
+		}
+	}
 
 
 
 
-
-	::SetupDiDestroyDeviceInfoList(hDevInfo);
+	SetupDiDestroyDeviceInfoList(hDevInfo);
     std::cout << "Hello World!\n";
 }
 
