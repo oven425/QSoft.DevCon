@@ -2,15 +2,78 @@
 //
 
 #include <iostream>
+#include <string>
+using namespace std;
 #include <Windows.h>
 #include <SetupAPI.h>
 #pragma comment(lib, "setupapi.lib")
+#include "hidsdi.h"
+#pragma comment( lib, "hid.lib")
 
+BOOL ListDeviceInstancePath()
+{
+	GUID guid1;
+	HidD_GetHidGuid(&guid1);
+
+	//spDevInfoData.ClassGuid = {745A17A0-74D3-11D0-B6FE-00A0C90F57DA}
+	HDEVINFO hdev;
+	DWORD idx;
+	GUID guid = GUID_DEVINTERFACE_DISK;
+	TCHAR csDevicePath[2048] = { 0 };
+	BOOL bRet = TRUE;
+	BOOL nStatus;
+	DWORD dwSize = 0;
+
+	hdev = SetupDiGetClassDevs(&guid1, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	if (hdev == INVALID_HANDLE_VALUE)
+	{
+		printf("ERROR : Unable to enumerate device.\n");
+		return FALSE;
+	}
+
+	SP_DEVICE_INTERFACE_DATA  DeviceInterfaceData;
+	DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
+
+	for (idx = 0; SetupDiEnumDeviceInterfaces(hdev, NULL, &guid1, idx, &DeviceInterfaceData); idx++)
+	{
+		nStatus = SetupDiGetDeviceInterfaceDetail(hdev, &DeviceInterfaceData, NULL, 0, &dwSize, NULL);
+		if (!dwSize)
+		{
+			bRet = FALSE;
+			printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+			break;
+		}
+
+		PSP_DEVICE_INTERFACE_DETAIL_DATA pBuffer = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(dwSize);
+		ZeroMemory(pBuffer, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
+		pBuffer->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+		SP_DEVINFO_DATA DeviceInfoData = { sizeof(SP_DEVINFO_DATA) };
+		nStatus = SetupDiGetDeviceInterfaceDetail(hdev, &DeviceInterfaceData, pBuffer, dwSize, &dwSize, &DeviceInfoData);
+		if (!nStatus)
+		{
+			bRet = FALSE;
+			printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+			break;
+		}
+		//csDevicePath = pBuffer->DevicePath;
+		::memset(csDevicePath, 0, sizeof(csDevicePath));
+		::wcscpy(csDevicePath, pBuffer->DevicePath);
+		//csDevicePath.MakeUpper();
+		::OutputDebugString(csDevicePath);
+		::OutputDebugStringA("\r\n");
+	}
+	int err = ::GetLastError();
+	SetupDiDestroyDeviceInfoList(hdev);
+
+	return bRet;
+}
 
 int main()
 {
+	//ListDeviceInstancePath();
 	//從 EnumWDMDriver 開始找
-	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
+	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE| DIGCF_DEVICEINTERFACE);
 
 	int index = 0;
 	SP_DEVINFO_DATA spDevInfoData = { 0 };
@@ -18,19 +81,108 @@ int main()
 	while (true)
 	{
 		TCHAR device_desc[MAXCHAR] = { 0 };
-		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == true)
+		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == TRUE)
 		{
-			if (!SetupDiGetDeviceRegistryProperty(hDevInfo,
-				&spDevInfoData,
-				SPDRP_CLASS, //SPDRP_DEVICEDESC,
-				0L,
-				(PBYTE)device_desc,
-				2048,
-				0))
+			if (!SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_CLASS, 0L, (PBYTE)device_desc, 2048, 0))
 			{
 				index++;
 				continue;
+			}
+			TCHAR instanseid[LINE_LEN] = { 0 };
+			if (SetupDiGetDeviceInstanceId(hDevInfo, &spDevInfoData, instanseid, LINE_LEN, 0) == false)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(instanseid, L"fail(%d)", err);
+			}
+			TCHAR classdesc[LINE_LEN] = { 0 };
+			if (SetupDiGetClassDescription(&spDevInfoData.ClassGuid, classdesc, LINE_LEN, NULL) == false)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(classdesc, L"fail(%d)", err);
 			};
+			TCHAR friendlyname[LINE_LEN] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_FRIENDLYNAME, 0L, (PBYTE)friendlyname, LINE_LEN, 0)==FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(friendlyname, L"fail(%d)", err);
+			}
+			TCHAR devicedesc[LINE_LEN] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_DEVICEDESC, 0L, (PBYTE)devicedesc, LINE_LEN, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(devicedesc, L"fail(%d)", err);
+			}
+
+			TCHAR hardwardid[2048] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_HARDWAREID, 0L, (PBYTE)hardwardid, 2048, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(hardwardid, L"fail(%d)", err);
+				//::OutputDebugStringA("SetupDiGetDeviceRegistryProperty SPDRP_HARDWAREID fail");
+
+			}
+			TCHAR mfg[LINE_LEN] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_MFG, 0L, (PBYTE)mfg, LINE_LEN, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(mfg, L"fail(%d)", err);
+			}
+			int bus_number = 0;
+			TCHAR bus_number_str[128] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_BUSNUMBER, 0L, (PBYTE)&bus_number, 63, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(bus_number_str, L"fail(%d)", err);
+			}
+			else
+			{
+				::wsprintf(bus_number_str, L"%d", bus_number);
+			}
+			
+			
+			wstring str = classdesc;
+			str = str + L"("+ device_desc + L")\r\n";
+			str = str + L"frendly name:" + friendlyname +L"\r\n";
+			str = str + L"device desc:" + devicedesc + L"\r\n";
+			str = str + L"instanseid:"+instanseid + L"\r\n";
+			str = str + L"hardwardid:" + hardwardid + L"\r\n";
+			str = str + L"manufacturer:" + mfg + L"\r\n";
+			str = str + L"bus number:" + bus_number_str + L"\r\n";
+			SP_DEVICE_INTERFACE_DATA  DeviceInterfaceData;
+			DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
+			
+			for (int idx = 0; SetupDiEnumDeviceInterfaces(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, idx, &DeviceInterfaceData); idx++)
+			{
+				DWORD dwSize = 0;
+				auto nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData, NULL, 0, &dwSize, NULL);
+				if (!dwSize)
+				{
+					//bRet = FALSE;
+					printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+					break;
+				}
+
+				PSP_DEVICE_INTERFACE_DETAIL_DATA pBuffer = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(dwSize);
+				ZeroMemory(pBuffer, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
+				pBuffer->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+				SP_DEVINFO_DATA DeviceInfoData = { sizeof(SP_DEVINFO_DATA) };
+				nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData, pBuffer, dwSize, &dwSize, &DeviceInfoData);
+				if (!nStatus)
+				{
+					//bRet = FALSE;
+					printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+					break;
+				}
+				//::OutputDebugString(pBuffer->DevicePath);
+				str = str + L"devicepath:" + pBuffer->DevicePath + L"\r\n";
+			}
+			index++;
+
+			::OutputDebugString(str.c_str());
+			int ase = ::GetLastError();
+			ase = 1;
+			::OutputDebugStringA("\r\n");
 		}
 		else
 		{

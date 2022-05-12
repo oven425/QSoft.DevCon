@@ -193,15 +193,9 @@ void DisplayDriverDetailInfo(HTREEITEM hTreeChild, const UINT nID,
     SendMessage(hTree, TVM_INSERTITEM, 0, (LPARAM)&tvStruct);
 };
 //
-void GetDeviceInstanceID(HDEVINFO hDevInfo,
-                         SP_DEVINFO_DATA* pspDevInfoData,
-                         char *szInstanceID)
+void GetDeviceInstanceID(HDEVINFO hDevInfo, SP_DEVINFO_DATA* pspDevInfoData, char *szInstanceID)
 {
-    if (!SetupDiGetDeviceInstanceId(hDevInfo,
-                                    pspDevInfoData,
-                                    szInstanceID,
-                                    LINE_LEN,
-                                    0))
+    if (!SetupDiGetDeviceInstanceId(hDevInfo, pspDevInfoData, szInstanceID, LINE_LEN, 0))
         ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
 };
 //
@@ -650,30 +644,21 @@ void GetOtherInfo(GUID guid, const short wOrder,
     };
 };
 //
-void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData,
-                            char *szPath)
+void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData, char *szPath)
 {
     SP_DEVICE_INTERFACE_DATA spDevInterfaceData = {0};
 //
     spDevInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-    if (!SetupDiCreateDeviceInterface(hDevInfo,
-                                      &spDevInfoData,
-                                      &spDevInfoData.ClassGuid,
-                                      0L,
-                                      0L,
-                                      &spDevInterfaceData))
-        ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
+	if (!SetupDiCreateDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
+	{
+		ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
+	}
     else
     {
         SP_DEVICE_INTERFACE_DETAIL_DATA *pspDevInterfaceDetail = 0L;
         DWORD                           dwRequire              = 0L;
 //
-        if (!SetupDiGetDeviceInterfaceDetail(hDevInfo,
-                                             &spDevInterfaceData,
-                                             0L,
-                                             0,
-                                             &dwRequire,
-                                             0L))
+        if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, 0L, 0, &dwRequire, 0L))
         {
             DWORD dwError = GetLastError();
 //
@@ -684,15 +669,9 @@ void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData,
             };
         };
 //
-        pspDevInterfaceDetail = (SP_DEVICE_INTERFACE_DETAIL_DATA*)LocalAlloc(LPTR,
-                                    sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)*dwRequire);
+        pspDevInterfaceDetail = (SP_DEVICE_INTERFACE_DETAIL_DATA*)LocalAlloc(LPTR, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)*dwRequire);
         pspDevInterfaceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-        if (!SetupDiGetDeviceInterfaceDetail(hDevInfo,
-                                             &spDevInterfaceData,
-                                             pspDevInterfaceDetail,
-                                             dwRequire,
-                                             &dwRequire,
-                                             0L))
+        if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, pspDevInterfaceDetail, dwRequire, &dwRequire, 0L))
         {
             DWORD dwError = GetLastError();
 //
@@ -701,8 +680,7 @@ void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData,
         }
         else
         {
-            memcpy(szPath, pspDevInterfaceDetail->DevicePath,
-                   strlen(pspDevInterfaceDetail->DevicePath));
+            memcpy(szPath, pspDevInterfaceDetail->DevicePath, strlen(pspDevInterfaceDetail->DevicePath));
 //            switch(spDevInterfaceData.                    
         };
 //

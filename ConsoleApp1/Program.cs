@@ -10,6 +10,29 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
+            List<Device> dds = new List<Device>();
+            dds.Enable();
+        }
+    }
+
+    public class Device
+    {
+        public string HardwareID { set; get; }
+        public void Enable()
+        {
+
+        }
+    }
+
+    public static class IDeviceEnumable
+    {
+        public static int Enable(this IEnumerable<Device> src)
+        {
+            foreach(var oo in src)
+            {
+                oo.Enable();
+            }
+            return 0;
         }
     }
 }
