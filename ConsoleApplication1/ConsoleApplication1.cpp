@@ -9,12 +9,12 @@ using namespace std;
 #pragma comment(lib, "setupapi.lib")
 #include "hidsdi.h"
 #pragma comment( lib, "hid.lib")
-
+//REG_DWORD
 BOOL ListDeviceInstancePath()
 {
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
-
+	
 	//spDevInfoData.ClassGuid = {745A17A0-74D3-11D0-B6FE-00A0C90F57DA}
 	HDEVINFO hdev;
 	DWORD idx;
@@ -24,7 +24,7 @@ BOOL ListDeviceInstancePath()
 	BOOL nStatus;
 	DWORD dwSize = 0;
 
-	hdev = SetupDiGetClassDevs(&guid1, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	hdev = SetupDiGetClassDevs(&guid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	if (hdev == INVALID_HANDLE_VALUE)
 	{
 		printf("ERROR : Unable to enumerate device.\n");
@@ -114,12 +114,26 @@ int main()
 			}
 
 			TCHAR hardwardid[2048] = { 0 };
+			wstring hardwardids;
 			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_HARDWAREID, 0L, (PBYTE)hardwardid, 2048, 0) == FALSE)
 			{
 				DWORD err = ::GetLastError();
 				::wsprintf(hardwardid, L"fail(%d)", err);
-				//::OutputDebugStringA("SetupDiGetDeviceRegistryProperty SPDRP_HARDWAREID fail");
-
+				hardwardids = hardwardid;
+			}
+			else
+			{
+				TCHAR* p = hardwardid;
+				while (*p)
+				{
+					if (hardwardids.empty() == false)
+					{
+						hardwardids = hardwardids + L"\r\n           ";
+					}
+					hardwardids = hardwardids + p;
+					p = ::wcschr(p, 0);
+					*p++;
+				}
 			}
 			TCHAR mfg[LINE_LEN] = { 0 };
 			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_MFG, 0L, (PBYTE)mfg, LINE_LEN, 0) == FALSE)
@@ -138,16 +152,30 @@ int main()
 			{
 				::wsprintf(bus_number_str, L"%d", bus_number);
 			}
-			
-			
+			TCHAR driver[1024] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_DRIVER, 0L, (PBYTE)driver, 1024, 0)==FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(driver, L"fail(%d)", err);
+			}
+			TCHAR locationinfo[4096] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_LOCATION_INFORMATION, 0L, (PBYTE)locationinfo, 4096, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(locationinfo, L"fail(%d)", err);
+			}
+
 			wstring str = classdesc;
 			str = str + L"("+ device_desc + L")\r\n";
 			str = str + L"frendly name:" + friendlyname +L"\r\n";
 			str = str + L"device desc:" + devicedesc + L"\r\n";
 			str = str + L"instanseid:"+instanseid + L"\r\n";
-			str = str + L"hardwardid:" + hardwardid + L"\r\n";
+			str = str + L"hardwardid:" + hardwardids + L"\r\n";
 			str = str + L"manufacturer:" + mfg + L"\r\n";
 			str = str + L"bus number:" + bus_number_str + L"\r\n";
+			str = str + L"driver:" + driver + L"\r\n";
+			str = str + L"locationinfo:" + locationinfo + L"\r\n";
+			
 			SP_DEVICE_INTERFACE_DATA  DeviceInterfaceData;
 			DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
 			
