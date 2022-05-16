@@ -7,8 +7,12 @@ using namespace std;
 #include <Windows.h>
 #include <SetupAPI.h>
 #pragma comment(lib, "setupapi.lib")
-#include "hidsdi.h"
+#include <hidsdi.h>
 #pragma comment( lib, "hid.lib")
+#include <initguid.h>
+#include <Hidclass.h>
+#include <Ntddmou.h>
+
 //REG_DWORD
 BOOL ListDeviceInstancePath()
 {
@@ -24,7 +28,7 @@ BOOL ListDeviceInstancePath()
 	BOOL nStatus;
 	DWORD dwSize = 0;
 
-	hdev = SetupDiGetClassDevs(&guid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	hdev = SetupDiGetClassDevs(&guid1, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	if (hdev == INVALID_HANDLE_VALUE)
 	{
 		printf("ERROR : Unable to enumerate device.\n");
@@ -71,8 +75,11 @@ BOOL ListDeviceInstancePath()
 
 int main()
 {
-	//ListDeviceInstancePath();
+	auto ii = GUID_DEVINTERFACE_MOUSE;
+	ListDeviceInstancePath();
 	//從 EnumWDMDriver 開始找
+	GUID guid1;
+	HidD_GetHidGuid(&guid1);
 	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE| DIGCF_DEVICEINTERFACE);
 
 	int index = 0;
@@ -164,6 +171,13 @@ int main()
 				DWORD err = ::GetLastError();
 				::wsprintf(locationinfo, L"fail(%d)", err);
 			}
+			TCHAR enumerator[1024] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_ENUMERATOR_NAME, 0L, (PBYTE)enumerator, 63, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(enumerator, L"fail(%d)", err);
+			}
+
 
 			wstring str = classdesc;
 			str = str + L"("+ device_desc + L")\r\n";
@@ -175,11 +189,55 @@ int main()
 			str = str + L"bus number:" + bus_number_str + L"\r\n";
 			str = str + L"driver:" + driver + L"\r\n";
 			str = str + L"locationinfo:" + locationinfo + L"\r\n";
+			str = str + L"enumerator:" + enumerator + L"\r\n";
 			
 			SP_DEVICE_INTERFACE_DATA  DeviceInterfaceData;
 			DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
+
+			if (wcscmp(device_desc, L"Ports") == 0)
+			{
+				auto err = ::GetLastError();
+				::OutputDebugStringA("");
+			}
+
+			if (wcscmp(device_desc, L"HIDClass") == 0)
+			{
+				BOOL bb = SetupDiEnumDeviceInterfaces(hDevInfo, &spDevInfoData, &guid1, 0, &DeviceInterfaceData);
+				if (bb == FALSE)
+				{
+					auto err = ::GetLastError();
+					::OutputDebugStringA("");
+				}
+				else
+				{
+					DWORD dwSize = 0;
+					auto nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData, NULL, 0, &dwSize, NULL);
+					if (!dwSize)
+					{
+						//bRet = FALSE;
+						printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+						break;
+					}
+
+					PSP_DEVICE_INTERFACE_DETAIL_DATA pBuffer = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(dwSize);
+					ZeroMemory(pBuffer, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
+					pBuffer->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+					SP_DEVINFO_DATA DeviceInfoData = { sizeof(SP_DEVINFO_DATA) };
+					nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData, pBuffer, dwSize, &dwSize, &DeviceInfoData);
+					if (!nStatus)
+					{
+						//bRet = FALSE;
+						printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+						break;
+					}
+					//::OutputDebugString(pBuffer->DevicePath);
+					str = str + L"devicepath:" + pBuffer->DevicePath + L"\r\n";
+				}
+			}
 			
-			for (int idx = 0; SetupDiEnumDeviceInterfaces(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, idx, &DeviceInterfaceData); idx++)
+			
+			for (int idx = 0; SetupDiEnumDeviceInterfaces(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, idx, &DeviceInterfaceData)==TRUE; idx++)
 			{
 				DWORD dwSize = 0;
 				auto nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData, NULL, 0, &dwSize, NULL);

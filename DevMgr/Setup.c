@@ -553,8 +553,7 @@ void FindSpecResource(const DEVINST DevInst, const DWORD dwResType,
     CM_Free_Res_Des_Handle(nextLogConf);
 };
 //
-void GetOtherInfo(GUID guid, const short wOrder,
-          const UINT nIDList1, const UINT nIDList2)
+void GetOtherInfo(GUID guid, const short wOrder, const UINT nIDList1, const UINT nIDList2)
 {
     HDEVINFO         hDevInfo      = 0L;
     SP_DEVINFO_DATA  spDevInfoData = {0};
@@ -568,9 +567,7 @@ void GetOtherInfo(GUID guid, const short wOrder,
 //
 //    wIndex = 0;
     spDevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
-    if (SetupDiEnumDeviceInfo(hDevInfo,
-                              wOrder,
-                              &spDevInfoData))
+    if (SetupDiEnumDeviceInfo(hDevInfo, wOrder, &spDevInfoData))
     {
         SP_DRVINFO_DATA        spDrvInfoData      = {0};
         SP_DRVINFO_DETAIL_DATA spDrvInfoDetail    = {0};
@@ -585,44 +582,31 @@ void GetOtherInfo(GUID guid, const short wOrder,
             FindSpecResource(spDevInfoData.DevInst,
                              wIdx, wOrder, nIDList2);
 //
-        if (!SetupDiBuildDriverInfoList(hDevInfo,
-                                        &spDevInfoData,
-                                        SPDIT_COMPATDRIVER))
+        if (!SetupDiBuildDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER))
             ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
         wIdx = 0;
         while (1)
         {
             spDrvInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
-            if (SetupDiEnumDriverInfo(hDevInfo,
-                                      &spDevInfoData,
-                                      SPDIT_COMPATDRIVER,
-                                      wIdx++,
-                                      &spDrvInfoData))
+            if (SetupDiEnumDriverInfo(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER, wIdx++, &spDrvInfoData))
             {
                 char szBuf[2048] = {0};
 //
                 memcpy(&spDrvInfoDetail, szBuf, sizeof(SP_DRVINFO_DETAIL_DATA));
                 spDrvInfoDetail.cbSize = sizeof(SP_DRVINFO_DETAIL_DATA);
                 dwRequireSize = 0;
-                if (SetupDiGetDriverInfoDetail(hDevInfo,
-                                               &spDevInfoData,
-                                               &spDrvInfoData,
-                                               &spDrvInfoDetail,
-                                               2048,
-                                               &dwRequireSize))
+                if (SetupDiGetDriverInfoDetail(hDevInfo, &spDevInfoData, &spDrvInfoData, &spDrvInfoDetail, 2048, &dwRequireSize))
                 {
                     SYSTEMTIME sysTime   = {0};
                     char       szTmp[64] = {0};
 //
-                    memcpy(szHardware, spDrvInfoDetail.HardwareID,
-                           strlen(spDrvInfoDetail.HardwareID));
+                    memcpy(szHardware, spDrvInfoDetail.HardwareID, strlen(spDrvInfoDetail.HardwareID));
                     ListViewInsertItemText(hList, 1, 1, szHardware);
                     ListViewInsertItemText(hList, 3, 1, spDrvInfoData.MfgName);
                     ListViewInsertItemText(hList, 4, 1, spDrvInfoData.ProviderName);
                     ListViewInsertItemText(hList, 5, 1, spDrvInfoData.Description);
                     FileTimeToSystemTime(&spDrvInfoData.DriverDate, &sysTime);
-                    sprintf(szTmp, "%02d/%02d/%04d", sysTime.wMonth,
-                             sysTime.wDay, sysTime.wYear);
+                    sprintf(szTmp, "%02d/%02d/%04d", sysTime.wMonth, sysTime.wDay, sysTime.wYear);
                     ListViewInsertItemText(hList, 7, 1, szTmp);
                     ListViewInsertItemText(hList, 6, 1, spDrvInfoDetail.SectionName);
                     ListViewInsertItemText(hList, 8, 1, spDrvInfoDetail.InfFileName);

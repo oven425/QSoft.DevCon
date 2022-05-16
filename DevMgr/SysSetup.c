@@ -74,9 +74,7 @@ char StopDriver(const char* lpszServiceName)
 //
     if (hSCManager)
     {
-        hService = OpenService(hSCManager,
-                               lpszServiceName,
-                               SERVICE_ALL_ACCESS);
+        hService = OpenService(hSCManager, lpszServiceName, SERVICE_ALL_ACCESS);
         if (hService)
         {
             bResult = (char)ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus);
