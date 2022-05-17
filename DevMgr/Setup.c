@@ -210,8 +210,7 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
     if (!hTreeChild)
         return 0;
 //
-    hDevInfo = SetupDiGetClassDevs(0L, 0L, _hDlg, DIGCF_PRESENT |
-                                   DIGCF_ALLCLASSES | DIGCF_PROFILE);
+    hDevInfo = SetupDiGetClassDevs(0L, 0L, _hDlg, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
     if (hDevInfo == (void*)-1)
     {
         ShowErrorMsg(_hDlg, GetLastError(), "SetupDiGetClassDevs");
@@ -224,23 +223,20 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
 //
     while (1)
     {
-        if (SetupDiEnumDeviceInfo(hDevInfo,
-                                  wIndex,
-                                  &spDevInfoData))
+        if (SetupDiEnumDeviceInfo(hDevInfo, wIndex, &spDevInfoData))
         {
             char  szBuf[MAX_PATH] = {0};
             short wImageIdx       = 0;
             short wItem           = 0;
 //
-            if (!SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData,
-                                                  SPDRP_CLASS, //SPDRP_DEVICEDESC,
+            if (!SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_CLASS, //SPDRP_DEVICEDESC,
                                                   0L, (PBYTE)szBuf, 2048, 0))
             {
                 wIndex++;
                 continue;
             };
 //
-            if (SetupDiGetClassImageIndex(&_spImageData, &spDevInfoData.ClassGuid, (int*)&wImageIdx))
+            //if (SetupDiGetClassImageIndex(&_spImageData, &spDevInfoData.ClassGuid, (int*)&wImageIdx))
             {
                 TVINSERTSTRUCT         tvStruct        = {0};
                 HWND                   hTree           = GetDlgItem(_hDlg, nIdTree);
@@ -250,7 +246,8 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
                 HTREEITEM              hItem;
                 DWORD                  dwRequireSize;
                 short                  wOrder;
-//
+
+				OutputDebugStringA("1\r\n");
                 if (!SetupDiGetClassDescription(&spDevInfoData.ClassGuid, szBuf, MAX_PATH, &dwRequireSize))
                 {
                     wIndex++;
@@ -265,6 +262,7 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
                 hItem = TreeViewFindChild(hTree, hTreeChild, szBuf);
                 if (!hItem)
                 {
+					OutputDebugStringA("2\r\n");
                     tvStruct.hParent      = hTreeChild;
                     tvStruct.hInsertAfter = TVI_LAST;
                     tvStruct.item.mask    = TVIF_IMAGE | TVIF_TEXT | TVIF_SELECTEDIMAGE;
@@ -276,21 +274,26 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
                     hItem = (HTREEITEM)SendMessage(hTree, TVM_INSERTITEM, 0, (LPARAM)&tvStruct);
                     wOrder = 0;
                 };
+				OutputDebugStringA("3\r\n");
                 GetDeviceInstanceID(hDevInfo, &spDevInfoData, szID);
                 GetDeviceInterfaceInfo(hDevInfo, spDevInfoData, szPath);
 //
+				OutputDebugStringA("4\r\n");
                 if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_FRIENDLYNAME, 0L, (PBYTE)szName, 63, 0))
                 {
+					OutputDebugStringA("5\r\n");
                     DisplayDriverDetailInfo(hItem, nIdTree, szName, wImageIdx, wImageIdx);
                     AddNewDeviceNode(spDevInfoData.ClassGuid, szName, szID, szPath, wIndex, wOrder);
                 }
                 else if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_DEVICEDESC, 0L, (PBYTE)szName, 63, 0))
                 {
+					OutputDebugStringA("6\r\n");
                     DisplayDriverDetailInfo(hItem, nIdTree, szName, wImageIdx, wImageIdx);
                     AddNewDeviceNode(spDevInfoData.ClassGuid, szName, szID, szPath, wIndex, wOrder);
 //                    if (!GetFirmwareEnvironmentVariable(szName, (LPCSTR)&spDevInfoData.ClassGuid, szBuf, 127))
 //                        ShowErrorMsg(_hDlg, GetLastError(), "GetFirmwareEnvironmentVariable");
                 };
+				OutputDebugStringA("7\r\n");
             };
 //            SetupDiDestroyDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER);
         }
@@ -298,10 +301,8 @@ char EnumWDMDriver(const UINT nIdTree, const UINT nIdBmp)
             break;
         wIndex++;
     };
-    SendMessage(GetDlgItem(_hDlg, nIdTree), TVM_EXPAND,
-                TVE_EXPAND, (LPARAM)hTreeChild);
-    SendMessage(GetDlgItem(_hDlg, nIdTree), TVM_SORTCHILDREN,
-                0, (LPARAM)hTreeChild);
+    SendMessage(GetDlgItem(_hDlg, nIdTree), TVM_EXPAND, TVE_EXPAND, (LPARAM)hTreeChild);
+    SendMessage(GetDlgItem(_hDlg, nIdTree), TVM_SORTCHILDREN, 0, (LPARAM)hTreeChild);
     TreeView_SetItemState(GetDlgItem(_hDlg, nIdTree), hTreeChild, TVIS_SELECTED, TVIS_SELECTED);
 //    SendMessage(GetDlgItem(_hDlg, nIdTree), TVM_SELECTITEM,
 //                TVGN_FIRSTVISIBLE, (LPARAM)hTreeChild);
@@ -326,8 +327,7 @@ void GetMemoryResource(MEM_DES* pMemDes, const ULONG ulSize, const UINT nID)
 //
     if (pMemDes->MD_Count)
     {
-        for (wLoop = 0; wLoop < (short)(ulSize - 
-                               (LONG)(sizeof(MEM_DES) / pMemDes->MD_Type)); wLoop++)
+        for (wLoop = 0; wLoop < (short)(ulSize -  (LONG)(sizeof(MEM_DES) / pMemDes->MD_Type)); wLoop++)
         {
             MEM_RANGE *pMemRange = (MEM_RANGE*)(pMemDes + 1);// + pMemDes->MD_Type);
             if (pMemRange->MR_Min != 0 && pMemRange->MR_Max != 0 &&
@@ -579,8 +579,7 @@ void GetOtherInfo(GUID guid, const short wOrder, const UINT nIDList1, const UINT
         GetMoreInformation(hDevInfo, spDevInfoData, nIDList1);
         // Show Resource Information  
         for (wIdx = ResType_Mem; wIdx <= ResType_IRQ; wIdx++)
-            FindSpecResource(spDevInfoData.DevInst,
-                             wIdx, wOrder, nIDList2);
+            FindSpecResource(spDevInfoData.DevInst, wIdx, wOrder, nIDList2);
 //
         if (!SetupDiBuildDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER))
             ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
@@ -588,7 +587,7 @@ void GetOtherInfo(GUID guid, const short wOrder, const UINT nIDList1, const UINT
         while (1)
         {
             spDrvInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
-            if (SetupDiEnumDriverInfo(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER, wIdx++, &spDrvInfoData))
+            if (SetupDiEnumDriverInfo(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER, wIdx, &spDrvInfoData))
             {
                 char szBuf[2048] = {0};
 //
@@ -622,6 +621,7 @@ void GetOtherInfo(GUID guid, const short wOrder, const UINT nIDList1, const UINT
                     ShowErrorMsg(_hDlg, dwError, "SetupDiEnumDriverInfo");
                 break;
             };
+			wIdx = wIdx + 1;
             SetupDiDestroyDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER);
         };
         SetupDiDestroyDeviceInfoList(hDevInfo);

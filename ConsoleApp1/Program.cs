@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QSoft.DevCon;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -11,48 +12,31 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
-            List<Device> dds = new List<Device>();
-            using (var mgr = new DevMgr())
-            {
-                mgr.AllDevice().Where(x => x.HardwareID != "").Enable();
-            }
+            //List<Device> dds = new List<Device>();
+            //using (var mgr = new DevMgr())
+            //{
+            //    mgr.AllDevice().Where(x => x.HardwareID != "").Enable();
+            //}
+
+            new DevMgr().AllDevice().Where(x => x.HardwareID != null).Enable();
         }
     }
 
-    public class DevMgr : IDisposable
-    {
-        SafeHandle m_Handle;
-        void EnumData()
-        {
+    //public class DevMgr : IDisposable
+    //{
+    //    SafeHandle m_Handle;
+    //    void EnumData()
+    //    {
 
-        }
-        public IEnumerable<Device> AllDevice()
-        {
-            return new List<Device>();
-        }
-        public void Dispose()
-        {
-        }
-    }
+    //    }
+    //    public IEnumerable<Device> AllDevice()
+    //    {
+    //        return new List<Device>();
+    //    }
+    //    public void Dispose()
+    //    {
+    //    }
+    //}
 
-    public class Device
-    {
-        public string HardwareID {internal set; get; }
-        public void Enable()
-        {
-
-        }
-    }
-
-    public static class IDeviceEnumable
-    {
-        public static int Enable(this IEnumerable<Device> src)
-        {
-            foreach(var oo in src)
-            {
-                oo.Enable();
-            }
-            return 0;
-        }
-    }
+    
 }

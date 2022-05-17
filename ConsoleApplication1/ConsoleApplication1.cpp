@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <iomanip>
 using namespace std;
 #include <Windows.h>
 #include <SetupAPI.h>
@@ -80,7 +82,7 @@ int main()
 	//從 EnumWDMDriver 開始找
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
-	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE| DIGCF_DEVICEINTERFACE);
+	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
 
 	int index = 0;
 	SP_DEVINFO_DATA spDevInfoData = { 0 };
@@ -177,20 +179,87 @@ int main()
 				DWORD err = ::GetLastError();
 				::wsprintf(enumerator, L"fail(%d)", err);
 			}
+			TCHAR lowerfilter[1024] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_LOWERFILTERS, 0L, (PBYTE)lowerfilter, 63, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(lowerfilter, L"fail(%d)", err);
+			}
+			TCHAR upperfilter[1024] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_UPPERFILTERS, 0L, (PBYTE)upperfilter, 63, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(upperfilter, L"fail(%d)", err);
+			}
+			TCHAR objectname[1024] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, 0L, (PBYTE)objectname, 63, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(objectname, L"fail(%d)", err);
+			}
 
+			
+			std::wstringstream driverinfo;
+			if (SetupDiBuildDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER) == TRUE)
+			{
+
+				int driverindex = 0;
+				while (true)
+				{
+					
+					SP_DRVINFO_DATA        spDrvInfoData = { 0 };
+					SP_DRVINFO_DETAIL_DATA spDrvInfoDetail = { 0 };
+					spDrvInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
+					if (SetupDiEnumDriverInfo(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER, driverindex, &spDrvInfoData) == FALSE)
+					{
+						DWORD err = ::GetLastError();
+						if (err != ERROR_NO_MORE_ITEMS)
+						{
+							driverinfo << L"fail(" << err << L")";
+						}
+						break;
+					}
+					else
+					{
+						//memcpy(&spDrvInfoDetail, szBuf, sizeof(SP_DRVINFO_DETAIL_DATA));
+						spDrvInfoDetail.cbSize = sizeof(SP_DRVINFO_DETAIL_DATA);
+						DWORD dwRequireSize = 0;
+						if (SetupDiGetDriverInfoDetail(hDevInfo, &spDevInfoData, &spDrvInfoData, &spDrvInfoDetail, 2048, &dwRequireSize))
+						{
+							SYSTEMTIME date = { 0 };
+							FileTimeToSystemTime(&spDrvInfoData.DriverDate, &date);
+							
+							driverinfo << L"driver ("<<driverindex<<L"):"<<endl;
+							driverinfo << L"          " << L"MfgName:" << spDrvInfoData.MfgName << endl;
+							driverinfo << L"          " << L"ProviderName:" << spDrvInfoData.ProviderName << endl;
+							driverinfo << L"          " << L"DriverType:" << spDrvInfoData.DriverType << endl;
+							driverinfo << L"          " << L"SectionName:" << spDrvInfoDetail.SectionName << endl;
+							driverinfo << L"          " << L"HardwareID:" << spDrvInfoDetail.HardwareID << endl;
+							driverinfo << L"          " << L"Inf filename:"<< spDrvInfoDetail.InfFileName<<endl;
+							driverinfo << L"          " << L"Inf Date:" << date.wYear<<L"/"<< date.wMonth<<L"/"<< date.wDay << endl;
+						}
+					}
+					driverindex = driverindex + 1;
+				}
+				SetupDiDestroyDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER);
+			}
 
 			wstring str = classdesc;
-			str = str + L"("+ device_desc + L")\r\n";
-			str = str + L"frendly name:" + friendlyname +L"\r\n";
+			str = str + L"(" + device_desc + L")\r\n";
+			str = str + L"frendly name:" + friendlyname + L"\r\n";
 			str = str + L"device desc:" + devicedesc + L"\r\n";
-			str = str + L"instanseid:"+instanseid + L"\r\n";
+			str = str + L"instanseid:" + instanseid + L"\r\n";
 			str = str + L"hardwardid:" + hardwardids + L"\r\n";
 			str = str + L"manufacturer:" + mfg + L"\r\n";
 			str = str + L"bus number:" + bus_number_str + L"\r\n";
 			str = str + L"driver:" + driver + L"\r\n";
-			str = str + L"locationinfo:" + locationinfo + L"\r\n";
+			str = str + L"Local Information:" + locationinfo + L"\r\n";
 			str = str + L"enumerator:" + enumerator + L"\r\n";
-			
+
+			str = str + L"objectname:" + objectname + L"\r\n";
+			str = str + L"upperfilter:" + upperfilter + L"\r\n";
+			str = str + L"lowerfilter:" + lowerfilter + L"\r\n";
+			str = str + driverinfo.str() + L"\r\n";
 			SP_DEVICE_INTERFACE_DATA  DeviceInterfaceData;
 			DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
 
