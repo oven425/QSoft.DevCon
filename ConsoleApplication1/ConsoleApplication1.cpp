@@ -78,7 +78,7 @@ BOOL ListDeviceInstancePath()
 int main()
 {
 	auto ii = GUID_DEVINTERFACE_MOUSE;
-	ListDeviceInstancePath();
+	//ListDeviceInstancePath();
 	//從 EnumWDMDriver 開始找
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);

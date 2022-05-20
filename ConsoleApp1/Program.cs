@@ -18,8 +18,25 @@ namespace ConsoleApp1
             //    mgr.AllDevice().Where(x => x.HardwareID != "").Enable();
             //}
 
-            new DevMgr().AllDevice().Where(x => x.HardwareID != null).Enable();
+            try
+            {
+                var dds = new DevMgr().AllDevice().Where(x=>string.IsNullOrEmpty(x.FriendlyName)==false);
+                foreach (var oo in dds)
+                {
+
+                }
+            }
+            catch(Exception ee)
+            {
+                System.Diagnostics.Trace.WriteLine(ee.Message);
+            }
+            
         }
+    }
+
+    public class AA
+    {
+        IEnumerable<int> a;
     }
 
     //public class DevMgr : IDisposable
