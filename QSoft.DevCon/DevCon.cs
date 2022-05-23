@@ -40,7 +40,9 @@ namespace QSoft.DevCon
                     StringBuilder friendlyname = new StringBuilder(2048);
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
                     dev.FriendlyName = friendlyname.ToString();
-
+                    StringBuilder desc = new StringBuilder(2048);
+                    SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_DEVICEDESC, IntPtr.Zero, desc, desc.Capacity, IntPtr.Zero);
+                    dev.Description = desc.ToString();
 
 
                     yield return dev;
@@ -125,6 +127,7 @@ namespace QSoft.DevCon
     {
         public string HardwareID { internal set; get; }
         public string FriendlyName { internal set; get; }
+        public string Description { set; get; }
         public void Enable()
         {
 

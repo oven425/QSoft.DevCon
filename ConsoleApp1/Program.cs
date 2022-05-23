@@ -23,14 +23,17 @@ namespace ConsoleApp1
                 var dds = new DevMgr().AllDevice().Where(x=>string.IsNullOrEmpty(x.FriendlyName)==false);
                 foreach (var oo in dds)
                 {
-
+                    Console.WriteLine($"FriendlyName:{oo.FriendlyName}");
+                    Console.WriteLine($"HardwareID:{oo.HardwareID}");
+                    Console.WriteLine($"Description:{oo.Description}");
+                    Console.WriteLine("");
                 }
             }
             catch(Exception ee)
             {
                 System.Diagnostics.Trace.WriteLine(ee.Message);
             }
-            
+            Console.ReadLine();
         }
     }
 
