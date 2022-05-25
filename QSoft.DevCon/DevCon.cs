@@ -18,8 +18,6 @@ namespace QSoft.DevCon
 
             int err = 0;
             uint index = 0;
-            //Enumerable.Range(0, 1000);
-            //foreach (var ooo in Enumerable.Range(0, 1000))
             while (true)
             {
                 SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
@@ -32,25 +30,59 @@ namespace QSoft.DevCon
                 else
                 {
                     DeviceInfo dev = new DeviceInfo();
-                    StringBuilder device_desc = new StringBuilder(2048);
-                    SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_DEVICEDESC, IntPtr.Zero, device_desc, device_desc.Capacity, IntPtr.Zero);
-                    StringBuilder hardwareid = new StringBuilder(2048);
-                    SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_HARDWAREID, IntPtr.Zero, hardwareid, hardwareid.Capacity, IntPtr.Zero);
-                    dev.HardwareID = hardwareid.ToString();
-                    StringBuilder friendlyname = new StringBuilder(2048);
-                    SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
-                    dev.FriendlyName = friendlyname.ToString();
-                    StringBuilder desc = new StringBuilder(2048);
-                    SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_DEVICEDESC, IntPtr.Zero, desc, desc.Capacity, IntPtr.Zero);
-                    dev.Description = desc.ToString();
 
 
+                    //StringBuilder hardwareid = new StringBuilder(2048);
+                    //SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_HARDWAREID, IntPtr.Zero, hardwareid, hardwareid.Capacity, IntPtr.Zero);
+                    //dev.HardwareID = hardwareid.ToString();
+                    //StringBuilder friendlyname = new StringBuilder(2048);
+                    //SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
+                    //dev.FriendlyName = friendlyname.ToString();
+                    //StringBuilder devicedesc = new StringBuilder(2048);
+                    //SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_DEVICEDESC, IntPtr.Zero, devicedesc, devicedesc.Capacity, IntPtr.Zero);
+                    //dev.Description = devicedesc.ToString();
+
+
+                    dev.HardwareID = GetValueString(hDevInfo, ref devinfo, SPDRP_HARDWAREID);
+                    dev.FriendlyName = GetValueString(hDevInfo, ref devinfo, SPDRP_FRIENDLYNAME);
+                    dev.Description = GetValueString(hDevInfo, ref devinfo, SPDRP_DEVICEDESC);
+
+                    StringBuilder instanceid = new StringBuilder(2048);
+                    SetupDiGetDeviceInstanceId(hDevInfo, ref devinfo, instanceid, instanceid.Capacity, IntPtr.Zero);
+                    dev.InstanceId = instanceid.ToString();
                     yield return dev;
                 }
                 index++;
             }
 
             //return dds;
+        }
+
+
+        
+        string GetValueString(IntPtr hDevInfo, ref SP_DEVINFO_DATA devinfo, uint spdrp)
+        {
+            int property_type = 0;
+            int requiresize = 0;
+            var hr = SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, spdrp, out property_type, IntPtr.Zero, 0, out requiresize);
+            var err = Marshal.GetLastWin32Error();
+            if(requiresize == 0)
+            {
+                return "";
+            }
+            byte[] buf = new byte[requiresize];
+            hr = SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, spdrp, IntPtr.Zero, buf, buf.Length, IntPtr.Zero);
+            err = Marshal.GetLastWin32Error();
+            var sss = Encoding.UTF8.GetString(buf, 0, buf.Length);
+
+            StringBuilder strb = new StringBuilder(requiresize);
+            
+            SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, spdrp, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            return sss;
+
+            //StringBuilder strb = new StringBuilder(requiresize);
+            //SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, spdrp, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            //return strb.ToString();
         }
         Guid GUID_DEVINTERFACE_DISK = new Guid(0x53f56307, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
 
@@ -79,8 +111,12 @@ namespace QSoft.DevCon
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, byte[] propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
         [DllImport("setupapi.dll", SetLastError = true)]
-        static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+        static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out int propertyRegDataType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize);
 
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, StringBuilder DeviceInstanceId, int DeviceInstanceIdSize, IntPtr RequiredSize);
         uint SPDRP_DEVICEDESC = 0x00000000; // DeviceDesc (R/W)
         uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
@@ -128,21 +164,23 @@ namespace QSoft.DevCon
         public string HardwareID { internal set; get; }
         public string FriendlyName { internal set; get; }
         public string Description { set; get; }
+        public string InstanceId { set; get; }
         public void Enable()
         {
 
         }
     }
 
-    public static class IDeviceEnumable
-    {
-        public static int Enable(this IEnumerable<DeviceInfo> src)
-        {
-            foreach (var oo in src)
-            {
-                oo.Enable();
-            }
-            return 0;
-        }
-    }
+    //public static class IDeviceEnumable
+    //{
+    //    public static int Enable(this IEnumerable<DeviceInfo> src)
+    //    {
+    //        foreach (var oo in src)
+    //        {
+    //            oo.Enable();
+    //        }
+    //        return 0;
+    //    }
+    //}
+
 }

@@ -109,6 +109,10 @@ int main()
 				DWORD err = ::GetLastError();
 				::wsprintf(classdesc, L"fail(%d)", err);
 			};
+			DWORD RequiredSize = 0;
+			DWORD property_type = 0;
+			auto bb = SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_HARDWAREID, &property_type, NULL, NULL, &RequiredSize);
+			auto err1 = ::GetLastError();
 			TCHAR friendlyname[LINE_LEN] = { 0 };
 			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_FRIENDLYNAME, 0L, (PBYTE)friendlyname, LINE_LEN, 0)==FALSE)
 			{

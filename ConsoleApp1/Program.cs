@@ -20,7 +20,9 @@ namespace ConsoleApp1
 
             try
             {
-                var dds = new DevMgr().AllDevice().Where(x=>string.IsNullOrEmpty(x.FriendlyName)==false);
+                StringBuilder strb = new StringBuilder();
+                var dd = new Dd();
+                var dds = new DevMgr().AllDevice();
                 foreach (var oo in dds)
                 {
                     Console.WriteLine($"FriendlyName:{oo.FriendlyName}");
@@ -37,26 +39,25 @@ namespace ConsoleApp1
         }
     }
 
-    public class AA
+    public class Read:Exception
     {
-        IEnumerable<int> a;
+        public override string ToString()
+        {
+            System.Diagnostics.Trace.WriteLine("ToString");
+            return "ccccc";
+        }
     }
 
-    //public class DevMgr : IDisposable
-    //{
-    //    SafeHandle m_Handle;
-    //    void EnumData()
-    //    {
-
-    //    }
-    //    public IEnumerable<Device> AllDevice()
-    //    {
-    //        return new List<Device>();
-    //    }
-    //    public void Dispose()
-    //    {
-    //    }
-    //}
+    public class Dd
+    {
+        public string AA
+        {
+            get
+            {
+                return "";
+            }
+        }
+    }
 
     
 }
