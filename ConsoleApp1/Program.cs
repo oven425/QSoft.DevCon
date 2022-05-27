@@ -26,7 +26,7 @@ namespace ConsoleApp1
                 foreach (var oo in dds)
                 {
                     Console.WriteLine($"FriendlyName:{oo.FriendlyName}");
-                    Console.WriteLine($"HardwareID:{oo.HardwareID}");
+                    //Console.WriteLine($"HardwareID:{oo.HardwareID}");
                     Console.WriteLine($"Description:{oo.Description}");
                     Console.WriteLine("");
                 }
