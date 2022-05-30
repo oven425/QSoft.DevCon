@@ -97,6 +97,12 @@ int main()
 				index++;
 				continue;
 			}
+			TCHAR classguid[256] = { 0 };
+			if (!SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_CLASSGUID, 0L, (PBYTE)classguid, 2048, 0))
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(classguid, L"fail(%d)", err);
+			}
 			TCHAR instanseid[LINE_LEN] = { 0 };
 			if (SetupDiGetDeviceInstanceId(hDevInfo, &spDevInfoData, instanseid, LINE_LEN, 0) == false)
 			{
@@ -111,7 +117,7 @@ int main()
 			};
 			DWORD RequiredSize = 0;
 			DWORD property_type = 0;
-			auto bb = SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_HARDWAREID, &property_type, NULL, NULL, &RequiredSize);
+			auto bb = SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_CLASSGUID, &property_type, NULL, NULL, &RequiredSize);
 			auto err1 = ::GetLastError();
 			TCHAR friendlyname[LINE_LEN] = { 0 };
 			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_FRIENDLYNAME, 0L, (PBYTE)friendlyname, LINE_LEN, 0)==FALSE)
@@ -172,11 +178,18 @@ int main()
 				::wsprintf(driver, L"fail(%d)", err);
 			}
 			TCHAR locationinfo[4096] = { 0 };
-			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_LOCATION_INFORMATION, 0L, (PBYTE)locationinfo, 4096, 0) == FALSE)
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_LOCATION_INFORMATION, NULL, (PBYTE)locationinfo, 4096, 0) == FALSE)
 			{
 				DWORD err = ::GetLastError();
 				::wsprintf(locationinfo, L"fail(%d)", err);
 			}
+			TCHAR localpaths[4096] = { 0 };
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_LOCATION_PATHS, NULL, (PBYTE)localpaths, 4096, 0) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				::wsprintf(localpaths, L"fail(%d)", err);
+			}
+
 			TCHAR enumerator[1024] = { 0 };
 			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_ENUMERATOR_NAME, 0L, (PBYTE)enumerator, 63, 0) == FALSE)
 			{
@@ -201,7 +214,11 @@ int main()
 				DWORD err = ::GetLastError();
 				::wsprintf(objectname, L"fail(%d)", err);
 			}
-
+			if (::wcscmp(classguid, L"{4d36e978-e325-11ce-bfc1-08002be10318}") == 0)
+			{
+				int a = 0;
+				a = a + 1;
+			}
 			
 			std::wstringstream driverinfo;
 			if (SetupDiBuildDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER) == TRUE)
@@ -250,6 +267,7 @@ int main()
 
 			wstring str = classdesc;
 			str = str + L"(" + device_desc + L")\r\n";
+			str = str + L"Class Guid:" + classguid + L"\r\n";
 			str = str + L"frendly name:" + friendlyname + L"\r\n";
 			str = str + L"device desc:" + devicedesc + L"\r\n";
 			str = str + L"instanseid:" + instanseid + L"\r\n";

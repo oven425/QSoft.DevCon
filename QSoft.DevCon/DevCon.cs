@@ -10,6 +10,25 @@ namespace QSoft.DevCon
 {
     public class DevMgr
     {
+        List<string> Split(byte[] src)
+        {
+            List<string> dst = new List<string>();
+            int begin_idx = 0;
+            for (int i = 0; i < src.Length; i++)
+            {
+                if (src[i] == 0)
+                {
+                    if (begin_idx == i)
+                    {
+                        break;
+                    }
+                    var harwareidss = Encoding.UTF8.GetString(src, begin_idx, i - begin_idx);
+                    dst.Add(harwareidss);
+                    begin_idx = i + 1;
+                }
+            }
+            return dst;
+        }
         public IEnumerable<DeviceInfo> AllDevice()
         {
             List<DeviceInfo> dds = new List<DeviceInfo>();
@@ -38,21 +57,21 @@ namespace QSoft.DevCon
                     byte[] buf = new byte[2048];
                     
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_HARDWAREID, IntPtr.Zero, buf, buf.Length, IntPtr.Zero);
-                    int begin_idx = 0;
-                    for (int i=0; i<buf.Length; i++)
-                    {
-                        if(buf[i] == 0)
-                        {
-                            if(begin_idx == i)
-                            {
-                                break;
-                            }
-                            var harwareidss = Encoding.UTF8.GetString(buf, begin_idx, i-begin_idx);
-                            dev.HardwareIDs.Add(harwareidss);
-                            begin_idx = i+1;
-                        }
-                    }
-
+                    //int begin_idx = 0;
+                    //for (int i=0; i<buf.Length; i++)
+                    //{
+                    //    if(buf[i] == 0)
+                    //    {
+                    //        if(begin_idx == i)
+                    //        {
+                    //            break;
+                    //        }
+                    //        var harwareidss = Encoding.UTF8.GetString(buf, begin_idx, i-begin_idx);
+                    //        dev.HardwareIDs.Add(harwareidss);
+                    //        begin_idx = i+1;
+                    //    }
+                    //}
+                    dev.HardwareIDs.AddRange(Split(buf));
 
                     StringBuilder friendlyname = new StringBuilder(2048);
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
@@ -67,6 +86,14 @@ namespace QSoft.DevCon
                     StringBuilder deviceclassguid = new StringBuilder(2048);
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_CLASSGUID, IntPtr.Zero, deviceclassguid, deviceclassguid.Capacity, IntPtr.Zero);
                     dev.ClassGuid = Guid.Parse(deviceclassguid.ToString());
+
+                    StringBuilder location = new StringBuilder(2048);
+                    SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_LOCATION_INFORMATION, IntPtr.Zero, location, location.Capacity, IntPtr.Zero);
+                    dev.Location = location.ToString();
+
+                    Array.Clear(buf, 0, buf.Length);
+                    SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_LOCATION_PATHS, IntPtr.Zero, buf, buf.Length, IntPtr.Zero);
+                    dev.LocationPaths.AddRange(this.Split(buf));
 
 
 
@@ -178,7 +205,7 @@ namespace QSoft.DevCon
         int SPDRP_REMOVAL_POLICY_HW_DEFAULT = (0x00000020);// Hardware Removal Policy (R)
         uint SPDRP_REMOVAL_POLICY_OVERRIDE = (0x00000021); // Removal Policy Override (RW)
         uint SPDRP_INSTALL_STATE = (0x00000022);// Device Install State (R)
-        int SPDRP_LOCATION_PATHS = (0x00000023); // Device Location Paths (R)
+        uint SPDRP_LOCATION_PATHS = (0x00000023); // Device Location Paths (R)
         int SPDRP_BASE_CONTAINERID = (0x00000024); // Base ContainerID (R)
 
         int SPDRP_MAXIMUM_PROPERTY = (0x00000025);// Upper bound on ordinals
@@ -193,6 +220,8 @@ namespace QSoft.DevCon
         public string FriendlyName { internal set; get; }
         public string Description { set; get; }
         public string InstanceId { set; get; }
+        public string Location { set; get; }
+        public List<string> LocationPaths { set; get; } = new List<string>();
         public void Enable()
         {
 

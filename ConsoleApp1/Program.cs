@@ -22,12 +22,19 @@ namespace ConsoleApp1
             {
                 StringBuilder strb = new StringBuilder();
                 var dd = new Dd();
-                var dds = new DevMgr().AllDevice();
+                var dds = new DevMgr().AllDevice().Where(x=>x.FriendlyName.Contains("COM"));
                 foreach (var oo in dds)
                 {
+                    Console.WriteLine($"Class:{oo.Class}");
+                    Console.WriteLine($"ClassGuid:{oo.ClassGuid}");
                     Console.WriteLine($"FriendlyName:{oo.FriendlyName}");
-                    //Console.WriteLine($"HardwareID:{oo.HardwareID}");
                     Console.WriteLine($"Description:{oo.Description}");
+                    Console.WriteLine($"Location:{oo.Location}");
+                    foreach(var locationpath in oo.LocationPaths)
+                    {
+                        Console.WriteLine($"LocationPaths:{locationpath}");
+                    }
+                    
                     Console.WriteLine("");
                 }
             }
