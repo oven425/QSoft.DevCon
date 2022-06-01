@@ -29,6 +29,7 @@ namespace QSoft.DevCon
             }
             return dst;
         }
+
         public IEnumerable<DeviceInfo> AllDevice()
         {
             List<DeviceInfo> dds = new List<DeviceInfo>();
@@ -57,20 +58,6 @@ namespace QSoft.DevCon
                     byte[] buf = new byte[2048];
                     
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_HARDWAREID, IntPtr.Zero, buf, buf.Length, IntPtr.Zero);
-                    //int begin_idx = 0;
-                    //for (int i=0; i<buf.Length; i++)
-                    //{
-                    //    if(buf[i] == 0)
-                    //    {
-                    //        if(begin_idx == i)
-                    //        {
-                    //            break;
-                    //        }
-                    //        var harwareidss = Encoding.UTF8.GetString(buf, begin_idx, i-begin_idx);
-                    //        dev.HardwareIDs.Add(harwareidss);
-                    //        begin_idx = i+1;
-                    //    }
-                    //}
                     dev.HardwareIDs.AddRange(Split(buf));
 
                     StringBuilder friendlyname = new StringBuilder(2048);
@@ -83,9 +70,25 @@ namespace QSoft.DevCon
                     StringBuilder deviceclass = new StringBuilder(2048);
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_CLASS, IntPtr.Zero, deviceclass, deviceclass.Capacity, IntPtr.Zero);
                     dev.Class = deviceclass.ToString();
+                    if(string.IsNullOrEmpty(dev.Class) == true)
+                    {
+                        System.Diagnostics.Trace.WriteLine("");
+                    }
                     StringBuilder deviceclassguid = new StringBuilder(2048);
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_CLASSGUID, IntPtr.Zero, deviceclassguid, deviceclassguid.Capacity, IntPtr.Zero);
-                    dev.ClassGuid = Guid.Parse(deviceclassguid.ToString());
+                    System.Diagnostics.Trace.WriteLine($"class name:{deviceclass.ToString()} {deviceclassguid.ToString()}");
+                    if(string.IsNullOrEmpty(deviceclassguid.ToString()) == true)
+                    {
+                        dev.ClassGuid = Guid.Empty;
+                    }
+                    else
+                    {
+                        var guid = Guid.Parse(deviceclassguid.ToString());
+                        dev.ClassGuid = guid;
+                        StringBuilder classdesc = new StringBuilder(2048);
+                        SetupDiGetClassDescription(ref guid, classdesc, classdesc.Capacity, IntPtr.Zero);
+                        dev.ClassDescription = classdesc.ToString();
+                    }
 
                     StringBuilder location = new StringBuilder(2048);
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_LOCATION_INFORMATION, IntPtr.Zero, location, location.Capacity, IntPtr.Zero);
@@ -134,8 +137,70 @@ namespace QSoft.DevCon
             //SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, spdrp, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             //return strb.ToString();
         }
-        Guid GUID_DEVINTERFACE_DISK = new Guid(0x53f56307, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
 
+        public void AA()
+        {
+            Guid DiskGUID = Guid.Empty;
+            IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
+            SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
+            DeviceInterfaceData.cbSize = Marshal.SizeOf(DeviceInterfaceData);
+
+        }
+
+        //public int Enable(Func<DeviceInfo, bool> func)
+        //{
+        //    int count = 0;
+        //    foreach (var dev in this.AllDevice())
+        //    {
+        //        if (func(dev) == true)
+        //        {
+        //            dev.ChnageState(true);
+        //        }
+        //    }
+
+        //    return count;
+        //}
+
+        //public int Disable(Func<DeviceInfo, bool> func)
+        //{
+        //    int count = 0;
+        //    foreach (var dev in this.AllDevice())
+        //    {
+        //        if (func(dev) == true)
+        //        {
+        //            dev.ChnageState(false);
+        //        }
+        //    }
+
+        //    return count;
+        //}
+
+        Guid GUID_DEVINTERFACE_DISK = new Guid(0x53f56307, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
+        [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern Boolean SetupDiGetDeviceInterfaceDetail(IntPtr hDevInfo, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, ref SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData,  UInt32 deviceInterfaceDetailDataSize, ref UInt32 requiredSize, ref SP_DEVINFO_DATA deviceInfoData);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct SP_DEVICE_INTERFACE_DATA
+        {
+            public Int32 cbSize;
+            public Guid interfaceClassGuid;
+            public Int32 flags;
+            private UIntPtr reserved;
+        }
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 1)]
+        struct SP_DEVICE_INTERFACE_DETAIL_DATA
+        {
+            public int size;
+            public char devicePath;
+        }
+
+        //[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        //struct SP_DEVICE_INTERFACE_DETAIL_DATA
+        //{
+        //    public int cbSize;
+        //    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = BUFFER_SIZE)]
+        //    public string DevicePath;
+        //}
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
@@ -143,6 +208,8 @@ namespace QSoft.DevCon
         public static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiGetClassDescription(ref Guid ClassGuid, StringBuilder ClassDescription, int ClassDescriptionSize, IntPtr RequiredSize);
         [StructLayout(LayoutKind.Sequential)]
         struct SP_DEVINFO_DATA
         {
@@ -209,12 +276,16 @@ namespace QSoft.DevCon
         int SPDRP_BASE_CONTAINERID = (0x00000024); // Base ContainerID (R)
 
         int SPDRP_MAXIMUM_PROPERTY = (0x00000025);// Upper bound on ordinals
+
+
+
     }
 
 
     public class DeviceInfo
     {
         public string Class { set; get; }
+        public string ClassDescription { set; get; }
         public Guid ClassGuid { set; get; }
         public List<string> HardwareIDs { internal set; get; } = new List<string>();
         public string FriendlyName { internal set; get; }
@@ -222,7 +293,7 @@ namespace QSoft.DevCon
         public string InstanceId { set; get; }
         public string Location { set; get; }
         public List<string> LocationPaths { set; get; } = new List<string>();
-        public void Enable()
+        internal void ChnageState(bool isenable)
         {
 
         }

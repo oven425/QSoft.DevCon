@@ -78,7 +78,7 @@ BOOL ListDeviceInstancePath()
 int main()
 {
 	auto ii = GUID_DEVINTERFACE_MOUSE;
-	//ListDeviceInstancePath();
+	ListDeviceInstancePath();
 	//從 EnumWDMDriver 開始找
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
@@ -216,6 +216,11 @@ int main()
 			}
 			if (::wcscmp(classguid, L"{4d36e978-e325-11ce-bfc1-08002be10318}") == 0)
 			{
+				auto key = SetupDiOpenDevRegKey(hDevInfo, &spDevInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
+				if (key == INVALID_HANDLE_VALUE)
+				{
+
+				}
 				int a = 0;
 				a = a + 1;
 			}
@@ -357,9 +362,7 @@ int main()
 			index++;
 
 			::OutputDebugString(str.c_str());
-			int ase = ::GetLastError();
-			ase = 1;
-			::OutputDebugStringA("\r\n");
+
 		}
 		else
 		{
