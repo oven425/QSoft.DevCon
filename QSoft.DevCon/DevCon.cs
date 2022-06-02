@@ -51,7 +51,6 @@ namespace QSoft.DevCon
                 {
                     DeviceInfo dev = new DeviceInfo();
 
-
                     //StringBuilder hardwareid = new StringBuilder(2048);
                     //SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_HARDWAREID, IntPtr.Zero, hardwareid, hardwareid.Capacity, IntPtr.Zero);
                     //dev.HardwareID = hardwareid.ToString();
@@ -142,8 +141,15 @@ namespace QSoft.DevCon
         {
             Guid DiskGUID = Guid.Empty;
             IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
+            int idx = 0;
             SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
             DeviceInterfaceData.cbSize = Marshal.SizeOf(DeviceInterfaceData);
+
+            for (idx = 0; SetupDiEnumDeviceInterfaces(hdev, NULL, &guid1, idx, ref DeviceInterfaceData); idx++)
+            {
+
+            }
+            
 
         }
 
@@ -176,9 +182,12 @@ namespace QSoft.DevCon
         //}
 
         Guid GUID_DEVINTERFACE_DISK = new Guid(0x53f56307, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
+
+        [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern Boolean SetupDiEnumDeviceInterfaces(IntPtr hDevInfo, ref SP_DEVINFO_DATA devInfo, ref Guid interfaceClassGuid, UInt32 memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
         [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         static extern Boolean SetupDiGetDeviceInterfaceDetail(IntPtr hDevInfo, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, ref SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData,  UInt32 deviceInterfaceDetailDataSize, ref UInt32 requiredSize, ref SP_DEVINFO_DATA deviceInfoData);
-
+        //SetupDiGetDeviceInterfaceDetail
         [StructLayout(LayoutKind.Sequential)]
         struct SP_DEVICE_INTERFACE_DATA
         {
