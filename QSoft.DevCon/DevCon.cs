@@ -34,7 +34,7 @@ namespace QSoft.DevCon
         {
             List<DeviceInfo> dds = new List<DeviceInfo>();
             Guid DiskGUID = Guid.Empty;
-            IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
+            IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES);
 
             int err = 0;
             uint index = 0;
@@ -102,6 +102,37 @@ namespace QSoft.DevCon
                     StringBuilder instanceid = new StringBuilder(2048);
                     SetupDiGetDeviceInstanceId(hDevInfo, ref devinfo, instanceid, instanceid.Capacity, IntPtr.Zero);
                     dev.InstanceId = instanceid.ToString();
+
+                    //if(dev.FriendlyName?.Contains("COM1") == true)
+                    //{
+                    //    uint status;
+                    //    uint problem;
+                    //    var hr = CM_Get_DevNode_Status(out status, out problem, devinfo.DevInst, 0);
+                    //    var aa = status & DN_STARTED;
+
+                    //    SP_PROPCHANGE_PARAMS params1 = new SP_PROPCHANGE_PARAMS();
+                    //    params1.ClassInstallHeader.cbSize = Marshal.SizeOf(params1.ClassInstallHeader.GetType());
+                    //    params1.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+                    //    params1.Scope = DICS_FLAG_GLOBAL;
+                    //    params1.StateChange = DICS_DISABLE;
+
+                    //    // setup proper parameters            
+                    //    //if (!SetupDiSetClassInstallParams(hDevInfo, ptrToDevInfoData, ClassInstallParams, Marshal.SizeOf(params1.GetType())))
+                    //    if (!SetupDiSetClassInstallParams(hDevInfo, devinfo, params1, Marshal.SizeOf(params1.GetType())))
+                    //    {
+                    //        int errorcode = Marshal.GetLastWin32Error();
+                    //        errorcode = 0;
+                    //    }
+
+                    //    // use parameters
+                    //    if (!SetupDiCallClassInstaller((uint)DIF_PROPERTYCHANGE, hDevInfo, ref devinfo))
+                    //    {
+                    //        int errorcode = Marshal.GetLastWin32Error(); // error here  
+                    //        errorcode = 0;
+                    //    }
+                    //}
+                    
+
                     yield return dev;
                 }
                 index++;
@@ -110,8 +141,8 @@ namespace QSoft.DevCon
             //return dds;
         }
 
+        const ulong CR_SUCCESS = 0x0;
 
-        
         string GetValueString(IntPtr hDevInfo, ref SP_DEVINFO_DATA devinfo, uint spdrp)
         {
             int property_type = 0;
@@ -145,27 +176,27 @@ namespace QSoft.DevCon
             SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
             DeviceInterfaceData.cbSize = Marshal.SizeOf(DeviceInterfaceData);
 
-            for (idx = 0; SetupDiEnumDeviceInterfaces(hdev, NULL, &guid1, idx, ref DeviceInterfaceData); idx++)
-            {
+            //for (idx = 0; SetupDiEnumDeviceInterfaces(hdev, NULL, &guid1, idx, ref DeviceInterfaceData); idx++)
+            //{
 
-            }
+            //}
             
 
         }
 
-        //public int Enable(Func<DeviceInfo, bool> func)
-        //{
-        //    int count = 0;
-        //    foreach (var dev in this.AllDevice())
-        //    {
-        //        if (func(dev) == true)
-        //        {
-        //            dev.ChnageState(true);
-        //        }
-        //    }
+        public int Enable(Func<DeviceInfo, bool> func)
+        {
+            int count = 0;
+            foreach (var dev in this.AllDevice())
+            {
+                if (func(dev) == true)
+                {
+                    dev.ChangeState(true);
+                }
+            }
 
-        //    return count;
-        //}
+            return count;
+        }
 
         //public int Disable(Func<DeviceInfo, bool> func)
         //{
@@ -227,11 +258,30 @@ namespace QSoft.DevCon
             public UInt32 DevInst;
             public UIntPtr Reserved;
         }
+        [StructLayout(LayoutKind.Sequential)]
+        public class SP_PROPCHANGE_PARAMS
+        {
+            public SP_CLASSINSTALL_HEADER ClassInstallHeader = new SP_CLASSINSTALL_HEADER();
+            public int StateChange;
+            public int Scope;
+            public int HwProfile;
+        };
+        [StructLayout(LayoutKind.Sequential)]
+        public class SP_CLASSINSTALL_HEADER
+        {
+            public int cbSize;
+            public int InstallFunction;
+        };
         const int DIGCF_DEFAULT = 0x1;
         const int DIGCF_PRESENT = 0x2;
         const int DIGCF_ALLCLASSES = 0x4;
         const int DIGCF_PROFILE = 0x8;
         const int DIGCF_DEVICEINTERFACE = 0x10;
+        const int DICS_ENABLE = 0x00000001;
+        const int DICS_DISABLE = 0x00000002;
+        const int DICS_PROPCHANGE = 0x00000003;
+        const int DICS_START = 0x00000004;
+        const int DICS_STOP = 0x00000005;
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out UInt32 propertyRegDataType, byte[] propertyBuffer, uint propertyBufferSize, out UInt32 requiredSize);
         [DllImport("setupapi.dll", SetLastError = true)]
@@ -246,6 +296,15 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, StringBuilder DeviceInstanceId, int DeviceInstanceIdSize, IntPtr RequiredSize);
+
+        [DllImport("cfgmgr32.dll", SetLastError = true)]
+        static extern int CM_Get_DevNode_Status(out UInt32 status, out UInt32 probNum, UInt32 devInst, int flags);
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool SetupDiSetClassInstallParams(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SP_PROPCHANGE_PARAMS ClassInstallParams, int ClassInstallParamsSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
+        static public int DIF_PROPERTYCHANGE = (0x00000012);
+        static public int DICS_FLAG_GLOBAL = (0x00000001);
         uint SPDRP_DEVICEDESC = 0x00000000; // DeviceDesc (R/W)
         uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
@@ -287,7 +346,25 @@ namespace QSoft.DevCon
         int SPDRP_MAXIMUM_PROPERTY = (0x00000025);// Upper bound on ordinals
 
 
-
+        uint DN_ROOT_ENUMERATED = 0x00000001; // Was enumerated by ROOT
+        uint DN_DRIVER_LOADED=0x00000002; // Has Register_Device_Driver
+        uint DN_ENUM_LOADED = 0x00000004; // Has Register_Enumerator
+        uint DN_STARTED = 0x00000008; // Is currently configured
+        uint DN_MANUAL = 0x00000010; // Manually installed
+        uint DN_NEED_TO_ENUM = 0x00000020; // May need reenumeration
+        uint DN_NOT_FIRST_TIME = 0x00000040; // Has received a config
+        uint DN_HARDWARE_ENUM = 0x00000080; // Enum generates hardware ID
+        uint DN_LIAR = 0x00000100; // Lied about can reconfig once
+        uint DN_HAS_MARK = 0x00000200; // Not CM_Create_DevInst lately
+        uint DN_HAS_PROBLEM = 0x00000400; // Need device installer
+        uint DN_FILTERED = 0x00000800; // Is filtered
+        uint DN_MOVED = 0x00001000; // Has been moved
+        uint DN_DISABLEABLE = 0x00002000; // Can be disabled
+        uint DN_REMOVABLE = 0x00004000; // Can be removed
+        uint DN_PRIVATE_PROBLEM = 0x00008000; // Has a private problem
+        uint DN_MF_PARENT = 0x00010000; // Multi function parent
+        uint DN_MF_CHILD = 0x00020000; // Multi function child
+        uint DN_WILL_BE_REMOVED = 0x00040000; // DevInst is being removed
     }
 
 
@@ -302,7 +379,7 @@ namespace QSoft.DevCon
         public string InstanceId { set; get; }
         public string Location { set; get; }
         public List<string> LocationPaths { set; get; } = new List<string>();
-        internal void ChnageState(bool isenable)
+        internal void ChangeState(bool isenable)
         {
 
         }

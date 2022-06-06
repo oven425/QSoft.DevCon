@@ -14,6 +14,7 @@ using namespace std;
 #include <initguid.h>
 #include <Hidclass.h>
 #include <Ntddmou.h>
+#include <cfgmgr32.h >
 
 //REG_DWORD
 BOOL ListDeviceInstancePath()
@@ -92,6 +93,10 @@ int main()
 		TCHAR device_desc[MAXCHAR] = { 0 };
 		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == TRUE)
 		{
+			ULONG status = 0;
+			ULONG problem = 0;
+			CM_Get_DevNode_Status(&status, &problem, spDevInfoData.DevInst, 0);
+			DN_STARTED;
 			if (!SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_CLASS, 0L, (PBYTE)device_desc, 2048, 0))
 			{
 				index++;
@@ -267,6 +272,9 @@ int main()
 					}
 					driverindex = driverindex + 1;
 				}
+
+
+				
 				SetupDiDestroyDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER);
 			}
 
