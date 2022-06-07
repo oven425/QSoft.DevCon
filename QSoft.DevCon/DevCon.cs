@@ -30,9 +30,28 @@ namespace QSoft.DevCon
             return dst;
         }
 
+
+        public List<string> AllPath()
+        {
+            List<string> paths = new List<string>();
+            Guid DiskGUID = GUID_DEVINTERFACE_USB_DEVICE;
+            IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES| DIGCF_DEVICEINTERFACE);
+            SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
+            DeviceInterfaceData.cbSize = Marshal.SizeOf(DeviceInterfaceData.GetType());
+            for (int i= 0; SetupDiEnumDeviceInterfaces(hDevInfo, IntPtr.Zero, ref DiskGUID, i, ref DeviceInterfaceData); i++)
+            {
+                int dwSize = 0;
+                int requiredSize = 0;
+                var nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, ref DeviceInterfaceData, IntPtr.Zero, ref requiredSize, ref dwSize, IntPtr.Zero);
+                var err = Marshal.GetLastWin32Error();
+                err = 0;
+            }
+
+            return paths;
+        }
+
         public IEnumerable<DeviceInfo> AllDevice()
         {
-            List<DeviceInfo> dds = new List<DeviceInfo>();
             Guid DiskGUID = Guid.Empty;
             IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES);
 
@@ -213,12 +232,17 @@ namespace QSoft.DevCon
         //}
 
         Guid GUID_DEVINTERFACE_DISK = new Guid(0x53f56307, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
+        Guid GUID_DEVINTERFACE_USB_DEVICE = new Guid(0xA5DCBF10, 0x6530, 0x11D2, 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED);
 
         [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern Boolean SetupDiEnumDeviceInterfaces(IntPtr hDevInfo, ref SP_DEVINFO_DATA devInfo, ref Guid interfaceClassGuid, UInt32 memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
+        static extern Boolean SetupDiEnumDeviceInterfaces(IntPtr hDevInfo, ref SP_DEVINFO_DATA devInfo, ref Guid interfaceClassGuid, int memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
         [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern Boolean SetupDiGetDeviceInterfaceDetail(IntPtr hDevInfo, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, ref SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData,  UInt32 deviceInterfaceDetailDataSize, ref UInt32 requiredSize, ref SP_DEVINFO_DATA deviceInfoData);
-        //SetupDiGetDeviceInterfaceDetail
+        static extern Boolean SetupDiEnumDeviceInterfaces(IntPtr hDevInfo, IntPtr devInfo, ref Guid interfaceClassGuid, int memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
+        [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern Boolean SetupDiGetDeviceInterfaceDetail(IntPtr hDevInfo, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, ref SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData,  ref int deviceInterfaceDetailDataSize, ref UInt32 requiredSize, ref SP_DEVINFO_DATA deviceInfoData);
+        [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern Boolean SetupDiGetDeviceInterfaceDetail(IntPtr hDevInfo, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, IntPtr deviceInterfaceDetailData, ref int deviceInterfaceDetailDataSize, ref int requiredSize, IntPtr deviceInfoData);
+
         [StructLayout(LayoutKind.Sequential)]
         struct SP_DEVICE_INTERFACE_DATA
         {

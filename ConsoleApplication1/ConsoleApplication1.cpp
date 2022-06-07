@@ -14,7 +14,8 @@ using namespace std;
 #include <initguid.h>
 #include <Hidclass.h>
 #include <Ntddmou.h>
-#include <cfgmgr32.h >
+#include <cfgmgr32.h>
+#include <Usbiodef.h>
 
 //REG_DWORD
 BOOL ListDeviceInstancePath()
@@ -25,16 +26,19 @@ BOOL ListDeviceInstancePath()
 	//spDevInfoData.ClassGuid = {745A17A0-74D3-11D0-B6FE-00A0C90F57DA}
 	HDEVINFO hdev;
 	DWORD idx;
-	GUID guid = GUID_DEVINTERFACE_DISK;
+	GUID guid = GUID_DEVINTERFACE_USB_DEVICE;
+	::memcpy(&guid, &GUID_DEVINTERFACE_USB_DEVICE, sizeof(GUID));
 	TCHAR csDevicePath[2048] = { 0 };
 	BOOL bRet = TRUE;
 	BOOL nStatus;
 	DWORD dwSize = 0;
-
-	hdev = SetupDiGetClassDevs(&guid1, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	//::memset(&guid, 0, sizeof(guid));
+	//hdev = SetupDiGetClassDevs(0L, NULL, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
+	hdev = SetupDiGetClassDevs(&guid1, NULL, NULL, DIGCF_PRESENT| DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
 	if (hdev == INVALID_HANDLE_VALUE)
 	{
 		printf("ERROR : Unable to enumerate device.\n");
+		auto err = ::GetLastError();
 		return FALSE;
 	}
 
@@ -84,7 +88,7 @@ int main()
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
 	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
-
+	GUID_DEVINTERFACE_USB_DEVICE;
 	int index = 0;
 	SP_DEVINFO_DATA spDevInfoData = { 0 };
 	spDevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);

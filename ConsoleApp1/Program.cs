@@ -40,12 +40,12 @@ namespace ConsoleApp1
 
 
                 //var count = new DevMgr().Enable(x => x.InstanceId == "aaaaa");
-                var dds = new DevMgr().AllDevice();
-                foreach(var item in dds)
-                {
-                    
-                }
-                
+                //var dds = new DevMgr().AllDevice();
+                //foreach(var item in dds)
+                //{
+
+                //}
+                var dds = new DevMgr().AllPath();
             }
             catch(Exception ee)
             {
