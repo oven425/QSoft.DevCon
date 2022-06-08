@@ -34,7 +34,7 @@ BOOL ListDeviceInstancePath()
 	DWORD dwSize = 0;
 	//::memset(&guid, 0, sizeof(guid));
 	//hdev = SetupDiGetClassDevs(0L, NULL, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
-	hdev = SetupDiGetClassDevs(&guid1, NULL, NULL, DIGCF_PRESENT| DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
+	hdev = SetupDiGetClassDevs(NULL, NULL, NULL, DIGCF_PRESENT| DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
 	if (hdev == INVALID_HANDLE_VALUE)
 	{
 		printf("ERROR : Unable to enumerate device.\n");
@@ -58,7 +58,6 @@ BOOL ListDeviceInstancePath()
 		PSP_DEVICE_INTERFACE_DETAIL_DATA pBuffer = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(dwSize);
 		ZeroMemory(pBuffer, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
 		pBuffer->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
 		SP_DEVINFO_DATA DeviceInfoData = { sizeof(SP_DEVINFO_DATA) };
 		nStatus = SetupDiGetDeviceInterfaceDetail(hdev, &DeviceInterfaceData, pBuffer, dwSize, &dwSize, &DeviceInfoData);
 		if (!nStatus)
@@ -83,7 +82,7 @@ BOOL ListDeviceInstancePath()
 int main()
 {
 	auto ii = GUID_DEVINTERFACE_MOUSE;
-	ListDeviceInstancePath();
+	//ListDeviceInstancePath();
 	//從 EnumWDMDriver 開始找
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
@@ -233,7 +232,16 @@ int main()
 				int a = 0;
 				a = a + 1;
 			}
-			
+			SP_DEVICE_INTERFACE_DATA spDevInterfaceData = { 0 };
+			//
+			spDevInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+			if (!SetupDiCreateDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
+			{
+				auto err = ::GetLastError();
+				err = 0;
+				//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
+			}
+			//SetupDiOpenDeviceInterface()
 			std::wstringstream driverinfo;
 			if (SetupDiBuildDriverInfoList(hDevInfo, &spDevInfoData, SPDIT_COMPATDRIVER) == TRUE)
 			{

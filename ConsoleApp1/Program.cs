@@ -45,7 +45,11 @@ namespace ConsoleApp1
                 //{
 
                 //}
-                var dds = new DevMgr().AllPath();
+
+                var count = new DevMgr().Enable(x => x.Description.Contains("Camera"));
+                var dds = new DevMgr().AllDevice().Where(x => x.Description.Contains("Camera"));
+                //var dds = new DevMgr().AllPath();
+                //var lookup = dds.ToLookup(x => x.DeviceInfo);
             }
             catch(Exception ee)
             {
