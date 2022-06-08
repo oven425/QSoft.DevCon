@@ -126,7 +126,7 @@ namespace QSoft.DevCon
                     }
                     StringBuilder deviceclassguid = new StringBuilder(2048);
                     SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_CLASSGUID, IntPtr.Zero, deviceclassguid, deviceclassguid.Capacity, IntPtr.Zero);
-                    System.Diagnostics.Trace.WriteLine($"class name:{deviceclass.ToString()} {deviceclassguid.ToString()}");
+                    //System.Diagnostics.Trace.WriteLine($"class name:{deviceclass.ToString()} {deviceclassguid.ToString()}");
                     if(string.IsNullOrEmpty(deviceclassguid.ToString()) == true)
                     {
                         dev.ClassGuid = Guid.Empty;
@@ -522,15 +522,15 @@ namespace QSoft.DevCon
         {
             this.m_DevInfo = devinfo;
         }
-        public string Class { set; get; }
-        public string ClassDescription { set; get; }
-        public Guid ClassGuid { set; get; }
+        public string Class {internal set; get; }
+        public string ClassDescription { internal set; get; }
+        public Guid ClassGuid { internal set; get; }
         public List<string> HardwareIDs { internal set; get; } = new List<string>();
         public string FriendlyName { internal set; get; }
-        public string Description { set; get; }
-        public string InstanceId { set; get; }
-        public string Location { set; get; }
-        public List<string> LocationPaths { set; get; } = new List<string>();
+        public string Description { internal set; get; }
+        public string InstanceId { internal set; get; }
+        public string Location { internal set; get; }
+        public List<string> LocationPaths { internal set; get; } = new List<string>();
         internal void ChangeState(bool isenable, IntPtr dev)
         {
             uint status;
