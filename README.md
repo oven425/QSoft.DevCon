@@ -24,5 +24,4 @@ var disable_count = new DevMgr().Disable(x => x.Description.Contains("Camera"));
 //enable device 
 var enable_count = new DevMgr().Enable(x => x.Description.Contains("Camera"));
 ```
-ps
-thanks for [Simple Device Manager](https://www.codeproject.com/Articles/14469/Simple-Device-Manager)
+PS: Thanks for [Simple Device Manager](https://www.codeproject.com/Articles/14469/Simple-Device-Manager).
