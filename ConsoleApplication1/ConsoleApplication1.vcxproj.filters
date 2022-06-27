@@ -21,9 +21,15 @@
     <ClCompile Include="Device.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="DevMgr.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Device.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="DevMgr.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>

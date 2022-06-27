@@ -153,9 +153,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp" />
+    <ClCompile Include="DevMgr.cpp" />
     <ClCompile Include="Device.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DevMgr.h" />
     <ClInclude Include="Device.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
