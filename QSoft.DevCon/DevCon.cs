@@ -31,51 +31,51 @@ namespace QSoft.DevCon
             return dst;
         }
 
-        //public class AAA
-        //{
-        //    public Guid DeviceInfo { set; get; }
-        //    public string DevicePath { set; get; }
-        //    public string FriendlyName { set; get; }
-        //    public string Description { set; get; }
-        //}
-        //public List<AAA> AllPath()
-        //{
-        //    Guid GUID_DEVICE_BATTERY = new Guid("72631E54-78A4-11D0-BCF7-00AA00B7B32A");
-        //    List<AAA> paths = new List<AAA>();
-        //    Guid DiskGUID = KSCATEGORY_VIDEO;
-        //    IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES| DIGCF_DEVICEINTERFACE);
-        //    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
-        //    DeviceInterfaceData.cbSize = Marshal.SizeOf(DeviceInterfaceData.GetType());
+        public class AAA
+        {
+            public Guid DeviceInfo { set; get; }
+            public string DevicePath { set; get; }
+            public string FriendlyName { set; get; }
+            public string Description { set; get; }
+        }
+        public List<AAA> AllPath()
+        {
+            Guid GUID_DEVICE_BATTERY = new Guid("72631E54-78A4-11D0-BCF7-00AA00B7B32A");
+            List<AAA> paths = new List<AAA>();
+            Guid DiskGUID = KSCATEGORY_VIDEO;
+            IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
+            SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
+            DeviceInterfaceData.cbSize = Marshal.SizeOf(DeviceInterfaceData.GetType());
 
-        //    for (int i= 0; SetupDiEnumDeviceInterfaces(hDevInfo, IntPtr.Zero, ref DiskGUID, i, ref DeviceInterfaceData); i++)
-        //    {
-        //        int dwSize = 0;
-        //        int requiredSize = 0;
-        //        var nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, ref DeviceInterfaceData, IntPtr.Zero, 0, ref dwSize, IntPtr.Zero);
-        //        SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
-        //        devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
-        //        var buffer = Marshal.AllocHGlobal(dwSize);
-        //        Marshal.WriteInt32(buffer, 8);//4 + Marshal.SystemDefaultCharSize*2;
-        //        nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, ref DeviceInterfaceData, buffer, dwSize, ref dwSize, ref devinfo);
-                
-        //        var oiu = Marshal.PtrToStringAuto(IntPtr.Add(buffer, 4));
-        //        Marshal.FreeHGlobal(buffer);
-        //        var err = Marshal.GetLastWin32Error();
-        //        AAA aaa = new AAA();
-        //        aaa.DeviceInfo = devinfo.ClassGuid;
-        //        aaa.DevicePath = oiu;
-        //        StringBuilder friendlyname = new StringBuilder(2048);
-        //        SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
-        //        aaa.FriendlyName = friendlyname.ToString();
-        //        StringBuilder devicedesc = new StringBuilder(2048);
-        //        SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_DEVICEDESC, IntPtr.Zero, devicedesc, devicedesc.Capacity, IntPtr.Zero);
-        //        aaa.Description = devicedesc.ToString();
-        //        paths.Add(aaa);
-        //        err = 0;
-        //    }
+            for (int i = 0; SetupDiEnumDeviceInterfaces(hDevInfo, IntPtr.Zero, ref DiskGUID, i, ref DeviceInterfaceData); i++)
+            {
+                int dwSize = 0;
+                int requiredSize = 0;
+                var nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, ref DeviceInterfaceData, IntPtr.Zero, 0, ref dwSize, IntPtr.Zero);
+                SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
+                devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+                var buffer = Marshal.AllocHGlobal(dwSize);
+                Marshal.WriteInt32(buffer, 8);//4 + Marshal.SystemDefaultCharSize*2;
+                nStatus = SetupDiGetDeviceInterfaceDetail(hDevInfo, ref DeviceInterfaceData, buffer, dwSize, ref dwSize, ref devinfo);
 
-        //    return paths;
-        //}
+                var oiu = Marshal.PtrToStringAuto(IntPtr.Add(buffer, 4));
+                Marshal.FreeHGlobal(buffer);
+                var err = Marshal.GetLastWin32Error();
+                AAA aaa = new AAA();
+                aaa.DeviceInfo = devinfo.ClassGuid;
+                aaa.DevicePath = oiu;
+                StringBuilder friendlyname = new StringBuilder(2048);
+                SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
+                aaa.FriendlyName = friendlyname.ToString();
+                StringBuilder devicedesc = new StringBuilder(2048);
+                SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_DEVICEDESC, IntPtr.Zero, devicedesc, devicedesc.Capacity, IntPtr.Zero);
+                aaa.Description = devicedesc.ToString();
+                paths.Add(aaa);
+                err = 0;
+            }
+
+            return paths;
+        }
         static Lazy<IntPtr> m_hDev = new Lazy<IntPtr>(() =>
         {
             Guid DiskGUID = Guid.Empty;
@@ -543,7 +543,7 @@ namespace QSoft.DevCon
             public UIntPtr Reserved;
         }
         internal SP_DEVINFO_DATA m_DevInfo;
-        internal DeviceInfo(SP_DEVINFO_DATA devinfo)
+        internal DeviceInfo(IntPtr handle, SP_DEVINFO_DATA devinfo)
         {
             this.m_DevInfo = devinfo;
         }
