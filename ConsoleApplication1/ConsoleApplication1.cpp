@@ -79,8 +79,11 @@ BOOL ListDeviceInstancePath()
 	return bRet;
 }
 
+#include "DevMgr.h"
 int main()
 {
+	//QSoft::DevCon::DevMgr devmgr;
+	//devmgr.Enable([](auto dev) {return true; });
 	auto ii = GUID_DEVINTERFACE_MOUSE;
 	//ListDeviceInstancePath();
 	//從 EnumWDMDriver 開始找
@@ -93,6 +96,7 @@ int main()
 	spDevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
 	while (true)
 	{
+		
 		TCHAR device_desc[MAXCHAR] = { 0 };
 		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == TRUE)
 		{
