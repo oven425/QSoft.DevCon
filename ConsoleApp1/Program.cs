@@ -43,7 +43,19 @@ namespace ConsoleApp1
             {
                 System.Diagnostics.Trace.WriteLine(ee.Message);
             }
+            Enable(x => x == 5);
             Console.ReadLine();
+        }
+
+        static void Enable(Func<int, bool> func)
+        {
+            for(int i=0; i<100; i++)
+            {
+                if(func(i)==true)
+                {
+                    break;
+                }
+            }
         }
     }
 

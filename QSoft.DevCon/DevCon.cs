@@ -563,16 +563,9 @@ namespace QSoft.DevCon
         }
     }
 
-    //public static class IDeviceEnumable
-    //{
-    //    public static int Enable(this IEnumerable<DeviceInfo> src)
-    //    {
-    //        foreach (var oo in src)
-    //        {
-    //            oo.Enable();
-    //        }
-    //        return 0;
-    //    }
-    //}
+    public static class DevMgrExtension
+    {
+
+    }
 
 }
