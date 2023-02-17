@@ -6,11 +6,45 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.DeviceInfo;
+using static QSoft.DevCon.SetupApi;
 
 namespace QSoft.DevCon
 {
+    public static class DevMgrExtension
+    {
+        public static uint SPDRP_FRIENDLYNAME = 1;
+        public static string setupapi_GetFriendName(this(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            StringBuilder friendlyname = new StringBuilder(2048);
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
+            return friendlyname.ToString();
+
+        }
+
+    }
+
     public class DevMgr
     {
+        public static IEnumerable<(IntPtr, SP_DEVINFO_DATA)> Devices()
+        {
+            Guid guid = Guid.Empty;
+            uint index = 0;
+            IntPtr hDevInfo = SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES);
+            while(true)
+            {
+                SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
+                devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+                if (SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
+                {
+                    var err = Marshal.GetLastWin32Error();
+                    yield break;
+                }
+                else
+                {
+                    yield return (hDevInfo, devinfo);
+                }
+            }
+        }
         List<string> Split(byte[] src)
         {
             List<string> dst = new List<string>();
@@ -42,7 +76,7 @@ namespace QSoft.DevCon
         {
             Guid GUID_DEVICE_BATTERY = new Guid("72631E54-78A4-11D0-BCF7-00AA00B7B32A");
             List<AAA> paths = new List<AAA>();
-            Guid DiskGUID = KSCATEGORY_VIDEO;
+            Guid DiskGUID = GUID_DEVICE_BATTERY;
             IntPtr hDevInfo = SetupDiGetClassDevs(ref DiskGUID, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_DEVICEINTERFACE);
             SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
             DeviceInterfaceData.cbSize = Marshal.SizeOf(DeviceInterfaceData.GetType());
@@ -100,7 +134,7 @@ namespace QSoft.DevCon
                 }
                 else
                 {
-                    DeviceInfo dev = new DeviceInfo(devinfo);
+                    DeviceInfo dev = new DeviceInfo(m_hDev.Value, devinfo);
 
                     //StringBuilder hardwareid = new StringBuilder(2048);
                     //SetupDiGetDeviceRegistryProperty(hDevInfo, ref devinfo, SPDRP_HARDWAREID, IntPtr.Zero, hardwareid, hardwareid.Capacity, IntPtr.Zero);
@@ -534,15 +568,15 @@ namespace QSoft.DevCon
 
     public class DeviceInfo
     {
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct SP_DEVINFO_DATA
-        {
-            public UInt32 cbSize;
-            public Guid ClassGuid;
-            public UInt32 DevInst;
-            public UIntPtr Reserved;
-        }
-        internal SP_DEVINFO_DATA m_DevInfo;
+        //[StructLayout(LayoutKind.Sequential)]
+        //internal struct SP_DEVINFO_DATA
+        //{
+        //    public UInt32 cbSize;
+        //    public Guid ClassGuid;
+        //    public UInt32 DevInst;
+        //    public UIntPtr Reserved;
+        //}
+        internal SetupApi.SP_DEVINFO_DATA m_DevInfo;
         internal DeviceInfo(IntPtr handle, SP_DEVINFO_DATA devinfo)
         {
             this.m_DevInfo = devinfo;
@@ -563,9 +597,20 @@ namespace QSoft.DevCon
         }
     }
 
-    public static class DevMgrExtension
+    public static class SetupApi
     {
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SP_DEVINFO_DATA
+        {
+            public UInt32 cbSize;
+            public Guid ClassGuid;
+            public UInt32 DevInst;
+            public UIntPtr Reserved;
+        }
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
 
     }
+
 
 }
