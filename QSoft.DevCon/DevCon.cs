@@ -13,12 +13,35 @@ namespace QSoft.DevCon
     public static class DevMgrExtension
     {
         public static uint SPDRP_FRIENDLYNAME = 1;
-        public static string setupapi_GetFriendName(this(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetFriendName(this(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             StringBuilder friendlyname = new StringBuilder(2048);
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
             return friendlyname.ToString();
 
+        }
+
+        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid)
+        {
+            uint index = 0;
+            IntPtr hDevInfo = SetupApi.SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_ALLCLASSES);
+            while (true)
+            {
+                SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
+                devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+                if (SetupApi.SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
+                {
+                    var err = Marshal.GetLastWin32Error();
+                    SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
+                    yield break;
+                }
+                else
+                {
+                    yield return (hDevInfo, devinfo);
+                }
+                index++;
+            }
+            SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
         }
 
     }
@@ -607,8 +630,17 @@ namespace QSoft.DevCon
             public UInt32 DevInst;
             public UIntPtr Reserved;
         }
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
+
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+        public const int DIGCF_PRESENT = 0x2;
+        public const int DIGCF_ALLCLASSES = 0x4;
 
     }
 

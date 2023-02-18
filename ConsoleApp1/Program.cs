@@ -15,6 +15,11 @@ namespace ConsoleApp1
             try
             {
 
+                var devices = Guid.Empty.Devices();
+                foreach(var device in devices) 
+                {
+                    device.GetFriendName();
+                }
                 //var count = new DevMgr().Enable(x => x.InstanceId == "aaaaa");
                 var dds = new DevMgr().AllDevice();
                 foreach (var item in dds)
