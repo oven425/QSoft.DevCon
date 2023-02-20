@@ -80,6 +80,7 @@ BOOL ListDeviceInstancePath()
 }
 
 #include "DevMgr.h"
+#include <devguid.h>
 int main()
 {
 	//QSoft::DevCon::DevMgr devmgr;
@@ -89,7 +90,8 @@ int main()
 	//從 EnumWDMDriver 開始找
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
-	HDEVINFO hDevInfo = SetupDiGetClassDevs(0L, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
+	//GUID_DEVCLASS_PROCESSOR
+	HDEVINFO hDevInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_PORTS, 0L, NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES | DIGCF_PROFILE);
 	GUID_DEVINTERFACE_USB_DEVICE;
 	int index = 0;
 	SP_DEVINFO_DATA spDevInfoData = { 0 };

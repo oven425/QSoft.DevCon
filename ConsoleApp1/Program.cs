@@ -14,12 +14,16 @@ namespace ConsoleApp1
         {
             try
             {
-
-                var devices = Guid.Empty.Devices();
-                foreach(var device in devices) 
+                Guid.Parse("6bdd1fc6-810f-11d0-bec7-08002be2092f").Devices().Enable();
+                foreach (var oo in Guid.Parse("6bdd1fc6-810f-11d0-bec7-08002be2092f").Devices())
                 {
-                    device.GetFriendName();
+                    System.Diagnostics.Trace.WriteLine(oo.GetFriendName());
                 }
+                //var devices = Guid.Empty.Devices();
+                //foreach(var device in devices) 
+                //{
+                //    device.GetFriendName();
+                //}
                 //var count = new DevMgr().Enable(x => x.InstanceId == "aaaaa");
                 var dds = new DevMgr().AllDevice();
                 foreach (var item in dds)
