@@ -11,20 +11,41 @@ namespace QSoft.DevCon
     public static class DevMgrExtension
     {
         public static uint SPDRP_FRIENDLYNAME = (0x0000000C);
+        public static uint SPDRP_DEVICEDESC = 0x00000000; // DeviceDesc (R/W)
+        public static uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         public static string GetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
-            StringBuilder friendlyname = new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, friendlyname, friendlyname.Capacity, IntPtr.Zero);
-            return friendlyname.ToString();
-
+            StringBuilder strb = new StringBuilder(2048);
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            return strb.ToString();
         }
 
-        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid)
+
+
+        public static string GetDescription(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            StringBuilder strb = new StringBuilder(2048);
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICEDESC, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            return strb.ToString();
+        }
+
+        public static string GetInstanceId(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb=null)
+        {
+            if(strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, strb, strb.Capacity, IntPtr.Zero);
+            return strb.ToString();
+        }
+
+        //Ports: SerialPort
+        public static Guid[] GetDevClass(this string src)
         {
             UInt32 RequiredSize = 0;
             Guid[] GuidArray = new Guid[1];
             // read Guids
-            bool Status = SetupDiClassGuidsFromName("Ports", ref GuidArray[0], 1, out RequiredSize);
+            bool Status = SetupDiClassGuidsFromName(src, ref GuidArray[0], 1, out RequiredSize);
             if (true == Status)
             {
                 if (1 < RequiredSize)
@@ -37,12 +58,19 @@ namespace QSoft.DevCon
             {
                 var ErrorCode = Marshal.GetLastWin32Error();
             }
+            return GuidArray;
+        }
+
+        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid)
+        {
+            
             uint index = 0;
+            uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
             if (guid == Guid.Empty)
             {
-
+                flags  = flags | DIGCF_ALLCLASSES;
             }
-            IntPtr hDevInfo = SetupApi.SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, DIGCF_PRESENT | DIGCF_PROFILE);
+            IntPtr hDevInfo = SetupApi.SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
             while (true)
             {
                 SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
@@ -122,6 +150,9 @@ namespace QSoft.DevCon
             public UInt32 DevInst;
             public UIntPtr Reserved;
         }
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, StringBuilder DeviceInstanceId, int DeviceInstanceIdSize, IntPtr RequiredSize);
+
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
         [DllImport("setupapi.dll", SetLastError = true)]

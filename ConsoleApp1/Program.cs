@@ -14,17 +14,23 @@ namespace ConsoleApp1
         {
             try
             {
-                Guid.Parse("6bdd1fc6-810f-11d0-bec7-08002be2092f").Devices().Enable();
-                foreach (var oo in Guid.Parse("6bdd1fc6-810f-11d0-bec7-08002be2092f").Devices())
-                {
-                    System.Diagnostics.Trace.WriteLine(oo.GetFriendName());
-                }
+
                 //var devices = Guid.Empty.Devices();
                 //foreach(var device in devices) 
                 //{
                 //    device.GetFriendName();
                 //}
                 //var count = new DevMgr().Enable(x => x.InstanceId == "aaaaa");
+                var guids = "Ports".GetDevClass();
+                //guids.FirstOrDefault().Devices().Where(x => x.GetFriendName() == "通訊連接埠 (").Enable();
+                foreach (var device in guids.FirstOrDefault().Devices())
+                {
+                    System.Diagnostics.Trace.WriteLine(device.GetFriendName());
+                    System.Diagnostics.Trace.WriteLine(device.GetDescription());
+                    System.Diagnostics.Trace.WriteLine(device.GetInstanceId());
+                }
+
+
                 var dds = new DevMgr().AllDevice();
                 foreach (var item in dds)
                 {
