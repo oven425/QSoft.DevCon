@@ -106,11 +106,11 @@ namespace QSoft.DevCon
             }
         }
 
-        public static void Do(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src, Action<SetupApi.SP_DEVINFO_DATA> action)
+        public static void Do(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src, Action<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> action)
         {
             foreach (var oo in src)
             {
-                action(oo.devdata);
+                action(oo);
             }
         }
 

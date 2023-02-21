@@ -25,7 +25,10 @@ namespace ConsoleApp1
                 //    device.GetFriendName();
                 //}
                 //var count = new DevMgr().Enable(x => x.InstanceId == "aaaaa");
-                var guids = "Camera".GetDevClass().FirstOrDefault().Devices().ElementAt(0);
+                "Ports".GetDevClass().FirstOrDefault()
+                    .Devices()
+                    .Where(x => x.GetFriendName() == "")
+                    .Do(x => { x.SetFriendName("COMPORT"); });
                 //guids.FirstOrDefault().Devices().Where(x => x.GetFriendName() == "通訊連接埠 (").Enable();
                 //foreach (var device in guids.FirstOrDefault().Devices())
                 //{
