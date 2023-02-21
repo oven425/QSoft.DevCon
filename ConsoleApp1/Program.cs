@@ -21,20 +21,37 @@ namespace ConsoleApp1
                 //{
                 //    device.GetFriendName();
                 //}
-                //var infos = "Ports".GetDevClass().FirstOrDefault()
-                //    .Devices()
-                //    .Select(x => new
-                //    {
-                //        friendname = x.GetFriendName(),
-                //        instanceid = x.GetInstanceId(),
-                //        classname = x.GetClass(),
-                //        classguid = x.GetClassGuid(),
-                //        desc = x.GetClassGuid().GetClassDescription()
-                //    });
+                var infos = "Ports".GetDevClass().FirstOrDefault()
+                    .Devices()
+                    .Select(x => new
+                    {
+                        friendname = x.GetFriendName(),
+                        instanceid = x.GetInstanceId(),
+                        classname = x.GetClass(),
+                        classguid = x.GetClassGuid(),
+                        desc = x.GetClassGuid().GetClassDescription()
+                    });
+
+                List<(string instanceid, int port)> changes = new List<(string instanceid, int port)>();
+                changes.Add(("ACPI\\PNP0501\\0", 100));
+
                 "Ports".GetDevClass().FirstOrDefault()
                     .Devices()
-                    .Where(x => x.GetFriendName() == "通訊連接埠 (")
-                    .Enable();
+                    .Join(changes, x => x.GetInstanceId(), y => y.instanceid, (x,y)=> new { x,y})
+                    .Do(x=> 
+                    {
+                        
+                    });
+                //foreach(var oo in joinchange)
+                //{
+                    
+                //}
+                
+
+                //"Ports".GetDevClass().FirstOrDefault()
+                //    .Devices()
+                //    .Where(x => x.GetFriendName() == "通訊連接埠 (")
+                //    .Enable();
                 //"Ports".GetDevClass().FirstOrDefault()
                 //    .Devices()
                 //    .Where(x => x.GetFriendName() == "")

@@ -153,13 +153,21 @@ namespace QSoft.DevCon
             return index;
         }
 
-        public static void Do(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src, Action<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> action)
+        public static void Do<T>(this IEnumerable<T> src, Action<T> action)
         {
             foreach (var oo in src)
             {
                 action(oo);
             }
         }
+
+        //public static void Do(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src, Action<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> action)
+        //{
+        //    foreach (var oo in src)
+        //    {
+        //        action(oo);
+        //    }
+        //}
 
         static public void ChangeState(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, bool isenable)
         {
