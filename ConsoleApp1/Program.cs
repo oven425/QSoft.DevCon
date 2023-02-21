@@ -8,10 +8,7 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1
 {
-    public class TTT
-    {
-        public string Name { set; get; }
-    }
+
     class Program
     {
         static void Main(string[] args)
@@ -24,11 +21,24 @@ namespace ConsoleApp1
                 //{
                 //    device.GetFriendName();
                 //}
-                //var count = new DevMgr().Enable(x => x.InstanceId == "aaaaa");
+                //var infos = "Ports".GetDevClass().FirstOrDefault()
+                //    .Devices()
+                //    .Select(x => new
+                //    {
+                //        friendname = x.GetFriendName(),
+                //        instanceid = x.GetInstanceId(),
+                //        classname = x.GetClass(),
+                //        classguid = x.GetClassGuid(),
+                //        desc = x.GetClassGuid().GetClassDescription()
+                //    });
                 "Ports".GetDevClass().FirstOrDefault()
                     .Devices()
-                    .Where(x => x.GetFriendName() == "")
-                    .Do(x => { x.SetFriendName("COMPORT"); });
+                    .Where(x => x.GetFriendName() == "通訊連接埠 (")
+                    .Enable();
+                //"Ports".GetDevClass().FirstOrDefault()
+                //    .Devices()
+                //    .Where(x => x.GetFriendName() == "")
+                //    .Do(x => { x.SetFriendName("COMPORT"); });
                 //guids.FirstOrDefault().Devices().Where(x => x.GetFriendName() == "通訊連接埠 (").Enable();
                 //foreach (var device in guids.FirstOrDefault().Devices())
                 //{
@@ -65,7 +75,7 @@ namespace ConsoleApp1
             {
                 System.Diagnostics.Trace.WriteLine(ee.Message);
             }
-            Enable(x => x == 5);
+            //Enable(x => x == 5);
             Console.ReadLine();
         }
 
