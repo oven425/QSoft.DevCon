@@ -134,12 +134,15 @@ namespace QSoft.DevCon
             //SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
         }
 
-        public static void Enable(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
+        public static int Enable(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
         {
+            int index = 0;
             foreach (var oo in src)
             {
                 oo.ChangeState(true);
+                index = index + 1;
             }
+            return index;
         }
 
         public static int Disable(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
@@ -153,12 +156,23 @@ namespace QSoft.DevCon
             return index;
         }
 
-        public static void Do<T>(this IEnumerable<T> src, Action<T> action)
+        public static void Enable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            src.ChangeState(true);
+        }
+
+        public static void Disable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            src.ChangeState(false);
+        }
+
+        public static int Do<T>(this IEnumerable<T> src, Action<T> action)
         {
             foreach (var oo in src)
             {
                 action(oo);
             }
+            return 0;
         }
 
         //public static void Do(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src, Action<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> action)

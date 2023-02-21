@@ -34,13 +34,14 @@ namespace ConsoleApp1
 
                 List<(string instanceid, int port)> changes = new List<(string instanceid, int port)>();
                 changes.Add(("ACPI\\PNP0501\\0", 100));
+                changes.Add(("ACPI\\PNP0501\\1", 101));
 
-                "Ports".GetDevClass().FirstOrDefault()
+                var joinchange = "Ports".GetDevClass().FirstOrDefault()
                     .Devices()
-                    .Join(changes, x => x.GetInstanceId(), y => y.instanceid, (x,y)=> new { x,y})
-                    .Do(x=> 
+                    .Join(changes, x => x.GetInstanceId(), y => y.instanceid, (x, y) => new { x, y })
+                    .Do(x => 
                     {
-                        
+                        x.x.Enable();
                     });
                 //foreach(var oo in joinchange)
                 //{
