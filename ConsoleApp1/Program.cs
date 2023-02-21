@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1
 {
+    public class TTT
+    {
+        public string Name { set; get; }
+    }
     class Program
     {
         static void Main(string[] args)
@@ -21,14 +25,14 @@ namespace ConsoleApp1
                 //    device.GetFriendName();
                 //}
                 //var count = new DevMgr().Enable(x => x.InstanceId == "aaaaa");
-                var guids = "Ports".GetDevClass();
+                var guids = "Camera".GetDevClass().FirstOrDefault().Devices().ElementAt(0);
                 //guids.FirstOrDefault().Devices().Where(x => x.GetFriendName() == "通訊連接埠 (").Enable();
-                foreach (var device in guids.FirstOrDefault().Devices())
-                {
-                    System.Diagnostics.Trace.WriteLine(device.GetFriendName());
-                    System.Diagnostics.Trace.WriteLine(device.GetDescription());
-                    System.Diagnostics.Trace.WriteLine(device.GetInstanceId());
-                }
+                //foreach (var device in guids.FirstOrDefault().Devices())
+                //{
+                //    //System.Diagnostics.Trace.WriteLine(device.GetFriendName());
+                //    //System.Diagnostics.Trace.WriteLine(device.GetDescription());
+                //    //System.Diagnostics.Trace.WriteLine(device.GetInstanceId());
+                //}
 
 
                 var dds = new DevMgr().AllDevice();

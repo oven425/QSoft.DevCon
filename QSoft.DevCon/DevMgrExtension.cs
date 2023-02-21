@@ -20,6 +20,14 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
+        public static void SetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, string data)
+        {
+            var buf1 = Encoding.Unicode.GetBytes(data);
+            var buf2 = new byte[buf1.Length+2];
+            Array.Copy(buf1, buf2, buf1.Length);
+            var hr = SetupApi.SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, buf2, (uint)buf2.Length);
+        }
+
 
 
         public static string GetDescription(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
@@ -98,6 +106,14 @@ namespace QSoft.DevCon
             }
         }
 
+        public static void Do(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src, Action<SetupApi.SP_DEVINFO_DATA> action)
+        {
+            foreach (var oo in src)
+            {
+                action(oo.devdata);
+            }
+        }
+
         static public void ChangeState(this SP_DEVINFO_DATA devinfo, bool isenable)
         {
             //uint status;
@@ -162,7 +178,8 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
-
+        [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, byte[] PropertyBuffer, uint PropertyBufferSize);
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
 
