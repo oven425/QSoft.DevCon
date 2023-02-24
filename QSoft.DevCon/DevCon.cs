@@ -556,36 +556,7 @@ namespace QSoft.DevCon
     }
 
 
-    public class DeviceInfo
-    {
-        //[StructLayout(LayoutKind.Sequential)]
-        //internal struct SP_DEVINFO_DATA
-        //{
-        //    public UInt32 cbSize;
-        //    public Guid ClassGuid;
-        //    public UInt32 DevInst;
-        //    public UIntPtr Reserved;
-        //}
-        internal SetupApi.SP_DEVINFO_DATA m_DevInfo;
-        internal DeviceInfo(IntPtr handle, SP_DEVINFO_DATA devinfo)
-        {
-            this.m_DevInfo = devinfo;
-        }
-        public string Class {internal set; get; }
-        public string ClassDescription { internal set; get; }
-        public Guid ClassGuid { internal set; get; }
-        public List<string> HardwareIDs { internal set; get; } = new List<string>();
-        public string FriendlyName { internal set; get; }
-        public string Description { internal set; get; }
-        public string InstanceId { internal set; get; }
-        public string Location { internal set; get; }
-        public List<string> LocationPaths { internal set; get; } = new List<string>();
-        internal void ChangeState(bool isenable, IntPtr dev)
-        {
-            uint status;
-
-        }
-    }
+    
 
 
 

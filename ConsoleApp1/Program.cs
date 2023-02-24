@@ -21,6 +21,8 @@ namespace ConsoleApp1
                 //{
                 //    device.GetFriendName();
                 //}
+                var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
+                var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
                 var infos = "Ports".GetDevClass().FirstOrDefault()
                     .Devices()
                     .Select(x => new

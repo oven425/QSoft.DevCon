@@ -10,12 +10,6 @@ namespace QSoft.DevCon
 {
     public static class DevMgrExtension
     {
-        public static uint SPDRP_FRIENDLYNAME = (0x0000000C);
-        
-        public static uint SPDRP_DEVICEDESC = 0x00000000; // DeviceDesc (R/W)
-        public static uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
-        public static uint SPDRP_CLASS = (0x00000007); // Class (R--tied to ClassGUID)
-        public static uint SPDRP_CLASSGUID = (0x00000008); // ClassGUID (R/W)
         public static string GetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             StringBuilder strb = new StringBuilder(2048);
@@ -50,7 +44,10 @@ namespace QSoft.DevCon
                 strb = new StringBuilder(2048);
             }
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CLASSGUID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-            guid = Guid.Parse(strb.ToString());
+            if(Guid.TryParse(strb.ToString(), out guid) == false)
+            {
+                return guid;
+            }
 
             return guid;
         }
@@ -65,9 +62,12 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        public static string GetDescription(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetDescription(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
-            StringBuilder strb = new StringBuilder(2048);
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICEDESC, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
@@ -81,8 +81,6 @@ namespace QSoft.DevCon
             SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
-
-
 
         //Ports: SerialPort
         public static Guid[] GetDevClass(this string src)
@@ -104,6 +102,16 @@ namespace QSoft.DevCon
                 var ErrorCode = Marshal.GetLastWin32Error();
             }
             return GuidArray;
+        }
+
+        public static string GetMFG(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb=null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_MFG, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            return strb.ToString();
         }
 
         public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid)
@@ -175,14 +183,6 @@ namespace QSoft.DevCon
             return 0;
         }
 
-        //public static void Do(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src, Action<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> action)
-        //{
-        //    foreach (var oo in src)
-        //    {
-        //        action(oo);
-        //    }
-        //}
-
         static public void ChangeState(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, bool isenable)
         {
             uint status;
@@ -241,7 +241,6 @@ namespace QSoft.DevCon
             }
             return sMsg;
         }
-
     }
 
 
@@ -342,6 +341,78 @@ namespace QSoft.DevCon
         public static uint DN_WILL_BE_REMOVED = 0x00040000; // DevInst is being removed
 
 
+        public const uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
+        public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
+        public const uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
+        public const uint SPDRP_UNUSED0 = (0x00000003);  // unused
+        public const uint SPDRP_SERVICE = (0x00000004);  // Service (R/W)
+        public const uint SPDRP_UNUSED1 = (0x00000005);  // unused
+        public const uint SPDRP_UNUSED2 = (0x00000006);  // unused
+        public const uint SPDRP_CLASS = (0x00000007);  // Class (R--tied to ClassGUID)
+        public const uint SPDRP_CLASSGUID = (0x00000008);  // ClassGUID (R/W)
+        public const uint SPDRP_DRIVER = (0x00000009);  // Driver (R/W)
+        public const uint SPDRP_CONFIGFLAGS = (0x0000000A);  // ConfigFlags (R/W)
+        public const uint SPDRP_MFG = (0x0000000B);  // Mfg (R/W)
+        public const uint SPDRP_FRIENDLYNAME = (0x0000000C);  // FriendlyName (R/W)
+        public const uint SPDRP_LOCATION_INFORMATION = (0x0000000D);  // LocationInformation (R/W)
+        public const uint SPDRP_PHYSICAL_DEVICE_OBJECT_NAME = (0x0000000E);  // PhysicalDeviceObjectName (R)
+        public const uint SPDRP_CAPABILITIES = (0x0000000F);  // Capabilities (R)
+        public const uint SPDRP_UI_NUMBER = (0x00000010);  // UiNumber (R)
+        public const uint SPDRP_UPPERFILTERS = (0x00000011);  // UpperFilters (R/W)
+        public const uint SPDRP_LOWERFILTERS = (0x00000012);  // LowerFilters (R/W)
+        public const uint SPDRP_BUSTYPEGUID = (0x00000013);  // BusTypeGUID (R)
+        public const uint SPDRP_LEGACYBUSTYPE = (0x00000014);  // LegacyBusType (R)
+        public const uint SPDRP_BUSNUMBER = (0x00000015);  // BusNumber (R)
+        public const uint SPDRP_ENUMERATOR_NAME = (0x00000016);  // Enumerator Name (R)
+        public const uint SPDRP_SECURITY = (0x00000017);  // Security (R/W, binary form)
+        public const uint SPDRP_SECURITY_SDS = (0x00000018); // Security (W, SDS form)
+        public const uint SPDRP_DEVTYPE = (0x00000019); // Device Type (R/W)
+        public const uint SPDRP_EXCLUSIVE = (0x0000001A); // Device is exclusive-access (R/W)
+        public const uint SPDRP_CHARACTERISTICS = (0x0000001B); // Device Characteristics (R/W)
+        public const uint SPDRP_ADDRESS = (0x0000001C); // Device Address (R)
+        public const uint SPDRP_UI_NUMBER_DESC_FORMAT = (0X0000001D); // UiNumberDescFormat (R/W)
+        public const uint SPDRP_DEVICE_POWER_DATA = (0x0000001E);  // Device Power Data (R)
+        public const uint SPDRP_REMOVAL_POLICY = (0x0000001F);  // Removal Policy (R)
+        public const uint SPDRP_REMOVAL_POLICY_HW_DEFAULT = (0x00000020);  // Hardware Removal Policy (R)
+        public const uint SPDRP_REMOVAL_POLICY_OVERRIDE = (0x00000021);  // Removal Policy Override (RW)
+        public const uint SPDRP_INSTALL_STATE = (0x00000022);  // Device Install State (R)
+        public const uint SPDRP_LOCATION_PATHS = (0x00000023);  // Device Location Paths (R)
+        public const uint SPDRP_BASE_CONTAINERID = (0x00000024);  // Base ContainerID (R)
+
+        public const uint SPDRP_MAXIMUM_PROPERTY = (0x00000025);  // Upper bound on ordinals
+
+
+
+    }
+
+    public class DeviceInfo
+    {
+        internal SetupApi.SP_DEVINFO_DATA m_DevInfo;
+        public DeviceInfo(IntPtr handle, SP_DEVINFO_DATA devinfo)
+        {
+            this.InstanceId = (handle, devinfo).GetInstanceId();
+            this.Class = (handle,devinfo).GetClass();
+            this.ClassGuid = (handle,devinfo).GetClassGuid();
+            this.ClassDescription = this.ClassGuid.GetClassDescription();
+            this.Description =(handle,devinfo).GetDescription();
+            this.Manufacturer = (handle, devinfo).GetMFG();
+            this.m_DevInfo = devinfo;
+        }
+        public string Class { internal set; get; }
+        public string ClassDescription { internal set; get; }
+        public Guid ClassGuid { internal set; get; }
+        public List<string> HardwareIDs { internal set; get; } = new List<string>();
+        public string FriendlyName { internal set; get; }
+        public string Description { internal set; get; }
+        public string InstanceId { internal set; get; }
+        public string Location { internal set; get; }
+        public List<string> LocationPaths { internal set; get; } = new List<string>();
+        public string Manufacturer { private set; get; }
+        //internal void ChangeState(bool isenable, IntPtr dev)
+        //{
+        //    uint status;
+
+        //}
     }
 
 }
