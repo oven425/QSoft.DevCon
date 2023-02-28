@@ -21,30 +21,50 @@ namespace ConsoleApp1
                 //{
                 //    device.GetFriendName();
                 //}
-                var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
-                var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
-                var infos = "Ports".GetDevClass().FirstOrDefault()
+                //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
+                //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
+                //var infos = "Ports".GetDevClass().FirstOrDefault()
+                //    .Devices()
+                //    .Select(x => new
+                //    {
+                //        portname=x.GetComPortName(),
+                //        friendname = x.GetFriendName(),
+                //        instanceid = x.GetInstanceId(),
+                //        classname = x.GetClass(),
+                //        classguid = x.GetClassGuid(),
+                //        desc = x.GetClassGuid().GetClassDescription(),
+                //        localoath = x.GetLoalPaths()
+                //    });
+                var infos = Guid.Empty
                     .Devices()
+                    .Where(x=>x.GetInstanceId() == "USB\\VID_058F&PID_6387\\51204A16")
                     .Select(x => new
                     {
                         friendname = x.GetFriendName(),
                         instanceid = x.GetInstanceId(),
                         classname = x.GetClass(),
                         classguid = x.GetClassGuid(),
-                        desc = x.GetClassGuid().GetClassDescription()
+                        desc = x.GetClassGuid().GetClassDescription(),
+                        localoath = x.GetLocationPaths(),
+                        locationinformation=x.GetLoationInformation()
                     });
+                foreach (var info in infos)
+                {
+                    Console.WriteLine(info);
+                }
+                Console.WriteLine("ed");
+                Console.ReadLine();
+                //List<(string instanceid, int port)> changes = new List<(string instanceid, int port)>();
+                //changes.Add(("ACPI\\PNP0501\\0", 100));
+                //changes.Add(("ACPI\\PNP0501\\1", 101));
 
-                List<(string instanceid, int port)> changes = new List<(string instanceid, int port)>();
-                changes.Add(("ACPI\\PNP0501\\0", 100));
-                changes.Add(("ACPI\\PNP0501\\1", 101));
-
-                var joinchange = "Ports".GetDevClass().FirstOrDefault()
-                    .Devices()
-                    .Join(changes, x => x.GetInstanceId(), y => y.instanceid, (x, y) => new { x, y })
-                    .Do(x => 
-                    {
-                        x.x.Enable();
-                    });
+                //var joinchange = "Ports".GetDevClass().FirstOrDefault()
+                //    .Devices()
+                //    .Join(changes, x => x.GetInstanceId(), y => y.instanceid, (x, y) => new { x, y })
+                //    .Do(x => 
+                //    {
+                //        x.x.Enable();
+                //    });
                 //foreach(var oo in joinchange)
                 //{
                     

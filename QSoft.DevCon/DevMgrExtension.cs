@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.SetupApi;
@@ -10,10 +13,42 @@ namespace QSoft.DevCon
 {
     public static class DevMgrExtension
     {
+        public static string GetComPortName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            var hKey = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+            Console.WriteLine($"hKey.IsInvalid:{hKey.IsInvalid}");
+            if (hKey.IsInvalid == false)
+            {
+
+                var reg = RegistryKey.FromHandle(hKey);
+                var portname = reg.GetValue("PortName").ToString();
+                reg.Dispose();
+                return portname;
+            }
+            return "";
+        }
         public static string GetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             StringBuilder strb = new StringBuilder(2048);
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if(hr == false)
+            {
+                Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
+            }
+            return strb.ToString();
+        }
+
+        public static string GetLocationPaths(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            StringBuilder strb = new StringBuilder(2048);
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            return strb.ToString();
+        }
+
+        public static string GetLoationInformation(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            StringBuilder strb = new StringBuilder(2048);
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_INFORMATION, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
 
@@ -284,6 +319,23 @@ namespace QSoft.DevCon
         public static extern bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetClassDescription(ref Guid ClassGuid, StringBuilder ClassDescription, int ClassDescriptionSize, IntPtr RequiredSize);
+        [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern SafeRegistryHandle SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
+
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiGetDeviceRegistryProperty(
+    IntPtr deviceInfoSet,
+    ref SP_DEVINFO_DATA deviceInfoData,
+    uint property,
+    out UInt32 propertyRegDataType,
+    IntPtr propertyBuffer, // the difference between this signature and the one above.
+    uint propertyBufferSize,
+    out UInt32 requiredSize
+    );
+
+
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData, uint pProperty, string pPropertyBuffer, int pPropertyBufferSize);
 
         public const int DIGCF_DEFAULT = 0x1;
         public const int DIGCF_PRESENT = 0x2;
@@ -304,14 +356,13 @@ namespace QSoft.DevCon
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
         public static int DIF_PROPERTYCHANGE = (0x00000012);
-        public static int DICS_FLAG_GLOBAL = (0x00000001);
 
         [StructLayout(LayoutKind.Sequential)]
         public class SP_PROPCHANGE_PARAMS
         {
             public SP_CLASSINSTALL_HEADER ClassInstallHeader = new SP_CLASSINSTALL_HEADER();
             public int StateChange;
-            public int Scope;
+            public uint Scope;
             public int HwProfile;
         };
         [StructLayout(LayoutKind.Sequential)]
@@ -381,7 +432,31 @@ namespace QSoft.DevCon
 
         public const uint SPDRP_MAXIMUM_PROPERTY = (0x00000025);  // Upper bound on ordinals
 
+        public const uint DICS_FLAG_GLOBAL = 0x00000001;  // make change in all hardware profiles
+        public const uint DICS_FLAG_CONFIGSPECIFIC = 0x00000002;  // make change in specified profile only
+        public const uint DICS_FLAG_CONFIGGENERAL = 0x00000004;  // 1 or more hardware profile-specific
+        public const uint DIREG_DEV = 0x00000001;         // Open/Create/Delete device key
+        public const uint DIREG_DRV = 0x00000002;        // Open/Create/Delete driver key
+        public const uint DIREG_BOTH = 0x00000004;        // Delete both driver and Device key
 
+        internal const int ERROR_MORE_DATA = 0xEA;
+        internal const int ERROR_SUCCESS = 0;
+        internal const int READ_CONTROL = 0x00020000;
+        internal const int SYNCHRONIZE = 0x00100000;
+        internal const int STANDARD_RIGHTS_READ = READ_CONTROL;
+        internal const int STANDARD_RIGHTS_WRITE = READ_CONTROL;
+        internal const int KEY_QUERY_VALUE = 0x0001;
+        internal const int KEY_SET_VALUE = 0x0002;
+        internal const int KEY_CREATE_SUB_KEY = 0x0004;
+        internal const int KEY_ENUMERATE_SUB_KEYS = 0x0008;
+        internal const int KEY_NOTIFY = 0x0010;
+        internal const int KEY_CREATE_LINK = 0x0020;
+        internal const int KEY_READ = ((STANDARD_RIGHTS_READ |
+                                                           KEY_QUERY_VALUE |
+                                                           KEY_ENUMERATE_SUB_KEYS |
+                                                           KEY_NOTIFY)
+                                                          &
+                                                          (~SYNCHRONIZE));
 
     }
 

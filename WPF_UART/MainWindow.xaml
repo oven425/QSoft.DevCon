@@ -1,0 +1,61 @@
+﻿<Window x:Class="WPF_UART.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPF_UART"
+        mc:Ignorable="d"
+        Loaded="Window_Loaded"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid x:Name="grid_setting">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <!--<ListView ItemsSource="{Binding Uarts}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                        <GridViewColumn Header="InstanceId" DisplayMemberBinding="{Binding InstanceId}"/>
+                        <GridViewColumn Header="LoaclPath" DisplayMemberBinding="{Binding LoaclPath}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>-->
+            <ListBox ItemsSource="{Binding Uarts}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <GroupBox Header="{Binding FriendName}">
+                            <StackPanel Margin="3">
+                                <RadioButton>
+                                    <TextBlock>
+                                        <Run>Name:</Run>
+                                        <Run Text="{Binding Name}"></Run>
+                                    </TextBlock>
+                                </RadioButton>
+                                <RadioButton>
+                                    <TextBlock>
+                                        <Run>InstanceId:</Run>
+                                        <Run Text="{Binding InstanceId}"></Run>
+                                    </TextBlock>
+                                </RadioButton>
+                                <RadioButton>
+                                    <TextBlock>
+                                        <Run>LocalPath:</Run>
+                                        <Run Text="{Binding LocalPath}"></Run>
+                                    </TextBlock>
+                                </RadioButton>
+                            </StackPanel>
+                        </GroupBox>
+                        
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <ListBox.ItemContainerStyle>
+                    <Style></Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+            
+        </Grid>
+    </Grid>
+    
+</Window>

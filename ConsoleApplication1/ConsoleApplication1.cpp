@@ -17,7 +17,7 @@ using namespace std;
 #include <cfgmgr32.h>
 #include <Usbiodef.h>
 
-//REG_DWORD
+int aa = KEY_READ;
 BOOL ListDeviceInstancePath()
 {
 	GUID guid1;
