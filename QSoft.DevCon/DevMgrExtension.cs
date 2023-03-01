@@ -19,7 +19,6 @@ namespace QSoft.DevCon
             Console.WriteLine($"hKey.IsInvalid:{hKey.IsInvalid}");
             if (hKey.IsInvalid == false)
             {
-
                 var reg = RegistryKey.FromHandle(hKey);
                 var portname = reg.GetValue("PortName").ToString();
                 reg.Dispose();
@@ -27,12 +26,29 @@ namespace QSoft.DevCon
             }
             return "";
         }
+
+
+        public static string GetDisplayName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb=null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if(hr == false)
+            {
+                hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICEDESC, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            }
+            return strb.ToString();
+        }
+
         public static string GetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             StringBuilder strb = new StringBuilder(2048);
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             if(hr == false)
             {
+                //throw new Exception($"err:{Marshal.GetLastWin32Error()}");
                 Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
             }
             return strb.ToString();

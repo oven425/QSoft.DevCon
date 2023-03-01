@@ -23,31 +23,32 @@ namespace ConsoleApp1
                 //}
                 //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
-                //var infos = "Ports".GetDevClass().FirstOrDefault()
-                //    .Devices()
-                //    .Select(x => new
-                //    {
-                //        portname=x.GetComPortName(),
-                //        friendname = x.GetFriendName(),
-                //        instanceid = x.GetInstanceId(),
-                //        classname = x.GetClass(),
-                //        classguid = x.GetClassGuid(),
-                //        desc = x.GetClassGuid().GetClassDescription(),
-                //        localoath = x.GetLoalPaths()
-                //    });
-                var infos = Guid.Empty
+                var infos = "Ports".GetDevClass().FirstOrDefault()
                     .Devices()
-                    .Where(x=>x.GetInstanceId() == "USB\\VID_058F&PID_6387\\51204A16")
                     .Select(x => new
                     {
+                        portname = x.GetComPortName(),
                         friendname = x.GetFriendName(),
                         instanceid = x.GetInstanceId(),
                         classname = x.GetClass(),
                         classguid = x.GetClassGuid(),
                         desc = x.GetClassGuid().GetClassDescription(),
-                        localoath = x.GetLocationPaths(),
-                        locationinformation=x.GetLoationInformation()
+                        localoath = x.GetLocationPaths()
                     });
+                //var infos = Guid.Empty
+                //    .Devices()
+                //    .Where(x=>x.GetDisplayName() == "USB Mass Storage Device")
+                //    .Select(x => new
+                //    {
+                //        friendname = x.GetFriendName(),
+                //        description = x.GetDescription(),
+                //        instanceid = x.GetInstanceId(),
+                //        classname = x.GetClass(),
+                //        classguid = x.GetClassGuid(),
+                //        desc = x.GetClassGuid().GetClassDescription(),
+                //        localoath = x.GetLocationPaths(),
+                //        locationinformation=x.GetLoationInformation(),
+                //    });
                 foreach (var info in infos)
                 {
                     Console.WriteLine(info);

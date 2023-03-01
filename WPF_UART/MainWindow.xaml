@@ -22,11 +22,60 @@
                     </GridView>
                 </ListView.View>
             </ListView>-->
-            <ListBox ItemsSource="{Binding Uarts}">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Uarts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <GroupBox Header="{Binding FriendName}">
+                                <StackPanel Margin="3">
+                                    <CheckBox IsChecked="{Binding EnableRTS}">EnableRTS</CheckBox>
+                                    <CheckBox IsChecked="{Binding EnableDTR}">EnableDTR</CheckBox>
+                                    <ItemsControl ItemsSource="{Binding Tests}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected}">
+                                                    <TextBlock>
+                                                        <Run Text="{Binding Key}"></Run>
+                                                        <Run>:</Run>
+                                                        <Run Text="{Binding Value}"></Run>
+                                                    </TextBlock>
+                                                </CheckBox>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <!--<RadioButton IsChecked="{Binding Name.IsSelected}">
+                                        <TextBlock>
+                                        <Run>Name:</Run>
+                                        <Run Text="{Binding Name.Value}"></Run>
+                                        </TextBlock>
+                                    </RadioButton>
+                                    <RadioButton IsChecked="{Binding InstanceId.IsSelected}">
+                                        <TextBlock>
+                                        <Run>InstanceId:</Run>
+                                        <Run Text="{Binding InstanceId.Value}"></Run>
+                                        </TextBlock>
+                                    </RadioButton>
+                                    <RadioButton IsChecked="{Binding LocationPath.IsSelected}">
+                                        <TextBlock>
+                                        <Run>LocationPath:</Run>
+                                        <Run Text="{Binding LocationPath.Value}"></Run>
+                                        </TextBlock>
+                                    </RadioButton>-->
+                                </StackPanel>
+                            </GroupBox>
+
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+            </ScrollViewer>
+            <!--<ListBox ItemsSource="{Binding Uarts}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <GroupBox Header="{Binding FriendName}">
                             <StackPanel Margin="3">
+                                <CheckBox IsChecked="{Binding EnableRTS}">EnableRTS</CheckBox>
+                                <CheckBox IsChecked="{Binding EnableDTR}">EnableDTR</CheckBox>
                                 <RadioButton>
                                     <TextBlock>
                                         <Run>Name:</Run>
@@ -53,8 +102,8 @@
                 <ListBox.ItemContainerStyle>
                     <Style></Style>
                 </ListBox.ItemContainerStyle>
-            </ListBox>
-            
+            </ListBox>-->
+            <Button x:Name="button_savesetting" Click="button_savesetting_Click" Grid.Row="1">Save setting</Button>
         </Grid>
     </Grid>
     
