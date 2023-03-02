@@ -17,7 +17,7 @@ using namespace std;
 #include <cfgmgr32.h>
 #include <Usbiodef.h>
 
-int aa = KEY_READ;
+int aa = CM_DEVCAP_HARDWAREDISABLED;
 BOOL ListDeviceInstancePath()
 {
 	GUID guid1;
@@ -91,7 +91,7 @@ int main()
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
 	//GUID_DEVCLASS_PROCESSOR
-	HDEVINFO hDevInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_PORTS, 0L, NULL, DIGCF_PRESENT  | DIGCF_PROFILE);
+	HDEVINFO hDevInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_CAMERA, 0L, NULL, DIGCF_PRESENT  | DIGCF_PROFILE);
 	GUID_DEVINTERFACE_USB_DEVICE;
 	int index = 0;
 	SP_DEVINFO_DATA spDevInfoData = { 0 };
@@ -106,6 +106,16 @@ int main()
 			ULONG problem = 0;
 			CM_Get_DevNode_Status(&status, &problem, spDevInfoData.DevInst, 0);
 			DN_STARTED;
+			DWORD compatibleids;
+			//TCHAR compatibleids[1024] = { 0 };
+			unsigned char bbbs[1024] = { 0 };
+			auto pptype = REG_DWORD;
+			DWORD sss = 0;
+			if (SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_CAPABILITIES, &pptype, bbbs, sizeof(bbbs), &sss) == FALSE)
+			{
+				DWORD err = ::GetLastError();
+				err = 0;
+			}
 			if (!SetupDiGetDeviceRegistryProperty(hDevInfo, &spDevInfoData, SPDRP_CLASS, 0L, (PBYTE)device_desc, 2048, 0))
 			{
 				index++;

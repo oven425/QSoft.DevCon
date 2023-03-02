@@ -16,17 +16,54 @@ namespace QSoft.DevCon
         public static string GetComPortName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             var hKey = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
-            Console.WriteLine($"hKey.IsInvalid:{hKey.IsInvalid}");
+            //Console.WriteLine($"hKey.IsInvalid:{hKey.IsInvalid}");
             if (hKey.IsInvalid == false)
             {
                 var reg = RegistryKey.FromHandle(hKey);
-                var portname = reg.GetValue("PortName").ToString();
-                reg.Dispose();
-                return portname;
+                var subkeynames = reg.GetSubKeyNames();
+                if(subkeynames.Contains("PortName") == true)
+                {
+                    var portname = reg.GetValue("PortName").ToString();
+                    reg.Dispose();
+                    return portname;
+                }
+                
             }
             return "";
         }
 
+        public static IEnumerable<string> GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if (hr == false)
+            {
+            }
+            return null;
+        }
+
+        public static string GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if (hr == false)
+            {
+            }
+            return strb.ToString();
+        }
+
+        public static uint GetCapabilities(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint dd = 0;
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CAPABILITIES, IntPtr.Zero, out dd, 8, IntPtr.Zero);
+            return dd;
+        }
 
         public static string GetDisplayName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb=null)
         {
@@ -42,28 +79,37 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        public static string GetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
-            StringBuilder strb = new StringBuilder(2048);
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             if(hr == false)
             {
                 //throw new Exception($"err:{Marshal.GetLastWin32Error()}");
-                Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
+                //Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
             }
             return strb.ToString();
         }
 
-        public static string GetLocationPaths(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetLocationPaths(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
-            StringBuilder strb = new StringBuilder(2048);
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
 
-        public static string GetLoationInformation(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetLoationInformation(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb=null)
         {
-            StringBuilder strb = new StringBuilder(2048);
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_INFORMATION, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
@@ -329,6 +375,9 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, out uint propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+
         [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, byte[] PropertyBuffer, uint PropertyBufferSize);
         [DllImport("setupapi.dll", SetLastError = true)]
@@ -454,6 +503,18 @@ namespace QSoft.DevCon
         public const uint DIREG_DEV = 0x00000001;         // Open/Create/Delete device key
         public const uint DIREG_DRV = 0x00000002;        // Open/Create/Delete driver key
         public const uint DIREG_BOTH = 0x00000004;        // Delete both driver and Device key
+
+        public const uint CM_DEVCAP_LOCKSUPPORTED = (0x00000001);
+        public const uint CM_DEVCAP_EJECTSUPPORTED = (0x00000002);
+        public const uint CM_DEVCAP_REMOVABLE = (0x00000004);
+        public const uint CM_DEVCAP_DOCKDEVICE = (0x00000008);
+        public const uint CM_DEVCAP_UNIQUEID = (0x00000010);
+        public const uint CM_DEVCAP_SILENTINSTALL = (0x00000020);
+        public const uint CM_DEVCAP_RAWDEVICEOK = (0x00000040);
+        public const uint CM_DEVCAP_SURPRISEREMOVALOK = (0x00000080);
+        public const uint CM_DEVCAP_HARDWAREDISABLED = (0x00000100);
+        public const uint CM_DEVCAP_NONDYNAMIC = (0x00000200);
+        public const uint CM_DEVCAP_SECUREDEVICE = (0x00000400);
 
         internal const int ERROR_MORE_DATA = 0xEA;
         internal const int ERROR_SUCCESS = 0;

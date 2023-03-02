@@ -15,7 +15,8 @@ namespace ConsoleApp1
         {
             try
             {
-
+                int oi = 164;
+                oi = oi & (int)SetupApi.CM_DEVCAP_HARDWAREDISABLED;
                 //var devices = Guid.Empty.Devices();
                 //foreach(var device in devices) 
                 //{
@@ -23,10 +24,12 @@ namespace ConsoleApp1
                 //}
                 //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
-                var infos = "Ports".GetDevClass().FirstOrDefault()
+                var infos = "Camera".GetDevClass().FirstOrDefault()
                     .Devices()
                     .Select(x => new
                     {
+                        hwid = x.GetHardwaeeID(),
+                        cap =x.GetCapabilities(),
                         portname = x.GetComPortName(),
                         friendname = x.GetFriendName(),
                         instanceid = x.GetInstanceId(),
