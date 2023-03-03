@@ -32,7 +32,7 @@ namespace QSoft.DevCon
             return "";
         }
 
-        public static IEnumerable<string> GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static IEnumerable<string> GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
             if (strb == null)
             {
@@ -45,13 +45,29 @@ namespace QSoft.DevCon
             return null;
         }
 
-        public static string GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static string GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
             if (strb == null)
             {
                 strb = new StringBuilder(2048);
             }
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            int reqsize = 0;
+            byte[] bb = new byte[2048];
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, bb, bb.Length, out reqsize);
+            int startindex = 0;
+            while(true)
+            {
+                var findindex = Array.IndexOf(bb, (byte)0, startindex);
+                if(findindex <=0)
+                {
+                    var stirng1 = Encoding.UTF8.GetString(bb, startindex, bb.Length - startindex);
+                    break;
+                }
+                
+                var stirng = Encoding.UTF8.GetString(bb, startindex, findindex - startindex);
+                startindex = findindex + 1;
+            }
+            
             if (hr == false)
             {
             }
@@ -375,6 +391,8 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, byte[] propertyBuffer, int propertyBufferSize, out int requiredSize);
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, out uint propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
 

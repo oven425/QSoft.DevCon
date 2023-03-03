@@ -24,11 +24,15 @@ namespace ConsoleApp1
                 //}
                 //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
-                var infos = "Camera".GetDevClass().FirstOrDefault()
+                var infos1 = Guid.Empty
                     .Devices()
+                    .FirstOrDefault(x => x.GetDisplayName() == "Intel(R) Iris(R) Xe Graphics");
+                var infos = Guid.Empty
+                    .Devices()
+                    .Where(x=>x.GetDisplayName()== "Intel(R) Iris(R) Xe Graphics")
                     .Select(x => new
                     {
-                        hwid = x.GetHardwaeeID(),
+                        hwid = x.GetHardwaeeIDs(),
                         cap =x.GetCapabilities(),
                         portname = x.GetComPortName(),
                         friendname = x.GetFriendName(),
