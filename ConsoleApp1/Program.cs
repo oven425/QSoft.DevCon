@@ -29,19 +29,20 @@ namespace ConsoleApp1
                     .FirstOrDefault(x => x.GetDisplayName() == "Intel(R) Iris(R) Xe Graphics");
                 var infos = Guid.Empty
                     .Devices()
-                    .Where(x=>x.GetDisplayName()== "Intel(R) Iris(R) Xe Graphics")
+                    .Where(x => x.GetDisplayName() == "Intel(R) Iris(R) Xe Graphics")
                     .Select(x => new
                     {
+                        driver = x.GetDriver(),
                         hwid = x.GetHardwaeeIDs(),
-                        cap =x.GetCapabilities(),
+                        cap = x.GetCapabilities(),
                         portname = x.GetComPortName(),
                         friendname = x.GetFriendName(),
                         instanceid = x.GetInstanceId(),
                         classname = x.GetClass(),
                         classguid = x.GetClassGuid(),
                         desc = x.GetClassGuid().GetClassDescription(),
-                        localoath = x.GetLocationPaths()
-                    });
+                        localoaths = x.GetLocationPaths()
+                    }); ;
                 //var infos = Guid.Empty
                 //    .Devices()
                 //    .Where(x=>x.GetDisplayName() == "USB Mass Storage Device")
@@ -58,7 +59,13 @@ namespace ConsoleApp1
                 //    });
                 foreach (var info in infos)
                 {
-                    Console.WriteLine(info);
+                    //info.localoaths.Aggregate("", )
+                    var aaa= info.hwid.Aggregate("HardwareIds: ", (x, y) => $"{x}{y}\r\n{" ".PadRight(13)}");
+                    Console.WriteLine("LocalPaths:");
+                    foreach(var path in  info.localoaths.Skip(1))
+                    {
+                        Console.WriteLine($"{" ".PadRight(11)}{path}");
+                    }
                 }
                 Console.WriteLine("ed");
                 Console.ReadLine();

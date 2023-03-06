@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace QSoft.DevCon
             return "";
         }
 
-        public static IEnumerable<string> GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static string GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
             if (strb == null)
             {
@@ -45,33 +46,41 @@ namespace QSoft.DevCon
             return null;
         }
 
-        public static string GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static List<string> GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
+            List<string> ids = new List<string>();
             if (strb == null)
             {
                 strb = new StringBuilder(2048);
             }
             int reqsize = 0;
-            byte[] bb = new byte[2048];
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, bb, bb.Length, out reqsize);
-            int startindex = 0;
-            while(true)
-            {
-                var findindex = Array.IndexOf(bb, (byte)0, startindex);
-                if(findindex <=0)
-                {
-                    var stirng1 = Encoding.UTF8.GetString(bb, startindex, bb.Length - startindex);
-                    break;
-                }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, null, 0, out reqsize);
+
+            byte[] bb = new byte[reqsize];
+            hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, bb, bb.Length, out reqsize);
+            ids = bb.Split(reqsize);
+            //int startindex = 0;
+            //while(true)
+            //{
+            //    var findindex = Array.IndexOf(bb, (byte)0, startindex);
+            //    if(findindex <=0)
+            //    {
+            //        var stirng1 = Encoding.UTF8.GetString(bb, startindex, bb.Length - startindex);
+            //        ids.Add(stirng1);
+            //        break;
+            //    }
+            //    else if(findindex >= bb.Length-2)
+            //    {
+            //        var stirng1 = Encoding.UTF8.GetString(bb, startindex, bb.Length-2 - startindex);
+            //        ids.Add(stirng1);
+            //        break;
+            //    }
                 
-                var stirng = Encoding.UTF8.GetString(bb, startindex, findindex - startindex);
-                startindex = findindex + 1;
-            }
-            
-            if (hr == false)
-            {
-            }
-            return strb.ToString();
+            //    var stirng = Encoding.UTF8.GetString(bb, startindex, findindex - startindex);
+            //    ids.Add(stirng);
+            //    startindex = findindex + 1;
+            //}
+            return ids;
         }
 
         public static uint GetCapabilities(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
@@ -110,14 +119,43 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        public static string GetLocationPaths(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static List<string> GetLocationPaths(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
-            if (strb == null)
+            byte[] bb = null;
+            int reqsize = 0;
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, null, 0, out reqsize);
+            bb = new byte[reqsize];
+            hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, bb, bb.Length, out reqsize);
+            return bb.Split(reqsize);
+        }
+
+        static List<string> Split(this byte[] src, int src_length)
+        {
+            int src_len = src_length-2;
+            List<string> list = new List<string>();
+            int startindex = 0;
+            while (true)
             {
-                strb = new StringBuilder(2048);
+                var findindex = Array.IndexOf(src, (byte)0, startindex);
+                if (findindex <= 0)
+                {
+                    var stirng1 = Encoding.UTF8.GetString(src, startindex, src_len - startindex);
+                    list.Add(stirng1);
+                    break;
+                }
+                else if (findindex >= src_len)
+                {
+                    var stirng1 = Encoding.UTF8.GetString(src, startindex, src_len - startindex);
+                    list.Add(stirng1);
+                    break;
+                }
+
+                var stirng = Encoding.UTF8.GetString(src, startindex, findindex - startindex);
+                list.Add(stirng);
+                startindex = findindex + 1;
             }
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-            return strb.ToString();
+
+            return list;
         }
 
         public static string GetLoationInformation(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb=null)
@@ -227,6 +265,29 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
+        public static string GetDriver(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DRIVER, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            return strb.ToString();
+        }
+
+        static public string GetLowerFilters(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            int reqsize;
+            //bytep[] buf;
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_ENUMERATOR_NAME, IntPtr.Zero, null, 0, out reqsize);
+            var err = Marshal.GetLastWin32Error();
+            return strb.ToString();
+        }
+
         public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid)
         {
             uint index = 0;
@@ -236,22 +297,30 @@ namespace QSoft.DevCon
                 flags  = flags | DIGCF_ALLCLASSES;
             }
             IntPtr hDevInfo = SetupApi.SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
-            while (true)
+            try
             {
-                SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
-                devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
-                if (SetupApi.SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
+                while (true)
                 {
-                    var err = Marshal.GetLastWin32Error();
-                    SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
-                    yield break;
+                    SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
+                    devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+                    if (SetupApi.SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
+                    {
+                        var err = Marshal.GetLastWin32Error();
+                        //SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
+                        yield break;
+                    }
+                    else
+                    {
+                        yield return (hDevInfo, devinfo);
+                    }
+                    index++;
                 }
-                else
-                {
-                    yield return (hDevInfo, devinfo);
-                }
-                index++;
             }
+            finally
+            {
+                SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
+            }
+
             //SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
         }
 
@@ -277,15 +346,15 @@ namespace QSoft.DevCon
             return index;
         }
 
-        public static void Enable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        {
-            src.ChangeState(true);
-        }
+        //public static void Enable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        //{
+        //    src.ChangeState(true);
+        //}
 
-        public static void Disable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        {
-            src.ChangeState(false);
-        }
+        //public static void Disable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        //{
+        //    src.ChangeState(false);
+        //}
 
         public static int Do<T>(this IEnumerable<T> src, Action<T> action)
         {
