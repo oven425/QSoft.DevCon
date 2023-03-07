@@ -33,6 +33,19 @@ namespace QSoft.DevCon
             return "";
         }
 
+        public static string GetService(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_SERVICE, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if (hr == false)
+            {
+            }
+            return null;
+        }
+
         public static string GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
             if (strb == null)
@@ -46,40 +59,18 @@ namespace QSoft.DevCon
             return null;
         }
 
-        public static List<string> GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static List<string> GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             List<string> ids = new List<string>();
-            if (strb == null)
-            {
-                strb = new StringBuilder(2048);
-            }
             int reqsize = 0;
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, null, 0, out reqsize);
-
+            if(reqsize == 0)
+            {
+                return ids;
+            }
             byte[] bb = new byte[reqsize];
             hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, bb, bb.Length, out reqsize);
             ids = bb.Split(reqsize);
-            //int startindex = 0;
-            //while(true)
-            //{
-            //    var findindex = Array.IndexOf(bb, (byte)0, startindex);
-            //    if(findindex <=0)
-            //    {
-            //        var stirng1 = Encoding.UTF8.GetString(bb, startindex, bb.Length - startindex);
-            //        ids.Add(stirng1);
-            //        break;
-            //    }
-            //    else if(findindex >= bb.Length-2)
-            //    {
-            //        var stirng1 = Encoding.UTF8.GetString(bb, startindex, bb.Length-2 - startindex);
-            //        ids.Add(stirng1);
-            //        break;
-            //    }
-                
-            //    var stirng = Encoding.UTF8.GetString(bb, startindex, findindex - startindex);
-            //    ids.Add(stirng);
-            //    startindex = findindex + 1;
-            //}
             return ids;
         }
 
@@ -124,6 +115,10 @@ namespace QSoft.DevCon
             byte[] bb = null;
             int reqsize = 0;
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, null, 0, out reqsize);
+            if(reqsize == 0)
+            {
+                return new List<string>();
+            }
             bb = new byte[reqsize];
             hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, bb, bb.Length, out reqsize);
             return bb.Split(reqsize);

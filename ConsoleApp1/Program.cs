@@ -24,12 +24,12 @@ namespace ConsoleApp1
                 //}
                 //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
-                var infos1 = Guid.Empty
-                    .Devices()
-                    .FirstOrDefault(x => x.GetDisplayName() == "Intel(R) Iris(R) Xe Graphics");
+                //Guid.Empty
+                //    .Devices()
+                //    .Where(x => x.GetInstanceId() == "").Do(x=>)
+                    
                 var infos = Guid.Empty
                     .Devices()
-                    .Where(x => x.GetDisplayName() == "Intel(R) Iris(R) Xe Graphics")
                     .Select(x => new
                     {
                         driver = x.GetDriver(),
@@ -41,7 +41,8 @@ namespace ConsoleApp1
                         classname = x.GetClass(),
                         classguid = x.GetClassGuid(),
                         desc = x.GetClassGuid().GetClassDescription(),
-                        localoaths = x.GetLocationPaths()
+                        locationpaths = x.GetLocationPaths(),
+                        service = x.GetService()
                     }); ;
                 //var infos = Guid.Empty
                 //    .Devices()
@@ -57,16 +58,21 @@ namespace ConsoleApp1
                 //        localoath = x.GetLocationPaths(),
                 //        locationinformation=x.GetLoationInformation(),
                 //    });
-                foreach (var info in infos)
-                {
-                    //info.localoaths.Aggregate("", )
-                    var aaa= info.hwid.Aggregate("HardwareIds: ", (x, y) => $"{x}{y}\r\n{" ".PadRight(13)}");
-                    Console.WriteLine("LocalPaths:");
-                    foreach(var path in  info.localoaths.Skip(1))
-                    {
-                        Console.WriteLine($"{" ".PadRight(11)}{path}");
-                    }
-                }
+                //foreach (var info in infos)
+                //{
+                //    //info.localoaths.Aggregate("", )
+                //    var hwids = info.hwid.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(13)}{next}",(final)=>$"HardwareIds: {final}");
+                //    //var aaa1 = info.hwid.Aggregate("", (x, y) => $"{x}{y}{Environment.NewLine}{" ".PadRight(13)}", (x)=> $"HardwareIds: {x.Remove(x.LastIndexOf(Environment.NewLine))}");
+                //    //var aaa= info.hwid.Aggregate("HardwareIds: ", (x, y) => $"{x}{y}\r\n{" ".PadRight(13)}");
+                //    Console.WriteLine(hwids);
+                //    var locationpaths = info.locationpaths.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
+                //    Console.WriteLine(locationpaths);
+                //    //Console.WriteLine("LocalPaths:");
+                //    //foreach(var path in  info.locationpaths.Skip(1))
+                //    //{
+                //    //    Console.WriteLine($"{" ".PadRight(11)}{path}");
+                //    //}
+                //}
                 Console.WriteLine("ed");
                 Console.ReadLine();
                 //List<(string instanceid, int port)> changes = new List<(string instanceid, int port)>();
@@ -145,6 +151,4 @@ namespace ConsoleApp1
             }
         }
     }
-
-    
 }
