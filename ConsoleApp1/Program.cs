@@ -24,10 +24,14 @@ namespace ConsoleApp1
                 //}
                 //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
-                //Guid.Empty
-                //    .Devices()
-                //    .Where(x => x.GetInstanceId() == "").Do(x=>)
-                    
+                Guid.Empty
+                    .Devices()
+                    .Where(x => x.GetInstanceId() == "")
+                    .Do(x => ChnageComPort(0,0));
+                int offset = 100;
+                "Ports".GetDevClass().Do((x,index)=> ChnageComPort(0, index+ offset));
+
+
                 var infos = Guid.Empty
                     .Devices()
                     .Select(x => new
@@ -138,6 +142,11 @@ namespace ConsoleApp1
             }
             //Enable(x => x == 5);
             Console.ReadLine();
+        }
+
+        static void ChnageComPort(int from, int to)
+        {
+
         }
 
         static void Enable(Func<int, bool> func)

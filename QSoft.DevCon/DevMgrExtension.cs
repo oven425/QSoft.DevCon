@@ -360,6 +360,18 @@ namespace QSoft.DevCon
             return 0;
         }
 
+        public static int Do<T>(this IEnumerable<T> src, Action<T, int> action)
+        {
+            int index = 0;
+            foreach (var oo in src)
+            {
+                action(oo, index);
+                index++;
+
+            }
+            return 0;
+        }
+
         static public void ChangeState(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, bool isenable)
         {
             uint status;
