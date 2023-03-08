@@ -43,7 +43,26 @@ namespace QSoft.DevCon
             if (hr == false)
             {
             }
-            return null;
+            return strb.ToString();
+        }
+
+        //public static int GetInstallState(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        //{
+        //    uint installstate = 0;
+        //    var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_INSTALL_STATE, IntPtr.Zero, out installstate, 4, IntPtr.Zero);
+        //    if (hr == false)
+        //    {
+        //        Console.WriteLine($"GetInstallState: {(uint)Marshal.GetLastWin32Error()}");
+        //    }
+        //    return 0;
+        //}
+
+        public static bool IsConnect(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint installstate = 0;
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_INSTALL_STATE, IntPtr.Zero, out installstate, 4, IntPtr.Zero);
+
+            return hr;
         }
 
         public static string GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
@@ -198,6 +217,8 @@ namespace QSoft.DevCon
             return guid;
         }
 
+
+
         public static string GetClassDescription(this Guid src, StringBuilder strb = null)
         {
             if (strb == null)
@@ -283,10 +304,15 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid)
+        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice=false)
         {
             uint index = 0;
+
             uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
+            if(showhiddendevice==true)
+            {
+                flags = DIGCF_PROFILE;
+            }
             if (guid == Guid.Empty)
             {
                 flags  = flags | DIGCF_ALLCLASSES;
@@ -317,6 +343,22 @@ namespace QSoft.DevCon
             }
 
             //SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
+        }
+
+        public static int Remove(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
+        {
+            int index = 0;
+            foreach (var oo in src)
+            {
+                var devdata = oo.devdata;
+                var hr = SetupApi.SetupDiRemoveDevice(oo.dev, ref devdata);
+                if(hr==false)
+                {
+                    throw new Exception($"SetupDiRemoveDevice fail, errcoed{Marshal.GetLastWin32Error()}");
+                }
+                index = index + 1;
+            }
+            return index;
         }
 
         public static int Enable(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
@@ -506,7 +548,8 @@ namespace QSoft.DevCon
         public const int DICS_PROPCHANGE = 0x00000003;
         public const int DICS_START = 0x00000004;
         public const int DICS_STOP = 0x00000005;
-
+        [DllImport("cfgmgr32.dll", SetLastError = true)]
+        public static extern bool SetupDiRemoveDevice(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData);
 
         [DllImport("cfgmgr32.dll", SetLastError = true)]
         public static extern int CM_Get_DevNode_Status(out UInt32 status, out UInt32 probNum, UInt32 devInst, int flags);

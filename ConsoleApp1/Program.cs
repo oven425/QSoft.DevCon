@@ -24,30 +24,32 @@ namespace ConsoleApp1
                 //}
                 //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
-                Guid.Empty
-                    .Devices()
-                    .Where(x => x.GetInstanceId() == "")
-                    .Do(x => ChnageComPort(0,0));
-                int offset = 100;
-                "Ports".GetDevClass().Do((x,index)=> ChnageComPort(0, index+ offset));
 
 
+
+                //var infos = "Ports".GetDevClass().FirstOrDefault()
                 var infos = Guid.Empty
-                    .Devices()
+                    .Devices(false)
                     .Select(x => new
                     {
                         driver = x.GetDriver(),
                         hwid = x.GetHardwaeeIDs(),
                         cap = x.GetCapabilities(),
                         portname = x.GetComPortName(),
+                        description = x.GetDescription(),
                         friendname = x.GetFriendName(),
                         instanceid = x.GetInstanceId(),
                         classname = x.GetClass(),
                         classguid = x.GetClassGuid(),
                         desc = x.GetClassGuid().GetClassDescription(),
                         locationpaths = x.GetLocationPaths(),
-                        service = x.GetService()
+                        isconnect = x.IsConnect(),
+                        service = x.GetService(),
                     }); ;
+                //foreach (var info in infos)
+                //{
+                //    Console.WriteLine(info);
+                //}
                 //var infos = Guid.Empty
                 //    .Devices()
                 //    .Where(x=>x.GetDisplayName() == "USB Mass Storage Device")
@@ -62,21 +64,22 @@ namespace ConsoleApp1
                 //        localoath = x.GetLocationPaths(),
                 //        locationinformation=x.GetLoationInformation(),
                 //    });
-                //foreach (var info in infos)
-                //{
-                //    //info.localoaths.Aggregate("", )
-                //    var hwids = info.hwid.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(13)}{next}",(final)=>$"HardwareIds: {final}");
-                //    //var aaa1 = info.hwid.Aggregate("", (x, y) => $"{x}{y}{Environment.NewLine}{" ".PadRight(13)}", (x)=> $"HardwareIds: {x.Remove(x.LastIndexOf(Environment.NewLine))}");
-                //    //var aaa= info.hwid.Aggregate("HardwareIds: ", (x, y) => $"{x}{y}\r\n{" ".PadRight(13)}");
-                //    Console.WriteLine(hwids);
-                //    var locationpaths = info.locationpaths.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
-                //    Console.WriteLine(locationpaths);
-                //    //Console.WriteLine("LocalPaths:");
-                //    //foreach(var path in  info.locationpaths.Skip(1))
-                //    //{
-                //    //    Console.WriteLine($"{" ".PadRight(11)}{path}");
-                //    //}
-                //}
+                foreach (var info in infos)
+                {
+                    Console.WriteLine($"CalssMame: {info.classname}");
+                    Console.WriteLine($"FriendName: {info.friendname}");
+                    Console.WriteLine($"GetDescription: {info.description}");
+                    Console.WriteLine($"InstanceId: {info.instanceid}");
+                    var hwids = info.hwid.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(13)}{next}", (final) => $"HardwareIds: {final}");
+                    //var aaa1 = info.hwid.Aggregate("", (x, y) => $"{x}{y}{Environment.NewLine}{" ".PadRight(13)}", (x)=> $"HardwareIds: {x.Remove(x.LastIndexOf(Environment.NewLine))}");
+                    //var aaa= info.hwid.Aggregate("HardwareIds: ", (x, y) => $"{x}{y}\r\n{" ".PadRight(13)}");
+                    Console.WriteLine(hwids);
+                    var locationpaths = info.locationpaths.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
+                    Console.WriteLine(locationpaths);
+                    Console.WriteLine($"Service: {info.service}");
+                    Console.WriteLine($"Driver: {info.driver}");
+                    Console.WriteLine("-----------------");
+                }
                 Console.WriteLine("ed");
                 Console.ReadLine();
                 //List<(string instanceid, int port)> changes = new List<(string instanceid, int port)>();
@@ -144,11 +147,6 @@ namespace ConsoleApp1
             Console.ReadLine();
         }
 
-        static void ChnageComPort(int from, int to)
-        {
-
-        }
-
         static void Enable(Func<int, bool> func)
         {
             for(int i=0; i<100; i++)
@@ -159,5 +157,8 @@ namespace ConsoleApp1
                 }
             }
         }
+
+
+
     }
 }
