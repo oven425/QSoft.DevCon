@@ -129,6 +129,19 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
+        public static uint GetBusNumber(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint dd = 0;
+            int reqeize = 0;
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_BUSNUMBER, IntPtr.Zero, null, 0, out reqeize);
+            if(hr == false)
+            {
+                var err = Marshal.GetLastWin32Error();
+                err = 0;
+            }
+            return dd;
+        }
+
         public static List<string> GetLocationPaths(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             byte[] bb = null;
@@ -217,8 +230,16 @@ namespace QSoft.DevCon
             return guid;
         }
 
-
-
+        
+        public static string GetEnumerator_Name(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_ENUMERATOR_NAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            return strb.ToString();
+        }
         public static string GetClassDescription(this Guid src, StringBuilder strb = null)
         {
             if (strb == null)
@@ -291,19 +312,21 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        static public string GetLowerFilters(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        static public IntPtr GetICon(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
-            if (strb == null)
-            {
-                strb = new StringBuilder(2048);
-            }
-            int reqsize;
-            //bytep[] buf;
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_ENUMERATOR_NAME, IntPtr.Zero, null, 0, out reqsize);
-            var err = Marshal.GetLastWin32Error();
-            return strb.ToString();
+            IntPtr icon;
+            
+            var hr = SetupApi.SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 0, 0, 0, out icon);
+            return icon;
         }
 
+        public static void GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            if(SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, 2) == true)
+            {
+                //SetupApi.SetupDiEnumDriverInfo();
+            }
+        }
         public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice=false)
         {
             uint index = 0;
@@ -341,8 +364,6 @@ namespace QSoft.DevCon
             {
                 SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
             }
-
-            //SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
         }
 
         public static int Remove(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
@@ -382,16 +403,6 @@ namespace QSoft.DevCon
             }
             return index;
         }
-
-        //public static void Enable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        //{
-        //    src.ChangeState(true);
-        //}
-
-        //public static void Disable(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        //{
-        //    src.ChangeState(false);
-        //}
 
         public static int Do<T>(this IEnumerable<T> src, Action<T> action)
         {
@@ -474,6 +485,20 @@ namespace QSoft.DevCon
         }
     }
 
+    public class SafeIconHandle : SafeHandleMinusOneIsInvalid
+    {
+        public SafeIconHandle(bool ownsHandle) : base(ownsHandle)
+        {
+        }
+
+        public override bool IsInvalid => throw new NotImplementedException();
+
+        protected override bool ReleaseHandle()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 
     public static class SetupApi
     {
@@ -497,6 +522,48 @@ namespace QSoft.DevCon
             public UInt32 DevInst;
             public UIntPtr Reserved;
         }
+        const int LINE_LEN= 256;
+        const int MAX_PATH = 260;
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SP_DRVINFO_DATA
+        {
+            public UInt32 cbSize;
+            public UInt32 DriverType;
+            public UIntPtr Reserved;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            public string Description;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            public string MfgName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            public string ProviderName;
+            //char Description[LINE_LEN];
+            //char MfgName[LINE_LEN];
+            //char ProviderName[LINE_LEN];
+            public System.Runtime.InteropServices.ComTypes.FILETIME InfDate;
+            public ulong DriverVersion;
+        };
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DRVINFO_DETAIL_DATA
+        {
+            public uint cbSize;
+            public System.Runtime.InteropServices.ComTypes.FILETIME InfDate;
+            public uint CompatIDsOffset;
+            public uint CompatIDsLength;
+            public UIntPtr Reserved;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            public string SectionName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260 /* this must be synchronized with the C++ code! */)]
+            public string InfFileName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            public string DrvDescription;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 1)]
+            public String HardwareID;
+        };
+
+
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool SetupDiLoadDeviceIcon(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
+
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, StringBuilder DeviceInstanceId, int DeviceInstanceIdSize, IntPtr RequiredSize);
 
@@ -504,9 +571,25 @@ namespace QSoft.DevCon
         public static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
+
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiBuildDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData,int DriverType);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiEnumDriverInfo(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType, int MemberIndex, out SP_DRVINFO_DATA DriverInfoData);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiGetDriverInfoDetailW(IntPtr DeviceInfoSet,
+  ref SP_DEVINFO_DATA DeviceInfoData,
+  SP_DRVINFO_DATA DriverInfoData,
+  out DRVINFO_DETAIL_DATA DriverInfoDetailData,
+  uint DriverInfoDetailDataSize,
+  out uint RequiredSize
+);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiDestroyDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType);
+
+
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
-
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
         [DllImport("setupapi.dll", SetLastError = true)]
@@ -533,7 +616,7 @@ namespace QSoft.DevCon
     uint propertyBufferSize,
     out UInt32 requiredSize
     );
-
+        
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData, uint pProperty, string pPropertyBuffer, int pPropertyBufferSize);

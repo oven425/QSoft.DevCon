@@ -25,7 +25,8 @@ namespace ConsoleApp1
                 //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
 
-
+                //var camera_icons = "Camera".GetDevClass().FirstOrDefault().Devices()
+                //    .Select(x => x.GetICon()).ToList();
 
                 //var infos = "Ports".GetDevClass().FirstOrDefault()
                 var infos = Guid.Empty
@@ -45,6 +46,8 @@ namespace ConsoleApp1
                         locationpaths = x.GetLocationPaths(),
                         isconnect = x.IsConnect(),
                         service = x.GetService(),
+                        busnumber = x.GetBusNumber(),
+                        enumeratorname = x.GetEnumerator_Name()
                     }); ;
                 //foreach (var info in infos)
                 //{
@@ -78,6 +81,8 @@ namespace ConsoleApp1
                     Console.WriteLine(locationpaths);
                     Console.WriteLine($"Service: {info.service}");
                     Console.WriteLine($"Driver: {info.driver}");
+                    Console.WriteLine($"BusNumber: {info.busnumber}");
+                    Console.WriteLine($"EnumeratorName: {info.enumeratorname}");
                     Console.WriteLine("-----------------");
                 }
                 Console.WriteLine("ed");
