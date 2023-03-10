@@ -320,12 +320,18 @@ namespace QSoft.DevCon
             return icon;
         }
 
-        public static void GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             if(SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, 2) == true)
             {
-                //SetupApi.SetupDiEnumDriverInfo();
+                int memberindex = 0;
+                SP_DRVINFO_DATA dvrinfo;
+                var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, 2, memberindex, out dvrinfo);
+                var err = Marshal.GetLastWin32Error();
+
+                
             }
+            return "";
         }
         public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice=false)
         {

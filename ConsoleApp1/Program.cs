@@ -47,7 +47,8 @@ namespace ConsoleApp1
                         isconnect = x.IsConnect(),
                         service = x.GetService(),
                         busnumber = x.GetBusNumber(),
-                        enumeratorname = x.GetEnumerator_Name()
+                        enumeratorname = x.GetEnumerator_Name(),
+                        dirveinfo = x.GetDriverInfo()
                     }); ;
                 //foreach (var info in infos)
                 //{
