@@ -334,8 +334,8 @@ namespace QSoft.DevCon
                 ltime = ltime << 32;
                 ltime = ltime + dvrinfo.InfDate.dwLowDateTime;
                 var dd = DateTime.FromFileTime(ltime);
-                
 
+                //https://www.itread01.com/article/1480521605.html
 
             }
             return "";
