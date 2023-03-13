@@ -322,14 +322,21 @@ namespace QSoft.DevCon
 
         public static string GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
-            if(SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, 2) == true)
+            if(SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER) == true)
             {
                 int memberindex = 0;
-                SP_DRVINFO_DATA dvrinfo;
-                var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, 2, memberindex, out dvrinfo);
+                SP_DRVINFO_DATA dvrinfo = new SP_DRVINFO_DATA();
+                dvrinfo.cbSize = (uint)Marshal.SizeOf(typeof(SP_DRVINFO_DATA));
+                //dvrinfo.cbSize = 1564;
+                var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER, memberindex, ref dvrinfo);
                 var err = Marshal.GetLastWin32Error();
-
+                long ltime = dvrinfo.InfDate.dwHighDateTime;
+                ltime = ltime << 32;
+                ltime = ltime + dvrinfo.InfDate.dwLowDateTime;
+                var dd = DateTime.FromFileTime(ltime);
                 
+
+
             }
             return "";
         }
@@ -520,7 +527,7 @@ namespace QSoft.DevCon
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         public static extern int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource, int dwMessageId, int dwLanguageZId, ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
         public struct SP_DEVINFO_DATA
         {
             public UInt32 cbSize;
@@ -528,19 +535,18 @@ namespace QSoft.DevCon
             public UInt32 DevInst;
             public UIntPtr Reserved;
         }
-        const int LINE_LEN= 256;
-        const int MAX_PATH = 260;
-        [StructLayout(LayoutKind.Sequential)]
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
         public struct SP_DRVINFO_DATA
         {
             public UInt32 cbSize;
             public UInt32 DriverType;
-            public UIntPtr Reserved;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            public IntPtr Reserved;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256 /* this must be synchronized with the C++ code! */)]
             public string Description;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256 /* this must be synchronized with the C++ code! */)]
             public string MfgName;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 /* this must be synchronized with the C++ code! */)]
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256 /* this must be synchronized with the C++ code! */)]
             public string ProviderName;
             //char Description[LINE_LEN];
             //char MfgName[LINE_LEN];
@@ -580,8 +586,11 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiBuildDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData,int DriverType);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiEnumDriverInfo(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType, int MemberIndex, out SP_DRVINFO_DATA DriverInfoData);
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern bool SetupDiEnumDriverInfo(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType, int MemberIndex, ref SP_DRVINFO_DATA DriverInfoData);
+        //[DllImport("setupapi.dll", SetLastError = true)]
+        //public static extern bool SetupDiEnumDriverInfo(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType, int MemberIndex, out SP_DRVINFO_DATA DriverInfoData);
+
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDriverInfoDetailW(IntPtr DeviceInfoSet,
   ref SP_DEVINFO_DATA DeviceInfoData,
@@ -662,6 +671,11 @@ namespace QSoft.DevCon
             public int cbSize;
             public int InstallFunction;
         };
+
+        public static int SPDIT_NODRIVER = 0x00000000;
+        public static int SPDIT_CLASSDRIVER = 0x00000001;
+        public static int SPDIT_COMPATDRIVER = 0x00000002;
+
         public static uint DN_ROOT_ENUMERATED = 0x00000001; // Was enumerated by ROOT
         public static uint DN_DRIVER_LOADED = 0x00000002; // Has Register_Device_Driver
         public static uint DN_ENUM_LOADED = 0x00000004; // Has Register_Enumerator

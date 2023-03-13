@@ -28,8 +28,8 @@ namespace ConsoleApp1
                 //var camera_icons = "Camera".GetDevClass().FirstOrDefault().Devices()
                 //    .Select(x => x.GetICon()).ToList();
 
-                //var infos = "Ports".GetDevClass().FirstOrDefault()
-                var infos = Guid.Empty
+                var infos = "Camera".GetDevClass().FirstOrDefault()
+                //var infos = Guid.Empty
                     .Devices(false)
                     .Select(x => new
                     {

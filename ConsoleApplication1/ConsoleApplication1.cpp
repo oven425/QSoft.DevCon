@@ -85,6 +85,9 @@ int main()
 {
 	//QSoft::DevCon::DevMgr devmgr;
 	//devmgr.Enable([](auto dev) {return true; });
+	//SPDIT_COMPATDRIVER
+	SP_DRVINFO_DATA sp = { 0 };
+	auto cbSize = sizeof(sp);
 	auto ii = GUID_DEVINTERFACE_MOUSE;
 	//ListDeviceInstancePath();
 	//從 EnumWDMDriver 開始找
