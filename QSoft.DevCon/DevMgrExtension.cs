@@ -631,7 +631,19 @@ namespace QSoft.DevCon
     uint propertyBufferSize,
     out UInt32 requiredSize
     );
-        
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct DEVPROPKEY
+        {
+            public Guid fmtid;
+            public UInt32 pid;
+        }
+
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern bool SetupDiGetDeviceProperty(
+     IntPtr deviceInfoSet,
+     ref SP_DEVINFO_DATA DeviceInfoData,
+     ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, UInt32 propertyBufferSize, out UInt32 requiredSize, UInt32 flags);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData, uint pProperty, string pPropertyBuffer, int pPropertyBufferSize);
