@@ -58,7 +58,7 @@ namespace ConsoleApp1
                     Console.WriteLine($"{oo.usb.id} letter:{oo.letter}");
                     var locationpaths = oo.usb.location.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
                     Console.WriteLine(locationpaths);
-
+                    Console.WriteLine();
                 }
                 Console.ReadLine();
 
