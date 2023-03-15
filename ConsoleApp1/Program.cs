@@ -15,6 +15,10 @@ namespace ConsoleApp1
         {
             try
             {
+                var disks = "DiskDrive".GetDevClass().FirstOrDefault().Devices().Select(x=>x.GetPhysicalDeviceObjectName());
+                //var usbs = "USB".GetDevClass().FirstOrDefault().Devices();
+                //var groupj = disks.GroupJoin(usbs, x => x.GetParent(), y => y.GetInstanceId(), (disk, usb) => new { disk, usb });
+                //var left = groupj.SelectMany(x=>x.usb.DefaultIfEmpty(), (x,y)=> new { x,y });
                 int oi = 164;
                 oi = oi & (int)SetupApi.CM_DEVCAP_HARDWAREDISABLED;
                 //var devices = Guid.Empty.Devices();
@@ -22,17 +26,18 @@ namespace ConsoleApp1
                 //{
                 //    device.GetFriendName();
                 //}
-                //var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClass(), y => y.GetClassGuid());
+                var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
 
                 //var camera_icons = "Camera".GetDevClass().FirstOrDefault().Devices()
                 //    .Select(x => x.GetICon()).ToList();
 
-                var infos = "Camera".GetDevClass().FirstOrDefault()
+                var infos = "DiskDrive".GetDevClass().FirstOrDefault()
                 //var infos = Guid.Empty
                     .Devices(false)
                     .Select(x => new
                     {
+                        parent = x.GetParent(),
                         driver = x.GetDriver(),
                         hwid = x.GetHardwaeeIDs(),
                         cap = x.GetCapabilities(),

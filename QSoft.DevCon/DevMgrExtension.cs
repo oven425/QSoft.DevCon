@@ -46,16 +46,44 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        //public static int GetInstallState(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        //{
-        //    uint installstate = 0;
-        //    var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_INSTALL_STATE, IntPtr.Zero, out installstate, 4, IntPtr.Zero);
-        //    if (hr == false)
-        //    {
-        //        Console.WriteLine($"GetInstallState: {(uint)Marshal.GetLastWin32Error()}");
-        //    }
-        //    return 0;
-        //}
+        public static string GetParent(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint propertytype = 0;
+            StringBuilder strb = null;
+            int reqsz = 0;
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Parent, out propertytype, strb, 0, out reqsz, 0);
+            strb = new StringBuilder(reqsz);
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Parent, out propertytype, strb, strb.Capacity, out reqsz, 0);
+
+
+            return strb.ToString();
+        }
+
+        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if (hr == false)
+            {
+            }
+            return strb.ToString();                                                      //
+        }
+
+        public static string GetChildren(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint propertytype = 0;
+            StringBuilder strb = null;
+            int reqsz = 0;
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Children, out propertytype, strb, 0, out reqsz, 0);
+            strb = new StringBuilder(reqsz);
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Children, out propertytype, strb, strb.Capacity, out reqsz, 0);
+
+
+            return strb.ToString();
+        }
 
         public static bool IsConnect(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
@@ -633,17 +661,18 @@ namespace QSoft.DevCon
     );
 
         [StructLayout(LayoutKind.Sequential)]
-        struct DEVPROPKEY
+        public struct DEVPROPKEY
         {
             public Guid fmtid;
             public UInt32 pid;
         }
 
+        public static DEVPROPKEY DEVPKEY_Device_Parent = new DEVPROPKEY() {fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=8 };
+        public static DEVPROPKEY DEVPKEY_Device_Children = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
+
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern bool SetupDiGetDeviceProperty(
-     IntPtr deviceInfoSet,
-     ref SP_DEVINFO_DATA DeviceInfoData,
-     ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, UInt32 propertyBufferSize, out UInt32 requiredSize, UInt32 flags);
+        public static extern bool SetupDiGetDeviceProperty(
+     IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData, uint pProperty, string pPropertyBuffer, int pPropertyBufferSize);

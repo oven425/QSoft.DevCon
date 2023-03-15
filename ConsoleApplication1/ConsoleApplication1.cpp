@@ -80,6 +80,7 @@ BOOL ListDeviceInstancePath()
 }
 
 #include "DevMgr.h"
+#include <Devpropdef.h>
 #include <devguid.h>
 int main()
 {
@@ -94,17 +95,37 @@ int main()
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
 	//GUID_DEVCLASS_PROCESSOR
-	HDEVINFO hDevInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_CAMERA, 0L, NULL, DIGCF_PRESENT  | DIGCF_PROFILE);
+	//GUID_DEVCLASS_DISKDRIVE
+	//GUID_DEVCLASS_CAMERA
+	GUID_DEVCLASS_VOLUME;
+	HDEVINFO hDevInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, 0L, NULL, DIGCF_PRESENT  | DIGCF_PROFILE);
 	GUID_DEVINTERFACE_USB_DEVICE;
 	int index = 0;
 	SP_DEVINFO_DATA spDevInfoData = { 0 };
 	spDevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
 	while (true)
 	{
-		
+		TCHAR tarhet[200] = { 0 };
+		QueryDosDevice(_T("D:"), tarhet, 100);
 		TCHAR device_desc[MAXCHAR] = { 0 };
 		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == TRUE)
 		{
+			//{4340a6c5-93fa-4706-972c-7b648008a5a7} 8
+			DEVPROPKEY parent;
+			parent.pid = 8;
+			
+			IIDFromString(L"{4340a6c5-93fa-4706-972c-7b648008a5a7}", &parent.fmtid);
+			DWORD reqsz = 0;
+			TCHAR parentstr[300] = { 0 };
+			auto bb11 = SetupDiGetDeviceProperty(hDevInfo, &spDevInfoData, &parent, &parent.pid, (PBYTE)parentstr, 300, &reqsz, 0);
+			if (bb11 == FALSE)
+			{
+				auto err = ::GetLastError();
+				err = 0;
+			}
+			DWORD reqcount = 0;
+			DEVPROPKEY keys[100] = { 0 };
+			auto gethr = SetupDiGetDevicePropertyKeys(hDevInfo, &spDevInfoData, keys, 100, &reqcount, 0);
 			ULONG status = 0;
 			ULONG problem = 0;
 			CM_Get_DevNode_Status(&status, &problem, spDevInfoData.DevInst, 0);
