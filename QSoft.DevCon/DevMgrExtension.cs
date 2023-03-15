@@ -15,14 +15,14 @@ namespace QSoft.DevCon
 {
     public static class DevMgrExtension
     {
-        public static IEnumerable<string> GetVolumeName()
+        public static IEnumerable<(string letter, string target)> GetVolumeName()
         {
             var drives= System.IO.DriveInfo.GetDrives();
             foreach(var oo in drives)
             {
                 StringBuilder strb = new StringBuilder(1024);
                 SetupApi.QueryDosDevice(oo.Name.Replace("\\",""), strb, strb.Capacity);
-                yield return strb.ToString();
+                yield return (oo.Name, strb.ToString());
             }
         }
 

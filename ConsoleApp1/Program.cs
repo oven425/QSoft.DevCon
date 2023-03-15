@@ -12,10 +12,18 @@ namespace ConsoleApp1
     {
         public bool Equals(string x, string y)
         {
-            System.Diagnostics.Trace.WriteLine($"x:{x}");
-            System.Diagnostics.Trace.WriteLine($"y:{y}");
+            if(x.Contains("USBSTOR") == true && y.Contains("USBSTOR"))
+            {
+                var xx = x.Replace("#", "\\").ToUpperInvariant();
+                var yy = y.ToUpperInvariant();
+                var bb = xx.Contains(yy);
 
-            return x.ToUpperInvariant().Contains(y.ToUpperInvariant());
+                System.Diagnostics.Trace.WriteLine($"x:{xx}");
+                System.Diagnostics.Trace.WriteLine($"y:{yy}");
+                return bb;
+            }
+            return false;
+            
         }
 
         public int GetHashCode(string obj)
@@ -30,16 +38,36 @@ namespace ConsoleApp1
         {
             try
             {
-                var drives = System.IO.DriveInfo.GetDrives();
+                var letters = DevMgrExtension.GetVolumeName().ToList();
 
 
-                DevMgrExtension.GetVolumeName().ToList();
-                var sssd = "Volume".Devices().Select(x => new { parent = x.GetChildren(), id = x.GetInstanceId(), physicalname = x.GetPhysicalDeviceObjectName() });
-
-                var disks = "DiskDrive".Devices().Select(x => new { id = x.GetInstanceId(),child = x.GetChildren(), parent = x.GetParent() });
+                var sssd = "Volume".Devices().Select(x => new { child = x.GetChildren(), parent = x.GetParent(), id = x.GetInstanceId(), physicalname = x.GetPhysicalDeviceObjectName() });
+                var f1 = letters.Join(sssd, x => x.target, y => y.physicalname, (x, y) => new { x,y});
+                var disks = "DiskDrive".Devices().Select(x => new { location=x.GetLocationPaths(), id = x.GetInstanceId(),child = x.GetChildren(), parent = x.GetParent() });
                 var usbs = "USB".GetDevClass().FirstOrDefault().Devices().Select(x => new { id = x.GetInstanceId(), children = x.GetChildren(),location = x.GetLocationPaths() });
 
-                var join = disks.Join(sssd, x => x.id, y => y.id, (x,y)=>new {x,y}, new DD()).ToList();
+                //var jj = usbs.Join(disks, x => x.id, y => y.parent, (x, y) => new { x, y });
+                //var join = disks.Join(sssd, x => x.id, y => y.id, (x, y) => new { x, y }, new DD()).ToList();
+
+                var j1 = usbs.GroupJoin(sssd, x => x.children, y => y.id, (x, y) => new { x, y }, new DD())
+                    .SelectMany(x => x.y.DefaultIfEmpty(), (x, y) => new {x, y?.physicalname })
+                    .GroupJoin(letters, x=>x.physicalname, y=>y.target, (x,y)=>new {x,y })
+                    .SelectMany(x=>x.y.DefaultIfEmpty(),(x,y)=>new {usb=x.x.x.x,letter=y.letter });
+                foreach(var oo in j1)
+                {
+                    Console.WriteLine($"{oo.usb.id} letter:{oo.letter}");
+                    var locationpaths = oo.usb.location.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
+                    Console.WriteLine(locationpaths);
+
+                }
+                Console.ReadLine();
+
+                var j2 = disks.GroupJoin(sssd, x => x.id, y => y.id, (x, y) => new { x, y }, new DD())
+                    .SelectMany(x => x.y.DefaultIfEmpty(), (x, y) => new { x, y })
+                    .Where(x => x.y != null).Select(x=>new { usb=x.x, phi=x.y.physicalname}).ToList();
+
+                //var mmp = usbs.GroupJoin(sssd, x => x.id, y => y.id, (x, y) => new { x,y}, new DD())
+                //    .SelectMany(x=>x.y.DefaultIfEmpty(), (x,y)=>new {x,y }).ToList();
 
                 //var usbs = "USB".GetDevClass().FirstOrDefault().Devices();
                 //var groupj = disks.GroupJoin(usbs, x => x.GetParent(), y => y.GetInstanceId(), (disk, usb) => new { disk, usb });
