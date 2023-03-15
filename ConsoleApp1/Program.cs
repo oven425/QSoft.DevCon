@@ -8,14 +8,39 @@ using System.Threading.Tasks;
 
 namespace ConsoleApp1
 {
+    public class DD : IEqualityComparer<string>
+    {
+        public bool Equals(string x, string y)
+        {
+            System.Diagnostics.Trace.WriteLine($"x:{x}");
+            System.Diagnostics.Trace.WriteLine($"y:{y}");
 
+            return x.ToUpperInvariant().Contains(y.ToUpperInvariant());
+        }
+
+        public int GetHashCode(string obj)
+        {
+            int hCode = obj.GetHashCode() ^ obj.GetHashCode();
+            return hCode.GetHashCode();
+        }
+    }
     class Program
     {
         static void Main(string[] args)
         {
             try
             {
-                var disks = "DiskDrive".GetDevClass().FirstOrDefault().Devices().Select(x=>x.GetPhysicalDeviceObjectName());
+                var drives = System.IO.DriveInfo.GetDrives();
+
+
+                DevMgrExtension.GetVolumeName().ToList();
+                var sssd = "Volume".Devices().Select(x => new { parent = x.GetChildren(), id = x.GetInstanceId(), physicalname = x.GetPhysicalDeviceObjectName() });
+
+                var disks = "DiskDrive".Devices().Select(x => new { id = x.GetInstanceId(),child = x.GetChildren(), parent = x.GetParent() });
+                var usbs = "USB".GetDevClass().FirstOrDefault().Devices().Select(x => new { id = x.GetInstanceId(), children = x.GetChildren(),location = x.GetLocationPaths() });
+
+                var join = disks.Join(sssd, x => x.id, y => y.id, (x,y)=>new {x,y}, new DD()).ToList();
+
                 //var usbs = "USB".GetDevClass().FirstOrDefault().Devices();
                 //var groupj = disks.GroupJoin(usbs, x => x.GetParent(), y => y.GetInstanceId(), (disk, usb) => new { disk, usb });
                 //var left = groupj.SelectMany(x=>x.usb.DefaultIfEmpty(), (x,y)=> new { x,y });
@@ -26,7 +51,7 @@ namespace ConsoleApp1
                 //{
                 //    device.GetFriendName();
                 //}
-                var groups1 = Guid.Empty.Devices().GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
+                var groups1 = Guid.Empty.Devices(true).GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
                 //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
 
                 //var camera_icons = "Camera".GetDevClass().FirstOrDefault().Devices()

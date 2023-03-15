@@ -3,6 +3,7 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Security.Cryptography;
@@ -14,6 +15,17 @@ namespace QSoft.DevCon
 {
     public static class DevMgrExtension
     {
+        public static IEnumerable<string> GetVolumeName()
+        {
+            var drives= System.IO.DriveInfo.GetDrives();
+            foreach(var oo in drives)
+            {
+                StringBuilder strb = new StringBuilder(1024);
+                SetupApi.QueryDosDevice(oo.Name.Replace("\\",""), strb, strb.Capacity);
+                yield return strb.ToString();
+            }
+        }
+
         public static string GetComPortName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             var hKey = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
@@ -368,6 +380,12 @@ namespace QSoft.DevCon
             }
             return "";
         }
+
+        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
+        {
+            return src.GetDevClass().FirstOrDefault().Devices();
+        }
+
         public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice=false)
         {
             uint index = 0;
@@ -676,7 +694,8 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData, uint pProperty, string pPropertyBuffer, int pPropertyBufferSize);
-
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern uint QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
         public const int DIGCF_DEFAULT = 0x1;
         public const int DIGCF_PRESENT = 0x2;
         public const int DIGCF_ALLCLASSES = 0x4;
