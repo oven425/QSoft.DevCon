@@ -38,7 +38,7 @@ namespace ConsoleApp1
         {
             try
             {
-                var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName());
+                var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
                 var letters = DevMgrExtension.GetVolumeName().ToList();
 
 

@@ -682,7 +682,7 @@ namespace QSoft.DevCon
             public Guid fmtid;
             public UInt32 pid;
         }
-
+        //https://www.magnumdb.com/search?q=filename%3A%22FunctionDiscoveryKeys_devpkey.h%22
         public static DEVPROPKEY DEVPKEY_Device_Parent = new DEVPROPKEY() {fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=8 };
         public static DEVPROPKEY DEVPKEY_Device_Children = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
 
