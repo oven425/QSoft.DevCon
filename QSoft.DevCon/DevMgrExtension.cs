@@ -32,15 +32,13 @@ namespace QSoft.DevCon
             //Console.WriteLine($"hKey.IsInvalid:{hKey.IsInvalid}");
             if (hKey.IsInvalid == false)
             {
-                var reg = RegistryKey.FromHandle(hKey);
-                var subkeynames = reg.GetSubKeyNames();
-                if(subkeynames.Contains("PortName") == true)
+                using (var reg = RegistryKey.FromHandle(hKey))
                 {
-                    var portname = reg.GetValue("PortName").ToString();
-                    reg.Dispose();
+                    var portname = reg?.GetValue("PortName").ToString();
                     return portname;
                 }
-                
+                    
+
             }
             return "";
         }
