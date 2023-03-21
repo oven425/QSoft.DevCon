@@ -1,27 +1,35 @@
-# Simple example
+# QSoft.DevCon
+## Quick start
+
+1. Get all devices displayname
 ```c#
-//get all device
-var dds = new DevMgr().AllDevice();
-foreach(var item in dds)
-{
-    System.Diagnostics.Trace.WriteLine(item.Description);
-}
-
-//group by device type
-var groups = new DevMgr().AllDevice().GroupBy(x=>x.Class);
-foreach (var group in groups)
-{
-    System.Diagnostics.Trace.WriteLine(group.Key);
-    foreach(var item in group)
-    {
-        System.Diagnostics.Trace.WriteLine(item.Description);
-    }
-}
-                
-//disable device
-var disable_count = new DevMgr().Disable(x => x.Description.Contains("Camera"));
-
-//enable device 
-var enable_count = new DevMgr().Enable(x => x.Description.Contains("Camera"));
+var alldevices = Guid.Empty.Devices()
+        .Select(x => new
+        {
+            displayname = x.GetDisplayName(),
+            description = x.GetDescription()
+        });
 ```
+2. Get all serial port info
+```c#
+var ports = "Ports".Devices().Where(x => x.GetService() == "Serial")
+        .Select(x => new
+        {
+            portname = x.GetComPortName(),
+            instanceid = x.GetInstanceId(),
+            locationpaths = x.GetLocationPaths()
+        });
+```
+
+3. Enable/Disable camera
+```c#
+"Camera".Devices().Enable();
+"Camera".Devices().Disable();
+```
+
+4. Get all device class name and class guid
+```c#
+var class_guid = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x => x.GetClassGuid());
+```
+
 PS: Thanks for [Simple Device Manager](https://www.codeproject.com/Articles/14469/Simple-Device-Manager).
