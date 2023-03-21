@@ -21,7 +21,7 @@ var ports = "Ports".Devices().Where(x => x.GetService() == "Serial")
         });
 ```
 
-3. Enable/Disable camera
+3. Enable/Disable camera, need administrator privileges
 ```c#
 "Camera".Devices().Enable();
 "Camera".Devices().Disable();

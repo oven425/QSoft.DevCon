@@ -39,8 +39,23 @@ namespace ConsoleApp1
         {
             try
             {
+                var class_guid = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x => x.GetClassGuid());
                 var yt = (10, "10").GetType();
-                var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
+                var alldevices = Guid.Empty.Devices()
+                    .Select(x => new
+                    {
+                        displayname = x.GetDisplayName(),
+                        description = x.GetDescription()
+                    });
+                var ports = "Ports".Devices().Where(x => x.GetService() == "Serial")
+                    .Select(x => new
+                    {
+                        portname = x.GetComPortName(),
+                        instanceid = x.GetInstanceId(),
+                        locationpaths = x.GetLocationPaths()
+                    });
+                "Camera".Devices().Disable();
+
                 var letters = DevMgrExtension.GetVolumeName().ToList();
 
 
@@ -88,8 +103,8 @@ namespace ConsoleApp1
                 //var camera_icons = "Camera".GetDevClass().FirstOrDefault().Devices()
                 //    .Select(x => x.GetICon()).ToList();
 
-                var infos = "DiskDrive".GetDevClass().FirstOrDefault()
-                //var infos = Guid.Empty
+                //var infos = "DiskDrive".GetDevClass().FirstOrDefault()
+                var infos = Guid.Empty
                     .Devices(false)
                     .Select(x => new
                     {
@@ -129,24 +144,24 @@ namespace ConsoleApp1
                 //        localoath = x.GetLocationPaths(),
                 //        locationinformation=x.GetLoationInformation(),
                 //    });
-                foreach (var info in infos)
-                {
-                    Console.WriteLine($"CalssMame: {info.classname}");
-                    Console.WriteLine($"FriendName: {info.friendname}");
-                    Console.WriteLine($"GetDescription: {info.description}");
-                    Console.WriteLine($"InstanceId: {info.instanceid}");
-                    var hwids = info.hwid.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(13)}{next}", (final) => $"HardwareIds: {final}");
-                    //var aaa1 = info.hwid.Aggregate("", (x, y) => $"{x}{y}{Environment.NewLine}{" ".PadRight(13)}", (x)=> $"HardwareIds: {x.Remove(x.LastIndexOf(Environment.NewLine))}");
-                    //var aaa= info.hwid.Aggregate("HardwareIds: ", (x, y) => $"{x}{y}\r\n{" ".PadRight(13)}");
-                    Console.WriteLine(hwids);
-                    var locationpaths = info.locationpaths.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
-                    Console.WriteLine(locationpaths);
-                    Console.WriteLine($"Service: {info.service}");
-                    Console.WriteLine($"Driver: {info.driver}");
-                    Console.WriteLine($"BusNumber: {info.busnumber}");
-                    Console.WriteLine($"EnumeratorName: {info.enumeratorname}");
-                    Console.WriteLine("-----------------");
-                }
+                //foreach (var info in infos)
+                //{
+                //    Console.WriteLine($"CalssMame: {info.classname}");
+                //    Console.WriteLine($"FriendName: {info.friendname}");
+                //    Console.WriteLine($"GetDescription: {info.description}");
+                //    Console.WriteLine($"InstanceId: {info.instanceid}");
+                //    var hwids = info.hwid.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(13)}{next}", (final) => $"HardwareIds: {final}");
+                //    //var aaa1 = info.hwid.Aggregate("", (x, y) => $"{x}{y}{Environment.NewLine}{" ".PadRight(13)}", (x)=> $"HardwareIds: {x.Remove(x.LastIndexOf(Environment.NewLine))}");
+                //    //var aaa= info.hwid.Aggregate("HardwareIds: ", (x, y) => $"{x}{y}\r\n{" ".PadRight(13)}");
+                //    Console.WriteLine(hwids);
+                //    var locationpaths = info.locationpaths.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
+                //    Console.WriteLine(locationpaths);
+                //    Console.WriteLine($"Service: {info.service}");
+                //    Console.WriteLine($"Driver: {info.driver}");
+                //    Console.WriteLine($"BusNumber: {info.busnumber}");
+                //    Console.WriteLine($"EnumeratorName: {info.enumeratorname}");
+                //    Console.WriteLine("-----------------");
+                //}
                 Console.WriteLine("ed");
                 Console.ReadLine();
                 //List<(string instanceid, int port)> changes = new List<(string instanceid, int port)>();
