@@ -233,13 +233,13 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        public static void SetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, string data)
-        {
-            var buf1 = Encoding.Unicode.GetBytes(data);
-            var buf2 = new byte[buf1.Length+2];
-            Array.Copy(buf1, buf2, buf1.Length);
-            var hr = SetupApi.SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, buf2, (uint)buf2.Length);
-        }
+        //public static void SetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, string data)
+        //{
+        //    var buf1 = Encoding.Unicode.GetBytes(data);
+        //    var buf2 = new byte[buf1.Length+2];
+        //    Array.Copy(buf1, buf2, buf1.Length);
+        //    var hr = SetupApi.SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, buf2, (uint)buf2.Length);
+        //}
 
 
         public static string GetClass(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb=null)
@@ -358,26 +358,26 @@ namespace QSoft.DevCon
             return icon;
         }
 
-        public static string GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        {
-            if(SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER) == true)
-            {
-                int memberindex = 0;
-                SP_DRVINFO_DATA dvrinfo = new SP_DRVINFO_DATA();
-                dvrinfo.cbSize = (uint)Marshal.SizeOf(typeof(SP_DRVINFO_DATA));
-                //dvrinfo.cbSize = 1564;
-                var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER, memberindex, ref dvrinfo);
-                var err = Marshal.GetLastWin32Error();
-                long ltime = dvrinfo.InfDate.dwHighDateTime;
-                ltime = ltime << 32;
-                ltime = ltime + dvrinfo.InfDate.dwLowDateTime;
-                var dd = DateTime.FromFileTime(ltime);
+        //public static string GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        //{
+        //    if(SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER) == true)
+        //    {
+        //        int memberindex = 0;
+        //        SP_DRVINFO_DATA dvrinfo = new SP_DRVINFO_DATA();
+        //        dvrinfo.cbSize = (uint)Marshal.SizeOf(typeof(SP_DRVINFO_DATA));
+        //        //dvrinfo.cbSize = 1564;
+        //        var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER, memberindex, ref dvrinfo);
+        //        var err = Marshal.GetLastWin32Error();
+        //        long ltime = dvrinfo.InfDate.dwHighDateTime;
+        //        ltime = ltime << 32;
+        //        ltime = ltime + dvrinfo.InfDate.dwLowDateTime;
+        //        var dd = DateTime.FromFileTime(ltime);
 
-                //https://www.itread01.com/article/1480521605.html
+        //        //https://www.itread01.com/article/1480521605.html
 
-            }
-            return "";
-        }
+        //    }
+        //    return "";
+        //}
 
         public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
         {
@@ -407,7 +407,6 @@ namespace QSoft.DevCon
                     if (SetupApi.SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
                     {
                         var err = Marshal.GetLastWin32Error();
-                        //SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
                         yield break;
                     }
                     else
@@ -461,26 +460,26 @@ namespace QSoft.DevCon
             return index;
         }
 
-        public static int Do<T>(this IEnumerable<T> src, Action<T> action)
-        {
-            foreach (var oo in src)
-            {
-                action(oo);
-            }
-            return 0;
-        }
+        //public static int Do<T>(this IEnumerable<T> src, Action<T> action)
+        //{
+        //    foreach (var oo in src)
+        //    {
+        //        action(oo);
+        //    }
+        //    return 0;
+        //}
 
-        public static int Do<T>(this IEnumerable<T> src, Action<T, int> action)
-        {
-            int index = 0;
-            foreach (var oo in src)
-            {
-                action(oo, index);
-                index++;
+        //public static int Do<T>(this IEnumerable<T> src, Action<T, int> action)
+        //{
+        //    int index = 0;
+        //    foreach (var oo in src)
+        //    {
+        //        action(oo, index);
+        //        index++;
 
-            }
-            return 0;
-        }
+        //    }
+        //    return 0;
+        //}
 
         static public void ChangeState(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, bool isenable)
         {
@@ -542,19 +541,19 @@ namespace QSoft.DevCon
         }
     }
 
-    public class SafeIconHandle : SafeHandleMinusOneIsInvalid
-    {
-        public SafeIconHandle(bool ownsHandle) : base(ownsHandle)
-        {
-        }
+    //public class SafeIconHandle : SafeHandleMinusOneIsInvalid
+    //{
+    //    public SafeIconHandle(bool ownsHandle) : base(ownsHandle)
+    //    {
+    //    }
 
-        public override bool IsInvalid => throw new NotImplementedException();
+    //    public override bool IsInvalid => throw new NotImplementedException();
 
-        protected override bool ReleaseHandle()
-        {
-            throw new NotImplementedException();
-        }
-    }
+    //    protected override bool ReleaseHandle()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 
 
     public static class SetupApi

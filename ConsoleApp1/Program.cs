@@ -32,12 +32,14 @@ namespace ConsoleApp1
             return hCode.GetHashCode();
         }
     }
+
     class Program
     {
         static void Main(string[] args)
         {
             try
             {
+                var yt = (10, "10").GetType();
                 var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
                 var letters = DevMgrExtension.GetVolumeName().ToList();
 
@@ -107,7 +109,7 @@ namespace ConsoleApp1
                         service = x.GetService(),
                         busnumber = x.GetBusNumber(),
                         enumeratorname = x.GetEnumerator_Name(),
-                        dirveinfo = x.GetDriverInfo()
+                        //dirveinfo = x.GetDriverInfo()
                     }); ;
                 //foreach (var info in infos)
                 //{
