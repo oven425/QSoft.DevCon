@@ -12,7 +12,7 @@ using static QSoft.DevCon.SetupApi;
 
 namespace QSoft.DevCon
 {
-
+    [Obsolete("No supoort, please use new DevMgrExtension static method")]
     public class DevMgr
     {
         public static IEnumerable<(IntPtr, SP_DEVINFO_DATA)> Devices()

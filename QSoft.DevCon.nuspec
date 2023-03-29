@@ -2,10 +2,11 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>QSoft.DevCon</id>
-    <version>1.0.0.0</version>
+    <version>1.0.1.0</version>
     <title>DevCon.NET</title>
     <authors>BEN_HSU</authors>
     <owners>BEN_HSU</owners>
+	<readme>README.md</readme>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
@@ -16,15 +17,15 @@
     <repository type="git" url="https://github.com/oven425/QSoft.DevCon.git" />
 	<tags>SetupApi, Enable/Disable device, c#, Linq</tags>
 	<dependencies>
-		<group targetFramework=".NETFramework4.0" />
 		<group targetFramework=".NETFramework4.7.2" />
-		<group targetFramework=".NETFramework4.8" />
     </dependencies>
-	<releaseNotes>1. provide device infomation
-	2. easy to enable/disable device, but need administrator privileges</releaseNotes>
+	<releaseNotes>1. stop support DevMgr
+	2. provide many extension mehtod in DevMgrExtension
+	3. no support bleow .net4, because ValueTuple</releaseNotes>
   </metadata>
   <files>
     <file src="QSoft.DevCon\bin\Release\lib\" target="lib" />
 	<file src="48607350112_057637c3b5_o.jpg" target="48607350112_057637c3b5_o.jpg"/>
+	<file src="README.md" target="README.md"/>
    </files>
 </package>
