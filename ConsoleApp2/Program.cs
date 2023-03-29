@@ -632,6 +632,8 @@ namespace HID
             // 取得hid设备全局id
             //HidD_GetHidGuid(ref hUSB);
             //取得一个包含所有HID接口信息集合的句柄
+
+            //GUID_DEVINTERFACE_IMAGE
             IntPtr hidInfoSet = SetupDiGetClassDevs(ref hUSB, 0, IntPtr.Zero, DIGCF.DIGCF_PRESENT | DIGCF.DIGCF_DEVICEINTERFACE);
             if (hidInfoSet != IntPtr.Zero)
             {
