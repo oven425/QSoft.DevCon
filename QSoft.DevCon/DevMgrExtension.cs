@@ -3,6 +3,7 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
@@ -11,9 +12,10 @@ using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.SetupApi;
 
+//https://cloud.tencent.com/developer/article/1998154
 namespace QSoft.DevCon
 {
-    public static class DevMgrExtension
+    public static partial class DevMgrExtension
     {
         public static IEnumerable<(string letter, string target)> GetVolumeName()
         {
@@ -97,10 +99,20 @@ namespace QSoft.DevCon
 
         public static bool IsConnect(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
-            uint installstate = 0;
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_INSTALL_STATE, IntPtr.Zero, out installstate, 4, IntPtr.Zero);
+            uint propertytype = 0;
+            StringBuilder strb = null;
+            int reqsz = 0;
+            int property = 0;
+            var hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DevNodeStatus, out propertytype, out property, 0, out reqsz, 0);
+            if(hr == false)
+            {
+                var err = Marshal.GetLastWin32Error();
+            }
 
-            return hr;
+            hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DevNodeStatus, out propertytype, out property, reqsz, out reqsz, 0);
+
+            var oo = property & SetupApi.DN_NEEDS_LOCKING;
+            return true;
         }
 
         public static string GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
@@ -163,6 +175,26 @@ namespace QSoft.DevCon
             {
                 //throw new Exception($"err:{Marshal.GetLastWin32Error()}");
                 //Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
+            }
+            return strb.ToString();
+        }
+
+        public static string GetAddress(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            if (strb == null)
+            {
+                strb = new StringBuilder(2048);
+            }
+            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SetupApi.SPDRP_ADDRESS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if (hr == false)
+            {
+                System.Diagnostics.Trace.WriteLine($"GetAddress fail:{Marshal.GetLastWin32Error()}");
+                //throw new Exception($"err:{Marshal.GetLastWin32Error()}");
+                //Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
+            }
+            else
+            {
+                System.Diagnostics.Trace.WriteLine($"GetAddress fail:{Marshal.GetLastWin32Error()}");
             }
             return strb.ToString();
         }
@@ -393,6 +425,7 @@ namespace QSoft.DevCon
             {
                 flags = DIGCF_PROFILE;
             }
+            //flags = flags | DIGCF_DEVICEINTERFACE;
             if (guid == Guid.Empty)
             {
                 flags  = flags | DIGCF_ALLCLASSES;
@@ -407,7 +440,6 @@ namespace QSoft.DevCon
                     if (SetupApi.SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
                     {
                         var err = Marshal.GetLastWin32Error();
-                        //SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
                         yield break;
                     }
                     else
@@ -421,6 +453,58 @@ namespace QSoft.DevCon
             {
                 SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
             }
+        }
+
+        public struct SP_DEVICE_INTERFACE_DATA
+        {
+            public int cbSize;
+            public Guid interfaceClassGuid;
+            public int flags;
+            public int reserved;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 2)]
+        internal struct SP_DEVICE_INTERFACE_DETAIL_DATA
+        {
+            internal int cbSize;
+            internal short devicePath;
+        }
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = false)]
+        private static extern Boolean SetupDiEnumDeviceInterfaces(IntPtr deviceInfoSet, IntPtr deviceInfoData, ref Guid interfaceClassGuid, uint memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
+        [DllImport("setupapi.dll", SetLastError = false, CharSet = CharSet.Auto)]
+        private static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr deviceInfoSet, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, IntPtr deviceInterfaceDetailData, int deviceInterfaceDetailDataSize, ref int requiredSize, SP_DEVINFO_DATA deviceInfoData);
+        public static string DevicePath(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+           
+            Guid hUSB = src.GetClassGuid();
+            SP_DEVICE_INTERFACE_DATA interfaceInfo = new SP_DEVICE_INTERFACE_DATA();
+            interfaceInfo.cbSize = Marshal.SizeOf(interfaceInfo);
+            //查询集合中每一个接口
+            for (var index = 0; index < 64; index++)
+            {
+                //得到第index个接口信息
+                if (SetupDiEnumDeviceInterfaces(src.dev, IntPtr.Zero, ref hUSB, (uint)index, ref interfaceInfo))
+                {
+                    int buffsize = 0;
+                    // 取得接口详细信息:第一次读取错误,但可以取得信息缓冲区的大小
+                    SetupDiGetDeviceInterfaceDetail(src.dev, ref interfaceInfo, IntPtr.Zero, buffsize, ref buffsize, src.devdata);
+                    //构建接收缓冲
+                    IntPtr pDetail = Marshal.AllocHGlobal(buffsize);
+                    SP_DEVICE_INTERFACE_DETAIL_DATA detail = new SP_DEVICE_INTERFACE_DETAIL_DATA();
+                    detail.cbSize = Marshal.SizeOf(typeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
+                    Marshal.StructureToPtr(detail, pDetail, false);
+                    if (SetupDiGetDeviceInterfaceDetail(src.dev, ref interfaceInfo, pDetail, buffsize, ref buffsize, src.devdata))
+                    {
+                        var pp = Marshal.PtrToStringAuto((IntPtr)((int)pDetail + 4));
+                    }
+                    Marshal.FreeHGlobal(pDetail);
+                }
+                else
+                {
+                    System.Diagnostics.Trace.WriteLine($"SetupDiEnumDeviceInterfaces fail:{Marshal.GetLastWin32Error()}");
+                }
+            }
+            return "";
         }
 
         public static int Remove(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
@@ -685,10 +769,13 @@ namespace QSoft.DevCon
         //https://www.magnumdb.com/search?q=filename%3A%22FunctionDiscoveryKeys_devpkey.h%22
         public static DEVPROPKEY DEVPKEY_Device_Parent = new DEVPROPKEY() {fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=8 };
         public static DEVPROPKEY DEVPKEY_Device_Children = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
+        //public static DEVPROPKEY DEVPKEY_Device_Connected = new DEVPROPKEY() { fmtid = Guid.Parse("{78C34FC8-104A-4ACA-9EA4-524D52996E57}"), pid = 55 };
+        public static DEVPROPKEY DEVPKEY_Device_DevNodeStatus = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 2 };
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetupDiGetDeviceProperty(
-     IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
+        public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, out int propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData, uint pProperty, string pPropertyBuffer, int pPropertyBufferSize);
@@ -753,6 +840,16 @@ namespace QSoft.DevCon
         public static uint DN_MF_PARENT = 0x00010000; // Multi function parent
         public static uint DN_MF_CHILD = 0x00020000; // Multi function child
         public static uint DN_WILL_BE_REMOVED = 0x00040000; // DevInst is being removed
+
+
+
+        public static int DN_NEEDS_LOCKING = 0x02000000;  // S: Devnode need lock resume processing
+        public static uint DN_ARM_WAKEUP = 0x04000000; // S: Devnode can be the wakeup device
+        public static uint DN_APM_ENUMERATOR = 0x08000000;  // S: APM aware enumerator
+        public static uint DN_APM_DRIVER = 0x10000000; // S: APM aware driver
+        public static uint DN_SILENT_INSTALL = 0x20000000;  // S: Silent install
+        public static uint DN_NO_SHOW_IN_DM = 0x40000000; // S: No show in device manager
+        public static uint DN_BOOT_LOG_PROB = 0x80000000; // S: Had a problem during preassignment of boot log conf
 
 
         public const uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)

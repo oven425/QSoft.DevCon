@@ -38,56 +38,44 @@ namespace ConsoleApp1
         {
             try
             {
-                var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
-                var letters = DevMgrExtension.GetVolumeName().ToList();
+                //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
+                //var letters = DevMgrExtension.GetVolumeName().ToList();
 
 
-                var sssd = "Volume".Devices().Select(x => new { child = x.GetChildren(), parent = x.GetParent(), id = x.GetInstanceId(), physicalname = x.GetPhysicalDeviceObjectName() });
-                var f1 = letters.Join(sssd, x => x.target, y => y.physicalname, (x, y) => new { x,y});
-                var disks = "DiskDrive".Devices().Select(x => new { location=x.GetLocationPaths(), id = x.GetInstanceId(),child = x.GetChildren(), parent = x.GetParent() });
-                var usbs = "USB".GetDevClass().FirstOrDefault().Devices().Select(x => new { id = x.GetInstanceId(), children = x.GetChildren(),location = x.GetLocationPaths() });
+                //var sssd = "Volume".Devices().Select(x => new { child = x.GetChildren(), parent = x.GetParent(), id = x.GetInstanceId(), physicalname = x.GetPhysicalDeviceObjectName() });
+                //var f1 = letters.Join(sssd, x => x.target, y => y.physicalname, (x, y) => new { x,y});
+                //var disks = "DiskDrive".Devices().Select(x => new { location=x.GetLocationPaths(), id = x.GetInstanceId(),child = x.GetChildren(), parent = x.GetParent() });
+                //var usbs = "USB".GetDevClass().FirstOrDefault().Devices().Select(x => new { id = x.GetInstanceId(), children = x.GetChildren(),location = x.GetLocationPaths() });
 
-                //var jj = usbs.Join(disks, x => x.id, y => y.parent, (x, y) => new { x, y });
-                //var join = disks.Join(sssd, x => x.id, y => y.id, (x, y) => new { x, y }, new DD()).ToList();
 
-                var j1 = usbs.GroupJoin(sssd, x => x.children, y => y.id, (x, y) => new { x, y }, new DD())
-                    .SelectMany(x => x.y.DefaultIfEmpty(), (x, y) => new {x, y?.physicalname })
-                    .GroupJoin(letters, x=>x.physicalname, y=>y.target, (x,y)=>new {x,y })
-                    .SelectMany(x=>x.y.DefaultIfEmpty(),(x,y)=>new {usb=x.x.x.x,letter=y.letter });
-                foreach(var oo in j1)
-                {
-                    Console.WriteLine($"{oo.usb.id} letter:{oo.letter}");
-                    var locationpaths = oo.usb.location.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
-                    Console.WriteLine(locationpaths);
-                    Console.WriteLine();
-                }
-                Console.ReadLine();
-
-                var j2 = disks.GroupJoin(sssd, x => x.id, y => y.id, (x, y) => new { x, y }, new DD())
-                    .SelectMany(x => x.y.DefaultIfEmpty(), (x, y) => new { x, y })
-                    .Where(x => x.y != null).Select(x=>new { usb=x.x, phi=x.y.physicalname}).ToList();
-
-                //var mmp = usbs.GroupJoin(sssd, x => x.id, y => y.id, (x, y) => new { x,y}, new DD())
-                //    .SelectMany(x=>x.y.DefaultIfEmpty(), (x,y)=>new {x,y }).ToList();
-
-                //var usbs = "USB".GetDevClass().FirstOrDefault().Devices();
-                //var groupj = disks.GroupJoin(usbs, x => x.GetParent(), y => y.GetInstanceId(), (disk, usb) => new { disk, usb });
-                //var left = groupj.SelectMany(x=>x.usb.DefaultIfEmpty(), (x,y)=> new { x,y });
-                int oi = 164;
-                oi = oi & (int)SetupApi.CM_DEVCAP_HARDWAREDISABLED;
-                //var devices = Guid.Empty.Devices();
-                //foreach(var device in devices) 
+                //var j1 = usbs.GroupJoin(sssd, x => x.children, y => y.id, (x, y) => new { x, y }, new DD())
+                //    .SelectMany(x => x.y.DefaultIfEmpty(), (x, y) => new {x, y?.physicalname })
+                //    .GroupJoin(letters, x=>x.physicalname, y=>y.target, (x,y)=>new {x,y })
+                //    .SelectMany(x=>x.y.DefaultIfEmpty(),(x,y)=>new {usb=x.x.x.x,letter=y.letter });
+                //foreach(var oo in j1)
                 //{
-                //    device.GetFriendName();
+                //    Console.WriteLine($"{oo.usb.id} letter:{oo.letter}");
+                //    var locationpaths = oo.usb.location.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
+                //    Console.WriteLine(locationpaths);
+                //    Console.WriteLine();
                 //}
-                var groups1 = Guid.Empty.Devices(true).GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
-                //var alldeviceinfo = Guid.Empty.Devices().Select(x => new DeviceInfo(x.dev, x.devdata)).ToList();
+                //Console.ReadLine();
 
-                //var camera_icons = "Camera".GetDevClass().FirstOrDefault().Devices()
-                //    .Select(x => x.GetICon()).ToList();
+                //var j2 = disks.GroupJoin(sssd, x => x.id, y => y.id, (x, y) => new { x, y }, new DD())
+                //    .SelectMany(x => x.y.DefaultIfEmpty(), (x, y) => new { x, y })
+                //    .Where(x => x.y != null).Select(x=>new { usb=x.x, phi=x.y.physicalname}).ToList();
 
-                var infos = "DiskDrive".GetDevClass().FirstOrDefault()
-                //var infos = Guid.Empty
+
+                //var groups1 = Guid.Empty.Devices(true).GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
+                
+                var idc = Guid.Empty.Devices().Where(x => x.GetClassGuid().CompareTo(Guid.Parse("{4d1e55b2-f16f-11cf-88cb-001111000030}"))==0).ToList();
+                //var has = i(Guid.Parse("{4d1e55b2-f16f-11cf-88cb-001111000030}"));
+                var oo = "Camera".GetDevClass().FirstOrDefault();//.Devices().Select(x => x.GetFriendName()).ToList();
+                var paths = Guid.Empty.Devices().Select(x => new { 
+                path = x.DevicePath()
+                }).ToList();
+                //var infos = "Camera"
+                var infos = Guid.Empty
                     .Devices(false)
                     .Select(x => new
                     {
@@ -95,7 +83,6 @@ namespace ConsoleApp1
                         driver = x.GetDriver(),
                         hwid = x.GetHardwaeeIDs(),
                         cap = x.GetCapabilities(),
-                        portname = x.GetComPortName(),
                         description = x.GetDescription(),
                         friendname = x.GetFriendName(),
                         instanceid = x.GetInstanceId(),
@@ -107,26 +94,10 @@ namespace ConsoleApp1
                         service = x.GetService(),
                         busnumber = x.GetBusNumber(),
                         enumeratorname = x.GetEnumerator_Name(),
-                        dirveinfo = x.GetDriverInfo()
+                        dirveinfo = x.GetDriverInfo(),
+                        address = x.GetAddress(),
                     }); ;
-                //foreach (var info in infos)
-                //{
-                //    Console.WriteLine(info);
-                //}
-                //var infos = Guid.Empty
-                //    .Devices()
-                //    .Where(x=>x.GetDisplayName() == "USB Mass Storage Device")
-                //    .Select(x => new
-                //    {
-                //        friendname = x.GetFriendName(),
-                //        description = x.GetDescription(),
-                //        instanceid = x.GetInstanceId(),
-                //        classname = x.GetClass(),
-                //        classguid = x.GetClassGuid(),
-                //        desc = x.GetClassGuid().GetClassDescription(),
-                //        localoath = x.GetLocationPaths(),
-                //        locationinformation=x.GetLoationInformation(),
-                //    });
+
                 foreach (var info in infos)
                 {
                     Console.WriteLine($"CalssMame: {info.classname}");
