@@ -141,7 +141,11 @@ void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData, TC
 	SP_DEVICE_INTERFACE_DATA spDevInterfaceData = { 0 };
 	//
 	spDevInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-	if (!SetupDiCreateDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
+	//if (!SetupDiCreateDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
+	//{
+	//	//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
+	//}
+	if (!SetupDiOpenDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
 	{
 		//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
 	}
