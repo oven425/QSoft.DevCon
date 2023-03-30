@@ -16,9 +16,10 @@ using namespace std;
 #include <Ntddmou.h>
 #include <cfgmgr32.h>
 #include <Usbiodef.h>
+#include <atlstr.h>
 
 int aa = CM_DEVCAP_HARDWAREDISABLED;
-BOOL ListDeviceInstancePath()
+BOOL ListDeviceInstancePath1()
 {
 	GUID guid1;
 	HidD_GetHidGuid(&guid1);
@@ -79,11 +80,115 @@ BOOL ListDeviceInstancePath()
 	return bRet;
 }
 
+BOOL ListDeviceInstancePath()
+{
+	HDEVINFO hdev;
+	DWORD idx;
+	GUID guid = GUID_DEVINTERFACE_DISK;
+	auto hr = CLSIDFromString(_T("{6BDD1FC6-810F-11D0-BEC7-08002BE2092F}"), &guid);
+	//guid = GUID_DEVINTERFACE_IMAGE;
+	CString csDevicePath;
+	BOOL bRet = TRUE;
+	BOOL nStatus;
+	DWORD dwSize = 0;
+
+	hdev = SetupDiGetClassDevs(&guid,
+		NULL,
+		NULL,
+		DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	if (hdev == INVALID_HANDLE_VALUE)
+	{
+		printf("ERROR : Unable to enumerate device.\n");
+		return FALSE;
+	}
+
+	SP_DEVICE_INTERFACE_DATA  DeviceInterfaceData;
+	DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
+
+	for (idx = 0; SetupDiEnumDeviceInterfaces(hdev, NULL, &guid, idx, &DeviceInterfaceData); idx++)
+	{
+		nStatus = SetupDiGetDeviceInterfaceDetail(hdev, &DeviceInterfaceData, NULL, 0, &dwSize, NULL);
+		if (!dwSize)
+		{
+			bRet = FALSE;
+			printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+			break;
+		}
+
+		PSP_DEVICE_INTERFACE_DETAIL_DATA pBuffer = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(dwSize);
+		ZeroMemory(pBuffer, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
+		pBuffer->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+		SP_DEVINFO_DATA DeviceInfoData = { sizeof(SP_DEVINFO_DATA) };
+		nStatus = SetupDiGetDeviceInterfaceDetail(hdev, &DeviceInterfaceData, pBuffer, dwSize, &dwSize, &DeviceInfoData);
+		if (!nStatus)
+		{
+			bRet = FALSE;
+			printf("ERROR : SetupDiGetDeviceInterfaceDetail fial.\n");
+			break;
+		}
+		csDevicePath = pBuffer->DevicePath;
+		csDevicePath.MakeUpper();
+		printf("%s\n", csDevicePath);
+	}
+	SetupDiDestroyDeviceInfoList(hdev);
+
+	return bRet;
+}
+
+void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData, TCHAR* szPath)
+{
+	SP_DEVICE_INTERFACE_DATA spDevInterfaceData = { 0 };
+	//
+	spDevInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+	if (!SetupDiCreateDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
+	{
+		//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
+	}
+	else
+	{
+		SP_DEVICE_INTERFACE_DETAIL_DATA* pspDevInterfaceDetail = 0L;
+		DWORD                           dwRequire = 0L;
+		//
+		if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, 0L, 0, &dwRequire, 0L))
+		{
+			DWORD dwError = GetLastError();
+			//
+			if (dwError != ERROR_INSUFFICIENT_BUFFER)
+			{
+				//ShowErrorMsg(_hDlg, dwError, "SetupDiBuildDriverInfoList");
+				return;
+			};
+		};
+		//
+		pspDevInterfaceDetail = (SP_DEVICE_INTERFACE_DETAIL_DATA*)LocalAlloc(LPTR, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) * dwRequire);
+		pspDevInterfaceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+		if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, pspDevInterfaceDetail, dwRequire, &dwRequire, 0L))
+		{
+			DWORD dwError = GetLastError();
+			//
+			//if (dwError != ERROR_INSUFFICIENT_BUFFER)
+				//ShowErrorMsg(_hDlg, dwError, "SetupDiBuildDriverInfoList");
+		}
+		else
+		{
+			CString str = pspDevInterfaceDetail->DevicePath;
+			str = _T("");
+			//memcpy(szPath, pspDevInterfaceDetail->DevicePath, strlen(pspDevInterfaceDetail->DevicePath));
+			//            switch(spDevInterfaceData.                    
+		};
+		//
+		if (pspDevInterfaceDetail)
+			LocalFree(pspDevInterfaceDetail);
+	};
+};
+
 #include "DevMgr.h"
 #include <Devpropdef.h>
 #include <devguid.h>
 int main()
 {
+	ListDeviceInstancePath();
 	//QSoft::DevCon::DevMgr devmgr;
 	//devmgr.Enable([](auto dev) {return true; });
 	//SPDIT_COMPATDRIVER
@@ -111,6 +216,7 @@ int main()
 		TCHAR device_desc[MAXCHAR] = { 0 };
 		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == TRUE)
 		{
+			GetDeviceInterfaceInfo(hDevInfo, spDevInfoData, NULL);
 			//{4340a6c5-93fa-4706-972c-7b648008a5a7} 8
 			DEVPROPKEY parent;
 			parent.pid = 8;
