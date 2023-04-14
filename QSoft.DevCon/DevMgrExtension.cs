@@ -28,6 +28,17 @@ namespace QSoft.DevCon
             }
         }
 
+        public static string GetPowerRelations(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint propertytype = 0;
+            StringBuilder strb = null;
+            int reqsz = 0;
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DPKEY_Device_PowerRelations, out propertytype, strb, 0, out reqsz, 0);
+            strb = new StringBuilder(reqsz);
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DPKEY_Device_PowerRelations, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            return strb.ToString();
+        }
+
         public static string GetComPortName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             var hKey = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
@@ -767,6 +778,7 @@ namespace QSoft.DevCon
             public UInt32 pid;
         }
         //https://www.magnumdb.com/search?q=filename%3A%22FunctionDiscoveryKeys_devpkey.h%22
+        public static DEVPROPKEY DPKEY_Device_PowerRelations = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 6 };
         public static DEVPROPKEY DEVPKEY_Device_Parent = new DEVPROPKEY() {fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=8 };
         public static DEVPROPKEY DEVPKEY_Device_Children = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
         //public static DEVPROPKEY DEVPKEY_Device_Connected = new DEVPROPKEY() { fmtid = Guid.Parse("{78C34FC8-104A-4ACA-9EA4-524D52996E57}"), pid = 55 };

@@ -136,63 +136,63 @@ BOOL ListDeviceInstancePath()
 	return bRet;
 }
 
-void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData, TCHAR* szPath)
-{
-	SP_DEVICE_INTERFACE_DATA spDevInterfaceData = { 0 };
-	//
-	spDevInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-	//if (!SetupDiCreateDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
-	//{
-	//	//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
-	//}
-	if (!SetupDiOpenDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
-	{
-		//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
-	}
-	else
-	{
-		SP_DEVICE_INTERFACE_DETAIL_DATA* pspDevInterfaceDetail = 0L;
-		DWORD                           dwRequire = 0L;
-		//
-		if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, 0L, 0, &dwRequire, 0L))
-		{
-			DWORD dwError = GetLastError();
-			//
-			if (dwError != ERROR_INSUFFICIENT_BUFFER)
-			{
-				//ShowErrorMsg(_hDlg, dwError, "SetupDiBuildDriverInfoList");
-				return;
-			};
-		};
-		//
-		pspDevInterfaceDetail = (SP_DEVICE_INTERFACE_DETAIL_DATA*)LocalAlloc(LPTR, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) * dwRequire);
-		pspDevInterfaceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-		if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, pspDevInterfaceDetail, dwRequire, &dwRequire, 0L))
-		{
-			DWORD dwError = GetLastError();
-			//
-			//if (dwError != ERROR_INSUFFICIENT_BUFFER)
-				//ShowErrorMsg(_hDlg, dwError, "SetupDiBuildDriverInfoList");
-		}
-		else
-		{
-			CString str = pspDevInterfaceDetail->DevicePath;
-			str = _T("");
-			//memcpy(szPath, pspDevInterfaceDetail->DevicePath, strlen(pspDevInterfaceDetail->DevicePath));
-			//            switch(spDevInterfaceData.                    
-		};
-		//
-		if (pspDevInterfaceDetail)
-			LocalFree(pspDevInterfaceDetail);
-	};
-};
+//void GetDeviceInterfaceInfo(HDEVINFO hDevInfo, SP_DEVINFO_DATA spDevInfoData, TCHAR* szPath)
+//{
+//	SP_DEVICE_INTERFACE_DATA spDevInterfaceData = { 0 };
+//	//
+//	spDevInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+//	//if (!SetupDiCreateDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
+//	//{
+//	//	//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
+//	//}
+//	if (!SetupDiOpenDeviceInterface(hDevInfo, &spDevInfoData, &spDevInfoData.ClassGuid, 0L, 0L, &spDevInterfaceData))
+//	{
+//		//ShowErrorMsg(_hDlg, GetLastError(), "SetupDiBuildDriverInfoList");
+//	}
+//	else
+//	{
+//		SP_DEVICE_INTERFACE_DETAIL_DATA* pspDevInterfaceDetail = 0L;
+//		DWORD                           dwRequire = 0L;
+//		//
+//		if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, 0L, 0, &dwRequire, 0L))
+//		{
+//			DWORD dwError = GetLastError();
+//			//
+//			if (dwError != ERROR_INSUFFICIENT_BUFFER)
+//			{
+//				//ShowErrorMsg(_hDlg, dwError, "SetupDiBuildDriverInfoList");
+//				return;
+//			};
+//		};
+//		//
+//		pspDevInterfaceDetail = (SP_DEVICE_INTERFACE_DETAIL_DATA*)LocalAlloc(LPTR, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) * dwRequire);
+//		pspDevInterfaceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+//		if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &spDevInterfaceData, pspDevInterfaceDetail, dwRequire, &dwRequire, 0L))
+//		{
+//			DWORD dwError = GetLastError();
+//			//
+//			//if (dwError != ERROR_INSUFFICIENT_BUFFER)
+//				//ShowErrorMsg(_hDlg, dwError, "SetupDiBuildDriverInfoList");
+//		}
+//		else
+//		{
+//			CString str = pspDevInterfaceDetail->DevicePath;
+//			str = _T("");
+//			//memcpy(szPath, pspDevInterfaceDetail->DevicePath, strlen(pspDevInterfaceDetail->DevicePath));
+//			//            switch(spDevInterfaceData.                    
+//		};
+//		//
+//		if (pspDevInterfaceDetail)
+//			LocalFree(pspDevInterfaceDetail);
+//	};
+//};
 
 #include "DevMgr.h"
 #include <Devpropdef.h>
 #include <devguid.h>
 int main()
 {
-	ListDeviceInstancePath();
+	//ListDeviceInstancePath();
 	//QSoft::DevCon::DevMgr devmgr;
 	//devmgr.Enable([](auto dev) {return true; });
 	//SPDIT_COMPATDRIVER
@@ -220,7 +220,7 @@ int main()
 		TCHAR device_desc[MAXCHAR] = { 0 };
 		if (SetupDiEnumDeviceInfo(hDevInfo, index, &spDevInfoData) == TRUE)
 		{
-			GetDeviceInterfaceInfo(hDevInfo, spDevInfoData, NULL);
+			//GetDeviceInterfaceInfo(hDevInfo, spDevInfoData, NULL);
 			//{4340a6c5-93fa-4706-972c-7b648008a5a7} 8
 			DEVPROPKEY parent;
 			parent.pid = 8;

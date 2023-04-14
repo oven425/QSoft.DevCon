@@ -67,7 +67,12 @@ namespace ConsoleApp1
 
 
                 //var groups1 = Guid.Empty.Devices(true).GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
+                var volumes = "Volume".Devices().Select(x => new {objectname = x.GetPhysicalDeviceObjectName(), name = x.GetDisplayName(), pl = x.GetPowerRelations() }).ToList();
+                var disks = "DiskDrive".Devices().Select(x=>new { instanceid=  x.GetInstanceId() });
                 
+                var letters = DevMgrExtension.GetVolumeName();
+                var j1 = disks.Join(volumes, x => x.instanceid.ToUpperInvariant(), y => y.pl.ToUpperInvariant(), (x, y) => new { x, y });
+
                 var idc = Guid.Empty.Devices().Where(x => x.GetClassGuid().CompareTo(Guid.Parse("{4d1e55b2-f16f-11cf-88cb-001111000030}"))==0).ToList();
                 //var has = i(Guid.Parse("{4d1e55b2-f16f-11cf-88cb-001111000030}"));
                 var oo = "Camera".GetDevClass().FirstOrDefault();//.Devices().Select(x => x.GetFriendName()).ToList();
@@ -94,7 +99,6 @@ namespace ConsoleApp1
                         service = x.GetService(),
                         busnumber = x.GetBusNumber(),
                         enumeratorname = x.GetEnumerator_Name(),
-                        dirveinfo = x.GetDriverInfo(),
                         address = x.GetAddress(),
                     }); ;
 
