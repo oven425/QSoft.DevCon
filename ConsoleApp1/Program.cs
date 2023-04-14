@@ -71,6 +71,7 @@ namespace ConsoleApp1
                 var disks = "DiskDrive".Devices().Select(x=>new { instanceid=  x.GetInstanceId() });
                 
                 var letters = DevMgrExtension.GetVolumeName();
+
                 var j1 = disks.Join(volumes, x => x.instanceid.ToUpperInvariant(), y => y.pl.ToUpperInvariant(), (x, y) => new { x, y });
 
                 var idc = Guid.Empty.Devices().Where(x => x.GetClassGuid().CompareTo(Guid.Parse("{4d1e55b2-f16f-11cf-88cb-001111000030}"))==0).ToList();
@@ -201,4 +202,38 @@ namespace ConsoleApp1
 
 
     }
+
+    public static class LinqEx
+    {
+        public static IEnumerable<TResult> LeftJoin<TOuter, TInner, TKey, TResult>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner, TResult> resultSelector, IEqualityComparer<TKey> comparer)
+        {
+            return outer
+                .GroupJoin(inner,
+                    outerKeySelector,
+                    innerKeySelector,
+                    (outerObj, inners) => new { outerObj, inners = inners.DefaultIfEmpty() }, comparer)
+                .SelectMany(a => a.inners.Select(innerObj => resultSelector(a.outerObj, innerObj)));
+        }
+
+        //public static IEnumerable<TResult> LeftJoin<TOuter, TInner, TKey, TResult>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner, TResult> resultSelector, Func<TKey, TKey, bool> comparer)
+        //{
+        //    return outer
+        //        .GroupJoin(inner,
+        //            outerKeySelector,
+        //            innerKeySelector,
+        //            (outerObj, inners) => new { outerObj, inners = inners.DefaultIfEmpty() }, new DDD<TKey>(comparer))
+        //        .SelectMany(a => a.inners.Select(innerObj => resultSelector(a.outerObj, innerObj)));
+        //}
+
+        public static IEnumerable<TResult> LeftJoin<TOuter, TInner, TKey, TResult>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner, TResult> resultSelector)
+        {
+            return outer
+                .GroupJoin(inner,
+                    outerKeySelector,
+                    innerKeySelector,
+                    (outerObj, inners) => new { outerObj, inners = inners.DefaultIfEmpty() })
+                .SelectMany(a => a.inners.Select(innerObj => resultSelector(a.outerObj, innerObj)));
+        }
+    }
+
 }
