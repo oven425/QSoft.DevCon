@@ -67,12 +67,12 @@ namespace ConsoleApp1
 
 
                 //var groups1 = Guid.Empty.Devices(true).GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
-                var volumes = "Volume".Devices().Select(x => new {objectname = x.GetPhysicalDeviceObjectName(), name = x.GetDisplayName(), pl = x.GetPowerRelations() }).ToList();
-                var disks = "DiskDrive".Devices().Select(x=>new { instanceid=  x.GetInstanceId() });
-                
+                var volumes = "Volume".Devices().Select(x => new { child = x.GetChildren(), parent = x.GetParent(), service = x.GetService(), objectname = x.GetPhysicalDeviceObjectName(), name = x.GetDisplayName(), pl = x.GetPowerRelations() }).Where(x => x.child != "");
+                var disks = "DiskDrive".Devices().Select(x=>new { instanceid=  x.GetInstanceId(), locationpaths = x.GetLocationPaths() });
+                var j1 = volumes.Join(disks, x => x.pl.ToUpperInvariant(), y => y.instanceid.ToUpperInvariant(), (x, y) => new { x, y });
                 var letters = DevMgrExtension.GetVolumeName();
+                var j2 = letters.Join(j1, x=>x.target, y=>y.x.objectname, (x,y)=> new { x, y });
 
-                var j1 = disks.Join(volumes, x => x.instanceid.ToUpperInvariant(), y => y.pl.ToUpperInvariant(), (x, y) => new { x, y });
 
                 var idc = Guid.Empty.Devices().Where(x => x.GetClassGuid().CompareTo(Guid.Parse("{4d1e55b2-f16f-11cf-88cb-001111000030}"))==0).ToList();
                 //var has = i(Guid.Parse("{4d1e55b2-f16f-11cf-88cb-001111000030}"));
