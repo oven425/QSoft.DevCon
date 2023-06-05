@@ -1,4 +1,5 @@
 ﻿using QSoft.DevCon;
+using QSoft.DevCon.Camera;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,6 +68,8 @@ namespace ConsoleApp1
 
 
                 //var groups1 = Guid.Empty.Devices(true).GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
+                var cameras = "Camera".Devices().Select(x => new {name = x.GetDisplayName(), panel=x.Panel() }).ToList();
+                
                 var volumes = "Volume".Devices().Select(x => new { child = x.GetChildren(), parent = x.GetParent(), service = x.GetService(), objectname = x.GetPhysicalDeviceObjectName(), name = x.GetDisplayName(), pl = x.GetPowerRelations() }).Where(x => x.child != "");
                 var disks = "DiskDrive".Devices().Select(x=>new { instanceid=  x.GetInstanceId(), locationpaths = x.GetLocationPaths() });
                 var j1 = volumes.Join(disks, x => x.pl.ToUpperInvariant(), y => y.instanceid.ToUpperInvariant(), (x, y) => new { x, y });

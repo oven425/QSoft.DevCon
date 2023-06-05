@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CameraEx.cs" />
     <Compile Include="DevCon.cs" />
     <Compile Include="DevMgrExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

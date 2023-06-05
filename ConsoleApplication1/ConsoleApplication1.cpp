@@ -192,6 +192,7 @@ BOOL ListDeviceInstancePath()
 #include <devguid.h>
 int main()
 {
+	auto dd = DEVPROP_TYPE_BINARY;
 	//ListDeviceInstancePath();
 	//QSoft::DevCon::DevMgr devmgr;
 	//devmgr.Enable([](auto dev) {return true; });
