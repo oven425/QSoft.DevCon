@@ -1,5 +1,4 @@
 ﻿using QSoft.DevCon;
-using QSoft.DevCon.Camera;
 using System;
 using System.Collections.Generic;
 using System.Linq;

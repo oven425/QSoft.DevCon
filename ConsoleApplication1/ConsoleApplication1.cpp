@@ -193,6 +193,7 @@ BOOL ListDeviceInstancePath()
 int main()
 {
 	auto dd = DEVPROP_TYPE_BINARY;
+	//auto aa = SPDRP_PHYSICAL_DEVICE_LOCATION;
 	//ListDeviceInstancePath();
 	//QSoft::DevCon::DevMgr devmgr;
 	//devmgr.Enable([](auto dev) {return true; });
