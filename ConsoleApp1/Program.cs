@@ -38,6 +38,14 @@ namespace ConsoleApp1
         {
             try
             {
+                List<bool> kks = new List<bool>() { true, false, true };
+                var iuyt = kks.Aggregate(0, (pre, cur) =>
+                {
+
+                    return 0;
+                });
+                var dd = DevMgrExtension.Convert(true, false, true);
+                dd = 0;
                 //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
                 //var letters = DevMgrExtension.GetVolumeName().ToList();
 

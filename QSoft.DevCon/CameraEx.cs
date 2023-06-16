@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -13,7 +14,7 @@ namespace QSoft.DevCon
     public static partial class DevMgrExtension
     {
         public static DEVPROPKEY DEVPKEY_Devices_PhysicalDeviceLocation = new DEVPROPKEY() { fmtid = Guid.Parse("{540B947E-8B40-45BC-A8A2-6A0B894CBDA2}"), pid = 9 };
-        public static int Panel(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static CameraPanel Panel(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             
@@ -27,10 +28,34 @@ namespace QSoft.DevCon
             hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, buffer, reqsz, out reqsz, 0);
             byte[] lbuffer = new byte[reqsz];
             Marshal.Copy(buffer, lbuffer, 0, (int)reqsz);
+
+
+            BitArray myBA3 = new BitArray(lbuffer);
+
+            Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
+            
             int errcode = Marshal.GetLastWin32Error();
             Marshal.FreeHGlobal(buffer);
 
-            return 0;
+            return (CameraPanel)Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
+        }
+
+        public static int Convert(params bool[]  src)
+        {
+            int dd = 0;
+            for(int i=0; i<src.Length; i++)
+            {
+                
+                if (i > 0)
+                {
+                    dd = dd << 1;
+                }
+                int o = src[i] == true ? 1 : 0;
+                dd = dd | o;
+                
+                
+            }
+            return dd;
         }
     }
 
