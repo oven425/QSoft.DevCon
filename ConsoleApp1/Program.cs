@@ -38,7 +38,8 @@ namespace ConsoleApp1
         {
             try
             {
-                var driver = "CPU".Devices().Select(x => x.GetDriver());
+                var classname = Guid.Empty.Devices().GroupBy(x => x.GetClass()).Select(x=>x.Key);
+                var driver = "Processor".Devices().Select(x => x.GetDriverInfo()).ToList();
                 Console.ReadLine();
 
                 //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();

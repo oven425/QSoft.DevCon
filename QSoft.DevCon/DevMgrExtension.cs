@@ -401,26 +401,26 @@ namespace QSoft.DevCon
             return icon;
         }
 
-        //public static string GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        //{
-        //    if(SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER) == true)
-        //    {
-        //        int memberindex = 0;
-        //        SP_DRVINFO_DATA dvrinfo = new SP_DRVINFO_DATA();
-        //        dvrinfo.cbSize = (uint)Marshal.SizeOf(typeof(SP_DRVINFO_DATA));
-        //        //dvrinfo.cbSize = 1564;
-        //        var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER, memberindex, ref dvrinfo);
-        //        var err = Marshal.GetLastWin32Error();
-        //        long ltime = dvrinfo.InfDate.dwHighDateTime;
-        //        ltime = ltime << 32;
-        //        ltime = ltime + dvrinfo.InfDate.dwLowDateTime;
-        //        var dd = DateTime.FromFileTime(ltime);
+        public static string GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            if (SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER) == true)
+            {
+                int memberindex = 0;
+                SP_DRVINFO_DATA dvrinfo = new SP_DRVINFO_DATA();
+                dvrinfo.cbSize = (uint)Marshal.SizeOf(typeof(SP_DRVINFO_DATA));
+                //dvrinfo.cbSize = 1564;
+                var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER, memberindex, ref dvrinfo);
+                var err = Marshal.GetLastWin32Error();
+                long ltime = dvrinfo.InfDate.dwHighDateTime;
+                ltime = ltime << 32;
+                ltime = ltime + dvrinfo.InfDate.dwLowDateTime;
+                var dd = DateTime.FromFileTime(ltime);
 
-        //        //https://www.itread01.com/article/1480521605.html
+                //https://www.itread01.com/article/1480521605.html
 
-        //    }
-        //    return "";
-        //}
+            }
+            return "";
+        }
 
         public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
         {
