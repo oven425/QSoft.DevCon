@@ -40,20 +40,20 @@ namespace QSoft.DevCon
             return (CameraPanel)Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
         }
 
-        public static int Convert(params bool[]  src)
+        static int Convert(params bool[] src)
         {
             int dd = 0;
-            for(int i=0; i<src.Length; i++)
+            for (int i = 0; i < src.Length; i++)
             {
-                
+
                 if (i > 0)
                 {
                     dd = dd << 1;
                 }
                 int o = src[i] == true ? 1 : 0;
                 dd = dd | o;
-                
-                
+
+
             }
             return dd;
         }

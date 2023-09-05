@@ -38,14 +38,9 @@ namespace ConsoleApp1
         {
             try
             {
-                List<bool> kks = new List<bool>() { true, false, true };
-                var iuyt = kks.Aggregate(0, (pre, cur) =>
-                {
+                var driver = "CPU".Devices().Select(x => x.GetDriver());
+                Console.ReadLine();
 
-                    return 0;
-                });
-                var dd = DevMgrExtension.Convert(true, false, true);
-                dd = 0;
                 //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
                 //var letters = DevMgrExtension.GetVolumeName().ToList();
 
@@ -75,11 +70,11 @@ namespace ConsoleApp1
 
 
                 //var groups1 = Guid.Empty.Devices(true).GroupBy(x => x.GetClassGuid().GetClassDescription(), y => new { classguid=y.GetClassGuid(), dd=y.GetClass() });
-                var cameras = "Camera".Devices().Select(x => new {name = x.GetDisplayName(), panel=x.Panel() }).ToList();
-                foreach(var camera in cameras)
-                {
-                    Console.WriteLine($"{camera.name}  {camera.panel}");
-                }
+                //var cameras = "Camera".Devices().Select(x => new {name = x.GetDisplayName(), panel=x.Panel() }).ToList();
+                //foreach(var camera in cameras)
+                //{
+                //    Console.WriteLine($"{camera.name}  {camera.panel}");
+                //}
                 Console.ReadLine();
                 var volumes = "Volume".Devices().Select(x => new { child = x.GetChildren(), parent = x.GetParent(), service = x.GetService(), objectname = x.GetPhysicalDeviceObjectName(), name = x.GetDisplayName(), pl = x.GetPowerRelations() }).Where(x => x.child != "");
                 var disks = "DiskDrive".Devices().Select(x=>new { instanceid=  x.GetInstanceId(), locationpaths = x.GetLocationPaths() });
