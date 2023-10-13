@@ -38,7 +38,7 @@ namespace ConsoleApp1
         {
             try
             {
-                var driver = "CPU".Devices().Select(x => x.GetDriver());
+                var driver = "Camera".Devices().Select(x => x.GetDriverVersion());
                 Console.ReadLine();
 
                 //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();

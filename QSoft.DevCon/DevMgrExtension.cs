@@ -383,6 +383,18 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
+
+        //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
+        public static string GetDriverVersion(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint propertytype = 0;
+            StringBuilder strb = null;
+            int reqsz = 0;
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, 0, out reqsz, 0);
+            strb = new StringBuilder(reqsz);
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            return strb.ToString();
+        }
         public static string GetDriver(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
             if (strb == null)
@@ -783,6 +795,7 @@ namespace QSoft.DevCon
         public static DEVPROPKEY DEVPKEY_Device_Children = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
         //public static DEVPROPKEY DEVPKEY_Device_Connected = new DEVPROPKEY() { fmtid = Guid.Parse("{78C34FC8-104A-4ACA-9EA4-524D52996E57}"), pid = 55 };
         public static DEVPROPKEY DEVPKEY_Device_DevNodeStatus = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 2 };
+        public static DEVPROPKEY DEVPKEY_Device_DriverVersion = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 3 };
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
