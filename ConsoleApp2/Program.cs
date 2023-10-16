@@ -13,8 +13,8 @@ namespace ConsoleApp2
     {
         static void Main(string[] args)
         {
-            List<string> list = new List<string>();
-            HID.Hid.GetHidDeviceList(ref list);
+            QSystem.Collections.Concurrent.ConcurrentQueue<string> qq = new QSystem.Collections.Concurrent.ConcurrentQueue<string>();
+            qq.GetEnumerator();
         }
     }
 }

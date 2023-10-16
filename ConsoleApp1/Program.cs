@@ -38,7 +38,14 @@ namespace ConsoleApp1
         {
             try
             {
-                var driver = "Camera".Devices().Select(x => x.GetDriverVersion());
+                var driver = "Camera".Devices().Select(x =>new
+                {
+                    ds = x.GetDisplayName(),
+                    fr = x.GetFriendName(),
+                    desc = x.GetDescription(),
+                    decs1 = x.GetDescription1(),
+                    driverversion = x.GetDriverVersion()
+                });
                 Console.ReadLine();
 
                 //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
@@ -95,7 +102,6 @@ namespace ConsoleApp1
                     .Select(x => new
                     {
                         parent = x.GetParent(),
-                        driver = x.GetDriver(),
                         hwid = x.GetHardwaeeIDs(),
                         cap = x.GetCapabilities(),
                         description = x.GetDescription(),
@@ -125,7 +131,7 @@ namespace ConsoleApp1
                     var locationpaths = info.locationpaths.Aggregate("", (cur, next) => cur == "" ? next : $"{cur}{Environment.NewLine}{" ".PadRight(12)}{next}", (final) => $"LocalPaths: {final}");
                     Console.WriteLine(locationpaths);
                     Console.WriteLine($"Service: {info.service}");
-                    Console.WriteLine($"Driver: {info.driver}");
+                    //Console.WriteLine($"Driver: {info.driver}");
                     Console.WriteLine($"BusNumber: {info.busnumber}");
                     Console.WriteLine($"EnumeratorName: {info.enumeratorname}");
                     Console.WriteLine("-----------------");
