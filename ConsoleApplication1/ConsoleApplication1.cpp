@@ -193,7 +193,7 @@ BOOL ListDeviceInstancePath()
 #include <Devpkey.h>
 int main()
 {
-	DEVPKEY_Device_DriverVersion
+	//DEVPKEY_Device_DriverVersion
 	auto dd = DEVPROP_TYPE_BINARY;
 	//auto aa = SPDRP_PHYSICAL_DEVICE_LOCATION;
 	//ListDeviceInstancePath();

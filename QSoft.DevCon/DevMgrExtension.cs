@@ -409,6 +409,19 @@ namespace QSoft.DevCon
             SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
             return strb.ToString();
         }
+
+        public static DateTime GetDriverDate(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint propertytype = 0;
+            long dd = 0;
+            int reqsz = 0;
+            var hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverDate, out propertytype, out dd, 8, out reqsz, 0);
+            var dq = DateTime.FromFileTime(dd);
+            //strb = new StringBuilder(reqsz);
+            //SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            //return strb.ToString();
+            return dq;
+        }
         //public static string GetDriver(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         //{
         //    if (strb == null)
@@ -810,6 +823,7 @@ namespace QSoft.DevCon
         //public static DEVPROPKEY DEVPKEY_Device_Connected = new DEVPROPKEY() { fmtid = Guid.Parse("{78C34FC8-104A-4ACA-9EA4-524D52996E57}"), pid = 55 };
         public static DEVPROPKEY DEVPKEY_Device_DevNodeStatus = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 2 };
         public static DEVPROPKEY DEVPKEY_Device_DriverVersion = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 3 };
+        public static DEVPROPKEY DEVPKEY_Device_DriverDate = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 2 };
         public static DEVPROPKEY DPKEY_Device_DeviceDesc = new DEVPROPKEY() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
@@ -817,6 +831,8 @@ namespace QSoft.DevCon
         public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, out int propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, out long propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr pDeviceInfoSet, ref SP_DEVINFO_DATA pDeviceInfoData, uint pProperty, string pPropertyBuffer, int pPropertyBufferSize);

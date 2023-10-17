@@ -40,12 +40,13 @@ namespace ConsoleApp1
             {
                 var driver = "Camera".Devices().Select(x =>new
                 {
+                    date = x.GetDriverDate(),
                     ds = x.GetDisplayName(),
                     fr = x.GetFriendName(),
                     desc = x.GetDescription(),
                     decs1 = x.GetDescription1(),
                     driverversion = x.GetDriverVersion()
-                });
+                }).ToList();
                 Console.ReadLine();
 
                 //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
