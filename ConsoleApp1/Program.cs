@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Schema;
 
 namespace ConsoleApp1
 {
@@ -45,7 +46,8 @@ namespace ConsoleApp1
                     fr = x.GetFriendName(),
                     desc = x.GetDescription(),
                     decs1 = x.GetDescription1(),
-                    driverversion = x.GetDriverVersion()
+                    driverversion = x.GetDriverVersion(),
+                   sectioninf = x.GetDriverInfSection(),
                 }).ToList();
                 Console.ReadLine();
 

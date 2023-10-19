@@ -396,8 +396,17 @@ namespace QSoft.DevCon
             var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_MFG, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
-
-
+        //DriverInfSection
+        public static string GetDriverInfSection(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        {
+            uint propertytype = 0;
+            StringBuilder strb = null;
+            int reqsz = 0;
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverInfSection, out propertytype, strb, 0, out reqsz, 0);
+            strb = new StringBuilder(reqsz);
+            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverInfSection, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            return strb.ToString();
+        }
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
         public static string GetDriverVersion(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
@@ -825,6 +834,9 @@ namespace QSoft.DevCon
         public static DEVPROPKEY DEVPKEY_Device_DriverVersion = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 3 };
         public static DEVPROPKEY DEVPKEY_Device_DriverDate = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 2 };
         public static DEVPROPKEY DPKEY_Device_DeviceDesc = new DEVPROPKEY() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
+        public static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
+
+
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, StringBuilder propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
