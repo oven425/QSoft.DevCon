@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Title>DevConCore.NET</Title>
+    <Copyright>Copyright © Ben Hsu 2024</Copyright>
+    <PackageProjectUrl>https://github.com/oven425/QSoft.DevCon</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/oven425/QSoft.DevCon</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags> SetupApi, Enable/Disable device, c#, Linq </PackageTags>
+    <Description>easy to get device infomation and enable/disable device</Description>
+    <Company>BEN_HSU</Company>
+    <Authors>BEN_HSU</Authors>
+    <PackageIcon>48720668291_7f311e241d_o.jpg</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>False</IncludeSymbols>
+    <AssemblyVersion>1.0.0.2</AssemblyVersion>
+    <FileVersion>1.0.0.2</FileVersion>
+    <Version>1.0.0.2</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <IsAotCompatible>True</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <IsAotCompatible>True</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\48720668291_7f311e241d_o.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="48720668291_7f311e241d_o.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>
