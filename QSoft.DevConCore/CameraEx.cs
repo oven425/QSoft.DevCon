@@ -13,7 +13,7 @@ namespace QSoft.DevCon
     //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/stream/camera-device-orientation
     public static partial class DevMgrExtension
     {
-        public static DEVPROPKEY DEVPKEY_Devices_PhysicalDeviceLocation = new DEVPROPKEY() { fmtid = Guid.Parse("{540B947E-8B40-45BC-A8A2-6A0B894CBDA2}"), pid = 9 };
+        public static DEVPROPKEY DEVPKEY_Devices_PhysicalDeviceLocation = new() { fmtid = Guid.Parse("{540B947E-8B40-45BC-A8A2-6A0B894CBDA2}"), pid = 9 };
         public static CameraPanel Panel(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
@@ -30,7 +30,7 @@ namespace QSoft.DevCon
             Marshal.Copy(buffer, lbuffer, 0, (int)reqsz);
 
 
-            BitArray myBA3 = new BitArray(lbuffer);
+            var myBA3 = new BitArray(lbuffer);
 
             Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
             
@@ -48,7 +48,7 @@ namespace QSoft.DevCon
 
                 if (i > 0)
                 {
-                    dd = dd << 1;
+                    dd <<= 1;
                 }
                 int o = src[i] == true ? 1 : 0;
                 dd = dd | o;
