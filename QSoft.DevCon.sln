@@ -13,9 +13,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DevMgr", "DevMgr\DevMgr.vcx
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp2", "ConsoleApp2\ConsoleApp2.csproj", "{11F24625-421A-48D9-A33A-981F2D95537D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QSoft.DevConCore", "QSoft.DevConCore\QSoft.DevConCore.csproj", "{95F56BE7-3995-473E-A55F-EEE2A5BE498A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QSoft.DevConCore", "QSoft.DevConCore\QSoft.DevConCore.csproj", "{95F56BE7-3995-473E-A55F-EEE2A5BE498A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp_NET", "ConsoleApp_NET\ConsoleApp_NET.csproj", "{1AFBFF04-9785-4DE4-8795-627AD0C436B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp_NET", "ConsoleApp_NET\ConsoleApp_NET.csproj", "{1AFBFF04-9785-4DE4-8795-627AD0C436B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

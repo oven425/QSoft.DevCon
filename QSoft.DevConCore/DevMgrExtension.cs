@@ -3,7 +3,6 @@ using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
-using static QSoft.DevCon.SetupApi;
 
 //https://cloud.tencent.com/developer/article/1998154
 namespace QSoft.DevCon
@@ -16,32 +15,31 @@ namespace QSoft.DevCon
             foreach(var oo in drives)
             {
                 var strb = new StringBuilder(1024);
-                SetupApi.QueryDosDevice(oo.Name.Replace("\\",""), strb, strb.Capacity);
+                QueryDosDevice(oo.Name.Replace("\\",""), strb, strb.Capacity);
                 yield return (oo.Name, strb.ToString());
             }
         }
 
-        public static string GetPowerRelations(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             StringBuilder? strb = null;
             int reqsz = 0;
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DPKEY_Device_PowerRelations, out propertytype, strb, 0, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DPKEY_Device_PowerRelations, out propertytype, strb, 0, out reqsz, 0);
             strb = new StringBuilder(reqsz);
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DPKEY_Device_PowerRelations, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DPKEY_Device_PowerRelations, out propertytype, strb, strb.Capacity, out reqsz, 0);
             return strb.ToString();
         }
         [SupportedOSPlatform("windows")]
-        public static string GetComPortName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string? GetComPortName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var hKey = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
-            //Console.WriteLine($"hKey.IsInvalid:{hKey.IsInvalid}");
-            if (hKey.IsInvalid == false)
+            if (!hKey.IsInvalid)
             {
                 using (var reg = RegistryKey.FromHandle(hKey))
                 {
-                    var portname = reg?.GetValue("PortName").ToString();
-                    return portname!;
+                    var portname = reg?.GetValue("PortName");
+                    return portname?.ToString();
                 }
                     
 
@@ -49,128 +47,116 @@ namespace QSoft.DevCon
             return "";
         }
 
-        public static string GetService(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string GetService(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_SERVICE, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-            if (hr == false)
-            {
-            }
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_SERVICE, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
 
-        public static string GetParent(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetParent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             StringBuilder? strb = null;
             int reqsz = 0;
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Parent, out propertytype, strb, 0, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_Parent, out propertytype, strb, 0, out reqsz, 0);
             strb = new StringBuilder(reqsz);
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Parent, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_Parent, out propertytype, strb, strb.Capacity, out reqsz, 0);
 
 
             return strb.ToString();
         }
 
-        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-            if (hr == false)
-            {
-            }
-            return strb.ToString();                                                      //
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+
+            return strb.ToString();
         }
 
-        public static string GetChildren(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             StringBuilder? strb = null;
             int reqsz = 0;
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Children, out propertytype, strb, 0, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_Children, out propertytype, strb, 0, out reqsz, 0);
             strb = new StringBuilder(reqsz);
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_Children, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_Children, out propertytype, strb, strb.Capacity, out reqsz, 0);
 
 
             return strb.ToString();
         }
 
-        public static bool IsConnect(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static bool IsConnect(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             int reqsz = 0;
             int property = 0;
-            var hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DevNodeStatus, out propertytype, out property, 0, out reqsz, 0);
+            var hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DevNodeStatus, out propertytype, out property, 0, out reqsz, 0);
             if(hr == false)
             {
                 var err = Marshal.GetLastWin32Error();
             }
 
-            hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DevNodeStatus, out propertytype, out property, reqsz, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DevNodeStatus, out propertytype, out property, reqsz, out reqsz, 0);
 
-            var oo = property & SetupApi.DN_NEEDS_LOCKING;
+            var oo = property & DN_NEEDS_LOCKING;
             return true;
         }
 
-        public static string? GetHardwaeeID(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string? GetHardwaeeID(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-            if (hr == false)
-            {
-            }
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return null;
         }
 
-        public static List<string> GetHardwaeeIDs(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var ids = new List<string>();
             int reqsize = 0;
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, null, 0, out reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, null, 0, out reqsize);
             if(reqsize == 0)
             {
                 return ids;
             }
             byte[] bb = new byte[reqsize];
-            hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, bb, bb.Length, out reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, IntPtr.Zero, bb, bb.Length, out reqsize);
             ids = bb.Split(reqsize);
             return ids;
         }
 
-        public static uint GetCapabilities(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static uint GetCapabilities(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint dd = 0;
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CAPABILITIES, IntPtr.Zero, out dd, 8, IntPtr.Zero);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CAPABILITIES, IntPtr.Zero, out dd, 8, IntPtr.Zero);
             return dd;
         }
 
-        public static string GetDisplayName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
+        public static string GetDisplayName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-            if(hr == false)
+            var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            if(!hr)
             {
-                hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICEDESC, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICEDESC, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             }
             return strb.ToString();
         }
 
-        public static string GetFriendName(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-            if(hr == false)
-            {
-                //throw new Exception($"err:{Marshal.GetLastWin32Error()}");
-                //Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
-            }
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+
             return strb.ToString();
         }
 
-        public static string GetAddress(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string GetAddress(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SetupApi.SPDRP_ADDRESS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_ADDRESS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             if (hr == false)
             {
                 System.Diagnostics.Trace.WriteLine($"GetAddress fail:{Marshal.GetLastWin32Error()}");
@@ -184,11 +170,11 @@ namespace QSoft.DevCon
             return strb.ToString();
         }
 
-        public static uint GetBusNumber(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static uint GetBusNumber(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint dd = 0;
             int reqeize = 0;
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_BUSNUMBER, IntPtr.Zero, null, 0, out reqeize);
+            var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_BUSNUMBER, IntPtr.Zero, null, 0, out reqeize);
             if(hr == false)
             {
                 var err = Marshal.GetLastWin32Error();
@@ -197,17 +183,17 @@ namespace QSoft.DevCon
             return dd;
         }
 
-        public static List<string> GetLocationPaths(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             byte[]? bb = null;
             int reqsize = 0;
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, null, 0, out reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, null, 0, out reqsize);
             if(reqsize == 0)
             {
                 return new List<string>();
             }
             bb = new byte[reqsize];
-            hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, bb, bb.Length, out reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, bb, bb.Length, out reqsize);
             return bb.Split(reqsize);
         }
 
@@ -240,10 +226,10 @@ namespace QSoft.DevCon
             return list;
         }
 
-        public static string GetLoationInformation(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
+        public static string GetLoationInformation(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_INFORMATION, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_INFORMATION, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
 
@@ -256,18 +242,18 @@ namespace QSoft.DevCon
         //}
 
 
-        public static string GetClass(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
+        public static string GetClass(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CLASS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CLASS, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
 
-        public static Guid GetClassGuid(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             Guid guid = Guid.Empty;
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CLASSGUID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_CLASSGUID, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             if(Guid.TryParse(strb.ToString(), out guid) == false)
             {
                 return guid;
@@ -277,38 +263,38 @@ namespace QSoft.DevCon
         }
 
         
-        public static string GetEnumerator_Name(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string GetEnumerator_Name(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_ENUMERATOR_NAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_ENUMERATOR_NAME, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
         public static string GetClassDescription(this Guid src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            SetupApi.SetupDiGetClassDescription(ref src, strb, strb.Capacity, IntPtr.Zero);
+            SetupDiGetClassDescription(ref src, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
 
-        public static string GetDescription1(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string GetDescription1(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             uint propertytype = 0;
             strb ??= new StringBuilder(2048);
             int reqsz = 0;
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DPKEY_Device_DeviceDesc, out propertytype, strb, 0, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DPKEY_Device_DeviceDesc, out propertytype, strb, 0, out reqsz, 0);
             strb = new StringBuilder(reqsz);
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DPKEY_Device_DeviceDesc, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DPKEY_Device_DeviceDesc, out propertytype, strb, strb.Capacity, out reqsz, 0);
             return strb.ToString();
         }
 
-        public static string GetDescription(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
+        public static string GetDescription(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb = null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICEDESC, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICEDESC, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
 
-        public static string GetInstanceId(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
+        public static string GetInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
         {
             strb ??= new StringBuilder(2048);
             SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, strb, strb.Capacity, IntPtr.Zero);
@@ -336,41 +322,41 @@ namespace QSoft.DevCon
             return GuidArray;
         }
 
-        public static string GetMFG(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
+        public static string GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder? strb=null)
         {
             strb ??= new StringBuilder(2048);
-            var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_MFG, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_MFG, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
             return strb.ToString();
         }
         //DriverInfSection
-        public static string GetDriverInfSection(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetDriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             StringBuilder? strb = null;
             int reqsz = 0;
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverInfSection, out propertytype, strb, 0, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverInfSection, out propertytype, strb, 0, out reqsz, 0);
             strb = new StringBuilder(reqsz);
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverInfSection, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverInfSection, out propertytype, strb, strb.Capacity, out reqsz, 0);
             return strb.ToString();
         }
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
-        public static string GetDriverVersion(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             StringBuilder? strb = null;
             int reqsz = 0;
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, 0, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverVersion, out propertytype, strb, 0, out reqsz, 0);
             strb = new StringBuilder(reqsz);
-            SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
             return strb.ToString();
         }
 
-        public static DateTime GetDriverDate(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             uint propertytype = 0;
             long dd = 0;
             int reqsz = 0;
-            var hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverDate, out propertytype, out dd, 8, out reqsz, 0);
+            var hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverDate, out propertytype, out dd, 8, out reqsz, 0);
             var dq = DateTime.FromFileTime(dd);
             //strb = new StringBuilder(reqsz);
             //SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
@@ -387,11 +373,11 @@ namespace QSoft.DevCon
         //    return strb.ToString();
         //}
 
-        static public IntPtr GetICon(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        static public IntPtr GetICon(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             IntPtr icon;
             
-            var hr = SetupApi.SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 0, 0, 0, out icon);
+            SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 0, 0, 0, out icon);
             return icon;
         }
 
@@ -416,12 +402,12 @@ namespace QSoft.DevCon
         //    return "";
         //}
 
-        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
+        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
         {
             return src.GetDevClass().FirstOrDefault().Devices();
         }
 
-        public static IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice=false)
+        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice=false)
         {
             uint index = 0;
 
@@ -435,14 +421,14 @@ namespace QSoft.DevCon
             {
                 flags  = flags | DIGCF_ALLCLASSES;
             }
-            IntPtr hDevInfo = SetupApi.SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
+            IntPtr hDevInfo = SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
             try
             {
                 while (true)
                 {
                     SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
                     devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
-                    if (SetupApi.SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
+                    if (SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo) == false)
                     {
                         var err = Marshal.GetLastWin32Error();
                         yield break;
@@ -456,7 +442,7 @@ namespace QSoft.DevCon
             }
             finally
             {
-                SetupApi.SetupDiDestroyDeviceInfoList(hDevInfo);
+                SetupDiDestroyDeviceInfoList(hDevInfo);
             }
         }
 
@@ -478,7 +464,7 @@ namespace QSoft.DevCon
         private static extern Boolean SetupDiEnumDeviceInterfaces(IntPtr deviceInfoSet, IntPtr deviceInfoData, ref Guid interfaceClassGuid, uint memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
         [DllImport("setupapi.dll", SetLastError = false, CharSet = CharSet.Auto)]
         private static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr deviceInfoSet, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, IntPtr deviceInterfaceDetailData, int deviceInterfaceDetailDataSize, ref int requiredSize, SP_DEVINFO_DATA deviceInfoData);
-        public static string DevicePath(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
+        public static string DevicePath(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
            
             Guid hUSB = src.GetClassGuid();
@@ -512,13 +498,13 @@ namespace QSoft.DevCon
             return "";
         }
 
-        public static int Remove(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
+        public static int Remove(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             int index = 0;
             foreach (var oo in src)
             {
                 var devdata = oo.devdata;
-                var hr = SetupApi.SetupDiRemoveDevice(oo.dev, ref devdata);
+                var hr = SetupDiRemoveDevice(oo.dev, ref devdata);
                 if(hr==false)
                 {
                     throw new Exception($"SetupDiRemoveDevice fail, errcoed{Marshal.GetLastWin32Error()}");
@@ -528,7 +514,7 @@ namespace QSoft.DevCon
             return index;
         }
 
-        public static int Enable(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
+        public static int Enable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             int index = 0;
             foreach (var oo in src)
@@ -539,7 +525,7 @@ namespace QSoft.DevCon
             return index;
         }
 
-        public static int Disable(this IEnumerable<(IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata)> src)
+        public static int Disable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             int index = 0;
             foreach (var oo in src)
@@ -571,7 +557,7 @@ namespace QSoft.DevCon
         //    return 0;
         //}
 
-        static public void ChangeState(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, bool isenable)
+        static public void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
         {
             uint status;
             uint problem;
@@ -629,6 +615,44 @@ namespace QSoft.DevCon
             }
             return sMsg;
         }
+
+        public enum FORMAT_MESSAGE : uint
+        {
+            ALLOCATE_BUFFER = 0x00000100,
+            IGNORE_INSERTS = 0x00000200,
+            FROM_SYSTEM = 0x00001000,
+            ARGUMENT_ARRAY = 0x00002000,
+            FROM_HMODULE = 0x00000800,
+            FROM_STRING = 0x00000400
+        }
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        static extern int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource, int dwMessageId, int dwLanguageZId, ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiDestroyDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType);
+
+
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder? propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, byte[]? propertyBuffer, int propertyBufferSize, out int requiredSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, out uint propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
+
+        [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, byte[] PropertyBuffer, uint PropertyBufferSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiGetClassDescription(ref Guid ClassGuid, StringBuilder? ClassDescription, int ClassDescriptionSize, IntPtr RequiredSize);
+        [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern SafeRegistryHandle SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
+
+
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool SetupDiLoadDeviceIcon(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
+
     }
 
     //public class SafeIconHandle : SafeHandleMinusOneIsInvalid
@@ -646,19 +670,8 @@ namespace QSoft.DevCon
     //}
 
 
-    public static class SetupApi
+    public static partial class DevMgrExtension
     {
-        public enum FORMAT_MESSAGE : uint
-        {
-            ALLOCATE_BUFFER = 0x00000100,
-            IGNORE_INSERTS = 0x00000200,
-            FROM_SYSTEM = 0x00001000,
-            ARGUMENT_ARRAY = 0x00002000,
-            FROM_HMODULE = 0x00000800,
-            FROM_STRING = 0x00000400
-        }
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-        public static extern int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource, int dwMessageId, int dwLanguageZId, ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         public struct SP_DEVINFO_DATA
@@ -706,8 +719,6 @@ namespace QSoft.DevCon
         };
 
 
-        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern bool SetupDiLoadDeviceIcon(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, StringBuilder? DeviceInstanceId, int DeviceInstanceIdSize, IntPtr RequiredSize);
@@ -732,27 +743,6 @@ namespace QSoft.DevCon
   uint DriverInfoDetailDataSize,
   out uint RequiredSize
 );
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiDestroyDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType);
-
-
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, StringBuilder? propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, byte[]? propertyBuffer, int propertyBufferSize, out int requiredSize);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, IntPtr propertyRegDataType, out uint propertyBuffer, int propertyBufferSize, IntPtr requiredSize);
-
-        [DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, byte[] PropertyBuffer, uint PropertyBufferSize);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiGetClassDescription(ref Guid ClassGuid, StringBuilder? ClassDescription, int ClassDescriptionSize, IntPtr RequiredSize);
-        [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern SafeRegistryHandle SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(
@@ -946,35 +936,4 @@ namespace QSoft.DevCon
                                                           (~SYNCHRONIZE));
 
     }
-
-    public class DeviceInfo
-    {
-        internal SetupApi.SP_DEVINFO_DATA m_DevInfo;
-        public DeviceInfo(IntPtr handle, SP_DEVINFO_DATA devinfo)
-        {
-            this.InstanceId = (handle, devinfo).GetInstanceId();
-            this.Class = (handle,devinfo).GetClass();
-            this.ClassGuid = (handle,devinfo).GetClassGuid();
-            this.ClassDescription = this.ClassGuid.GetClassDescription();
-            this.Description =(handle,devinfo).GetDescription();
-            this.Manufacturer = (handle, devinfo).GetMFG();
-            this.m_DevInfo = devinfo;
-        }
-        public string Class { internal set; get; }
-        public string ClassDescription { internal set; get; }
-        public Guid ClassGuid { internal set; get; }
-        public List<string> HardwareIDs { internal set; get; } = new List<string>();
-        public string FriendlyName { internal set; get; }
-        public string Description { internal set; get; }
-        public string InstanceId { internal set; get; }
-        public string Location { internal set; get; }
-        public List<string> LocationPaths { internal set; get; } = new List<string>();
-        public string Manufacturer { private set; get; }
-        //internal void ChangeState(bool isenable, IntPtr dev)
-        //{
-        //    uint status;
-
-        //}
-    }
-
 }
