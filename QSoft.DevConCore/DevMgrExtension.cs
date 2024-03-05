@@ -160,8 +160,6 @@ namespace QSoft.DevCon
             if (hr == false)
             {
                 System.Diagnostics.Trace.WriteLine($"GetAddress fail:{Marshal.GetLastWin32Error()}");
-                //throw new Exception($"err:{Marshal.GetLastWin32Error()}");
-                //Console.WriteLine($"err:{Marshal.GetLastWin32Error()}");
             }
             else
             {
@@ -175,10 +173,9 @@ namespace QSoft.DevCon
             uint dd = 0;
             int reqeize = 0;
             var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_BUSNUMBER, IntPtr.Zero, null, 0, out reqeize);
-            if(hr == false)
+            if(!hr)
             {
-                var err = Marshal.GetLastWin32Error();
-                err = 0;
+                Marshal.GetLastWin32Error();
             }
             return dd;
         }
@@ -186,7 +183,7 @@ namespace QSoft.DevCon
         public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             byte[]? bb = null;
-            int reqsize = 0;
+            var reqsize = 0;
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, IntPtr.Zero, null, 0, out reqsize);
             if(reqsize == 0)
             {
@@ -358,20 +355,8 @@ namespace QSoft.DevCon
             int reqsz = 0;
             var hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverDate, out propertytype, out dd, 8, out reqsz, 0);
             var dq = DateTime.FromFileTime(dd);
-            //strb = new StringBuilder(reqsz);
-            //SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
-            //return strb.ToString();
             return dq;
         }
-        //public static string GetDriver(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
-        //{
-        //    if (strb == null)
-        //    {
-        //        strb = new StringBuilder(2048);
-        //    }
-        //    var hr = SetupApi.SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DRIVER, IntPtr.Zero, strb, strb.Capacity, IntPtr.Zero);
-        //    return strb.ToString();
-        //}
 
         static public IntPtr GetICon(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -380,27 +365,6 @@ namespace QSoft.DevCon
             SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 0, 0, 0, out icon);
             return icon;
         }
-
-        //public static string GetDriverInfo(this (IntPtr dev, SetupApi.SP_DEVINFO_DATA devdata) src)
-        //{
-        //    if (SetupApi.SetupDiBuildDriverInfoList(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER) == true)
-        //    {
-        //        int memberindex = 0;
-        //        SP_DRVINFO_DATA dvrinfo = new SP_DRVINFO_DATA();
-        //        dvrinfo.cbSize = (uint)Marshal.SizeOf(typeof(SP_DRVINFO_DATA));
-        //        //dvrinfo.cbSize = 1564;
-        //        var hr = SetupApi.SetupDiEnumDriverInfo(src.dev, ref src.devdata, SetupApi.SPDIT_COMPATDRIVER, memberindex, ref dvrinfo);
-        //        var err = Marshal.GetLastWin32Error();
-        //        long ltime = dvrinfo.InfDate.dwHighDateTime;
-        //        ltime = ltime << 32;
-        //        ltime = ltime + dvrinfo.InfDate.dwLowDateTime;
-        //        var dd = DateTime.FromFileTime(ltime);
-
-        //        //https://www.itread01.com/article/1480521605.html
-
-        //    }
-        //    return "";
-        //}
 
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
         {
@@ -536,27 +500,6 @@ namespace QSoft.DevCon
             return index;
         }
 
-        //public static int Do<T>(this IEnumerable<T> src, Action<T> action)
-        //{
-        //    foreach (var oo in src)
-        //    {
-        //        action(oo);
-        //    }
-        //    return 0;
-        //}
-
-        //public static int Do<T>(this IEnumerable<T> src, Action<T, int> action)
-        //{
-        //    int index = 0;
-        //    foreach (var oo in src)
-        //    {
-        //        action(oo, index);
-        //        index++;
-
-        //    }
-        //    return 0;
-        //}
-
         static public void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
         {
             uint status;
@@ -625,8 +568,15 @@ namespace QSoft.DevCon
             FROM_HMODULE = 0x00000800,
             FROM_STRING = 0x00000400
         }
+#if NET8_0_OR_GREATER
+        [LibraryImport("kernel32.dll", CharSet = CharSet.Auto)]
+        static extern int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource, int dwMessageId, int dwLanguageZId, ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
+
+#else
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         static extern int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource, int dwMessageId, int dwLanguageZId, ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
+
+#endif
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiDestroyDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType);
 
@@ -652,26 +602,6 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern bool SetupDiLoadDeviceIcon(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
-
-    }
-
-    //public class SafeIconHandle : SafeHandleMinusOneIsInvalid
-    //{
-    //    public SafeIconHandle(bool ownsHandle) : base(ownsHandle)
-    //    {
-    //    }
-
-    //    public override bool IsInvalid => throw new NotImplementedException();
-
-    //    protected override bool ReleaseHandle()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
-
-
-    public static partial class DevMgrExtension
-    {
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         public struct SP_DEVINFO_DATA
@@ -729,11 +659,10 @@ namespace QSoft.DevCon
         public static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
 
         [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiBuildDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData,int DriverType);
+        public static extern bool SetupDiBuildDriverInfoList(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern bool SetupDiEnumDriverInfo(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType, int MemberIndex, ref SP_DRVINFO_DATA DriverInfoData);
-        //[DllImport("setupapi.dll", SetLastError = true)]
-        //public static extern bool SetupDiEnumDriverInfo(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, int DriverType, int MemberIndex, out SP_DRVINFO_DATA DriverInfoData);
+
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDriverInfoDetailW(IntPtr DeviceInfoSet,
@@ -763,7 +692,7 @@ namespace QSoft.DevCon
         }
         //https://www.magnumdb.com/search?q=filename%3A%22FunctionDiscoveryKeys_devpkey.h%22
         public static DEVPROPKEY DPKEY_Device_PowerRelations = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 6 };
-        public static DEVPROPKEY DEVPKEY_Device_Parent = new() {fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=8 };
+        public static DEVPROPKEY DEVPKEY_Device_Parent = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 8 };
         public static DEVPROPKEY DEVPKEY_Device_Children = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
         //public static DEVPROPKEY DEVPKEY_Device_Connected = new DEVPROPKEY() { fmtid = Guid.Parse("{78C34FC8-104A-4ACA-9EA4-524D52996E57}"), pid = 55 };
         public static DEVPROPKEY DEVPKEY_Device_DevNodeStatus = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 2 };
@@ -936,4 +865,6 @@ namespace QSoft.DevCon
                                                           (~SYNCHRONIZE));
 
     }
+
+
 }
