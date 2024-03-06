@@ -24,8 +24,7 @@ namespace QSoft.DevCon
         {
             uint propertytype = 0;
             StringBuilder? strb = null;
-            int reqsz = 0;
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DPKEY_Device_PowerRelations, out propertytype, strb, 0, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DPKEY_Device_PowerRelations, out propertytype, strb, 0, out var reqsz, 0);
             strb = new StringBuilder(reqsz);
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DPKEY_Device_PowerRelations, out propertytype, strb, strb.Capacity, out reqsz, 0);
             return strb.ToString();
@@ -569,7 +568,7 @@ namespace QSoft.DevCon
             FROM_STRING = 0x00000400
         }
 #if NET8_0_OR_GREATER
-        [LibraryImport("kernel32.dll", CharSet = CharSet.Auto)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         static extern int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource, int dwMessageId, int dwLanguageZId, ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
 
 #else
