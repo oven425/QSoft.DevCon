@@ -193,6 +193,11 @@ BOOL ListDeviceInstancePath()
 #include <Devpkey.h>
 int main()
 {
+	DWORD reqszie = 0;
+	auto uu = SetupDiClassGuidsFromNameW(_T("Camera"), nullptr, 0, &reqszie);
+	auto guids = new GUID[reqszie];
+	uu = SetupDiClassGuidsFromNameW(_T("Camera"), guids, reqszie, &reqszie);
+
 	//DEVPKEY_Device_DriverVersion
 	auto dd = DEVPROP_TYPE_BINARY;
 	//auto aa = SPDRP_PHYSICAL_DEVICE_LOCATION;
