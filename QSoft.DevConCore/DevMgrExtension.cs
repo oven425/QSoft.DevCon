@@ -375,7 +375,7 @@ namespace QSoft.DevCon
             uint index = 0;
 
             uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
-            if(showhiddendevice==true)
+            if(showhiddendevice)
             {
                 flags = DIGCF_PROFILE;
             }
