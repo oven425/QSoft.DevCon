@@ -56,7 +56,7 @@ namespace ClassLibrary1
             int reqszie = 0;
             var ii = IntPtr.Zero;
             var bb = _ = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, ii, 0, out reqszie);
-            //var s1 = Marshal.SizeOf<char>();
+            var s1 = Marshal.SizeOf<char>();
             ////var _pointer = Marshal.AllocCoTaskMem(s1* reqszie);
             ////bb = _ = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, _pointer, reqszie, out reqszie);
             ////var aa = Marshal.PtrToStringUni(_pointer);
@@ -65,11 +65,11 @@ namespace ClassLibrary1
             //{
             //    System.Diagnostics.Trace.WriteLine($"err:{err}");
             //}
-            //using (var buffer = new IntPtrMem(s1 * reqszie))
-            //{
-            //    SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
-            //    return Marshal.PtrToStringUni(buffer.Pointer);
-            //}
+            using (var buffer = new IntPtrMem(s1 * reqszie*2))
+            {
+                SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
+                return Marshal.PtrToStringUni(buffer.Pointer);
+            }
 
 #endif
 
@@ -204,8 +204,9 @@ namespace ClassLibrary1
         public int Size { private set; get; } = 0;
         public IntPtrMem(int size)
         {
+            //Marshal.AllocHGlobal 
             Size = size;
-            m_pBuffer = Marshal.AllocCoTaskMem(Size);
+            m_pBuffer = Marshal.AllocHGlobal(Size);
         }
         IntPtr m_pBuffer = IntPtr.Zero;
         public void Dispose()
@@ -213,7 +214,7 @@ namespace ClassLibrary1
             IntPtr intPtr = Interlocked.Exchange(ref m_pBuffer, IntPtr.Zero);
             if (intPtr != IntPtr.Zero)
             {
-                Marshal.FreeCoTaskMem(intPtr);
+                Marshal.FreeHGlobal(intPtr);
             }
         }
     }
