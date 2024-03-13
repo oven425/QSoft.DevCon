@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters;
 using System.Text;
 using System.Threading;
 
@@ -29,7 +30,7 @@ namespace ClassLibrary1
             {
                 while (true)
                 {
-                    SP_DEVINFO_DATA devinfo = new SP_DEVINFO_DATA();
+                    SP_DEVINFO_DATA devinfo = new();
                     devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
                     if (!SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo))
                     {
@@ -50,27 +51,109 @@ namespace ClassLibrary1
             }
         }
 
+        public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var str = "";
+#if NET8_0_OR_GREATER
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, out var property_type, IntPtr.Zero, 0, out var reqsize);
+            if(reqsize >0)
+            {
+                using(var mem = new IntPtrMem<byte>((int)reqsize*2))
+                {
+                    SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, out property_type, mem.Pointer, reqsize, out  reqsize);
+                    str = Marshal.PtrToStringUni(mem.Pointer);
+                }
+            }
+
+            
+#endif
+            return str??"";
+        }
+
+        public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var ids = new List<string>();
+#if NET8_0_OR_GREATER
+
+            var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out var property_type, IntPtr.Zero, 0, out  var reqsize);
+            
+            var aa = Marshal.GetLastWin32Error();
+            using (var mem = new IntPtrMem<byte>((int)reqsize))
+            {
+                hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out property_type,mem.Pointer, reqsize, out reqsize);
+
+                var str = Marshal.PtrToStringUni(mem.Pointer); 
+                byte[] b = new byte[reqsize];
+               
+                Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
+                ids.AddRange(b.Chunk());
+            }
+            //ids = bb.Split(reqsize);
+
+#endif
+            return ids;
+        }
+
+        static List<string> Chunk(this byte[] src)
+        {
+            List<string> ids = new List<string>();
+            var index = 0;
+            for(int i=0; i<src.Length-5; i++)
+            {
+                if (src[i]==0&& src[i+1]==0 && src[i + 2] == 0)
+                {
+                    int len = i - index+1;
+                    var id = Encoding.Unicode.GetString(src, index, len);
+                    ids.Add(id);
+                    index = i + 3;
+                }
+            }
+            return ids;
+        }
+
+        static List<string> Split(this byte[] src, int src_length)
+        {
+            int src_len = src_length - 2;
+            List<string> list = new List<string>();
+            int startindex = 0;
+            while (true)
+            {
+                var findindex = Array.IndexOf(src, (byte)0, startindex);
+                if (findindex <= 0)
+                {
+                    var stirng1 = Encoding.UTF8.GetString(src, startindex, src_len - startindex);
+                    list.Add(stirng1);
+                    break;
+                }
+                else if (findindex >= src_len)
+                {
+                    var stirng1 = Encoding.UTF8.GetString(src, startindex, src_len - startindex);
+                    list.Add(stirng1);
+                    break;
+                }
+
+                var stirng = Encoding.UTF8.GetString(src, startindex, findindex - startindex);
+                list.Add(stirng);
+                startindex = findindex + 1;
+            }
+
+            return list;
+        }
+
         public static string? GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
+
 #if NET8_0_OR_GREATER
             int reqszie = 0;
             var ii = IntPtr.Zero;
             var bb = _ = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, ii, 0, out reqszie);
             var s1 = Marshal.SizeOf<char>();
-            ////var _pointer = Marshal.AllocCoTaskMem(s1* reqszie);
-            ////bb = _ = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, _pointer, reqszie, out reqszie);
-            ////var aa = Marshal.PtrToStringUni(_pointer);
-            //var err = Marshal.GetLastWin32Error();
-            //if(err != 0)
-            //{
-            //    System.Diagnostics.Trace.WriteLine($"err:{err}");
-            //}
-            using (var buffer = new IntPtrMem(s1 * reqszie*2))
+            using (var buffer = new IntPtrMem<char>(reqszie*2))
             {
                 SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
                 return Marshal.PtrToStringUni(buffer.Pointer);
             }
-
+            
 #endif
 
             return "";
@@ -106,24 +189,16 @@ namespace ClassLibrary1
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
 
-        //[LibraryImport("setupapi.dll", SetLastError = true)]
-        //[return: MarshalAs(UnmanagedType.Bool)]
-        //internal static partial bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, [MarshalAs(UnmanagedType.LPWStr)]string? DeviceInstanceId, uint DeviceInstanceIdSize, ref uint RequiredSize);
-
-
-
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInstanceIdW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceRegistryPropertyW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
 
         [LibraryImport("setupapi.dll",EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
-
-        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
-        //[return: MarshalAs(UnmanagedType.Bool)]
-        //public static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)]string ClassName,  IntPtr guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
-
 
 #else
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
@@ -186,7 +261,7 @@ namespace ClassLibrary1
         public const uint SPDRP_MAXIMUM_PROPERTY = (0x00000025);  // Upper bound on ordinals
     }
 
-    public sealed class IntPtrMem : IDisposable
+    public sealed class IntPtrMem<T> : IDisposable
     {
         public IntPtr Pointer
         {
@@ -204,10 +279,11 @@ namespace ClassLibrary1
         public int Size { private set; get; } = 0;
         public IntPtrMem(int size)
         {
-            //Marshal.AllocHGlobal 
-            Size = size;
+            var s1 = Marshal.SizeOf<char>();
+            Size = s1*size;
             m_pBuffer = Marshal.AllocHGlobal(Size);
         }
+
         IntPtr m_pBuffer = IntPtr.Zero;
         public void Dispose()
         {

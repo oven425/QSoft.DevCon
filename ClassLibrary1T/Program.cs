@@ -3,8 +3,8 @@ using ClassLibrary1;
 using System;
 using System.Linq;
 Console.WriteLine("Hello, World!");
-var ll = Guid.Empty.Devices().Select(x => x.GetDeviceInstanceId());
-//var cc = ll.Count;
+var ll = Guid.Empty.Devices().Select(x => x.GetFriendName());
+
 try
 {
     foreach (var device in ll)
