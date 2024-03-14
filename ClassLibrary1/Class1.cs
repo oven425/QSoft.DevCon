@@ -94,6 +94,31 @@ namespace ClassLibrary1
             return ids;
         }
 
+        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var ids = new List<string>();
+#if NET8_0_OR_GREATER
+
+            var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out var property_type, IntPtr.Zero, 0, out var reqsize);
+
+            var aa = Marshal.GetLastWin32Error();
+            using (var mem = new IntPtrMem<byte>((int)reqsize))
+            {
+                hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out property_type, mem.Pointer, reqsize, out reqsize);
+
+                var str = Marshal.PtrToStringUni(mem.Pointer);
+                byte[] b = new byte[reqsize];
+
+                Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
+                ids.AddRange(b.Chunk());
+            }
+            //ids = bb.Split(reqsize);
+
+#endif
+            return ids;
+        }
+
+
         static List<string> Chunk(this byte[] src)
         {
             List<string> ids = new List<string>();
