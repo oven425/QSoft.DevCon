@@ -39,7 +39,7 @@ namespace ConsoleApp1
         {
             try
             {
-                var driver = "Camera".Devices().Select(x =>new
+                var driver = Guid.Empty.Devices().Select(x =>new
                 {
                     date = x.GetDriverDate(),
                     ds = x.GetDisplayName(),
@@ -48,6 +48,7 @@ namespace ConsoleApp1
                     decs1 = x.GetDescription1(),
                     driverversion = x.GetDriverVersion(),
                    sectioninf = x.GetDriverInfSection(),
+                   guid = x.GetClassGuid(),
                 }).ToList();
                 Console.ReadLine();
 

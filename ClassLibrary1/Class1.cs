@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters;
 using System.Text;
@@ -19,7 +20,7 @@ namespace ClassLibrary1
             {
                 flags = DIGCF_PROFILE;
             }
-            flags |= DIGCF_DEVICEINTERFACE;
+            //flags |= DIGCF_DEVICEINTERFACE;
             if (guid == Guid.Empty)
             {
                 flags |= DIGCF_ALLCLASSES;
@@ -55,19 +56,18 @@ namespace ClassLibrary1
         {
             var str = "";
 #if NET8_0_OR_GREATER
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            if(reqsize >0)
-            {
-                using(var mem = new IntPtrMem<byte>((int)reqsize*2))
-                {
-                    SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_FRIENDLYNAME, out property_type, mem.Pointer, reqsize, out  reqsize);
-                    str = Marshal.PtrToStringUni(mem.Pointer);
-                }
-            }
-
-            
+            str = GetString(src, SPDRP_FRIENDLYNAME);
 #endif
             return str??"";
+        }
+
+        public static string GetDeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var str = "";
+#if NET8_0_OR_GREATER
+            str = GetString(src, SPDRP_DEVICEDESC);
+#endif
+            return str ?? "";
         }
 
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -86,6 +86,7 @@ namespace ClassLibrary1
                 byte[] b = new byte[reqsize];
                
                 Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
+                
                 ids.AddRange(b.Chunk());
             }
             //ids = bb.Split(reqsize);
@@ -118,7 +119,6 @@ namespace ClassLibrary1
             return ids;
         }
 
-
         static List<string> Chunk(this byte[] src)
         {
             List<string> ids = new List<string>();
@@ -136,38 +136,8 @@ namespace ClassLibrary1
             return ids;
         }
 
-        static List<string> Split(this byte[] src, int src_length)
-        {
-            int src_len = src_length - 2;
-            List<string> list = new List<string>();
-            int startindex = 0;
-            while (true)
-            {
-                var findindex = Array.IndexOf(src, (byte)0, startindex);
-                if (findindex <= 0)
-                {
-                    var stirng1 = Encoding.UTF8.GetString(src, startindex, src_len - startindex);
-                    list.Add(stirng1);
-                    break;
-                }
-                else if (findindex >= src_len)
-                {
-                    var stirng1 = Encoding.UTF8.GetString(src, startindex, src_len - startindex);
-                    list.Add(stirng1);
-                    break;
-                }
-
-                var stirng = Encoding.UTF8.GetString(src, startindex, findindex - startindex);
-                list.Add(stirng);
-                startindex = findindex + 1;
-            }
-
-            return list;
-        }
-
         public static string? GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-
 #if NET8_0_OR_GREATER
             int reqszie = 0;
             var ii = IntPtr.Zero;
@@ -183,6 +153,57 @@ namespace ClassLibrary1
 
             return "";
         }
+
+        public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var str = GetString(src, SPDRP_CLASSGUID);
+            if (Guid.TryParse(str, out var guid))
+            {
+                return guid;
+            }
+            return Guid.Empty;
+        }
+
+        public static string? GetClassDesc(this Guid guid)
+        {
+            var str = "";
+#if NET8_0_OR_GREATER
+            SetupDiGetClassDescription(guid!, IntPtr.Zero, 0, out var reqsize);
+            if(reqsize > 0)
+            {
+                using(var mem = new IntPtrMem<byte>((int)reqsize *2))
+                {
+                    SetupDiGetClassDescription(guid!, mem.Pointer, reqsize, out reqsize);
+                    str = Marshal.PtrToStringUni(mem.Pointer);
+                }
+            }
+#else
+
+#endif
+
+
+            return str;
+        }
+
+        static string? GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
+        {
+            var str = "";
+#if NET8_0_OR_GREATER
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
+            if (reqsize > 0)
+            {
+                using (var mem = new IntPtrMem<byte>((int)reqsize * 2))
+                {
+                    SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
+                    str = Marshal.PtrToStringUni(mem.Pointer);
+                }
+            }
+#else
+#endif
+            return str;
+        }
+
+
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         public struct SP_DEVINFO_DATA
@@ -224,6 +245,19 @@ namespace ClassLibrary1
         [LibraryImport("setupapi.dll",EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
+
+
+//        WINSETUPAPI BOOL SetupDiClassNameFromGuidW(
+//  [in]            const GUID* ClassGuid,
+//  [out]           PWSTR ClassName,
+//  [in]            DWORD ClassNameSize,
+//  [out, optional] PDWORD RequiredSize
+//);
+
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDescriptionW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool SetupDiGetClassDescription(Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
+
 
 #else
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
