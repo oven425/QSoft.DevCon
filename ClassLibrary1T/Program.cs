@@ -3,7 +3,7 @@ using ClassLibrary1;
 using System;
 using System.Linq;
 Console.WriteLine("Hello, World!");
-
+var guids = "Camera".GetGuids();
 var gg = new Guid("{ca3e7ab9-b4c3-4ae6-8251-579ef933890f}");
 var ll = Guid.Empty.Devices().Select(x => new
 {

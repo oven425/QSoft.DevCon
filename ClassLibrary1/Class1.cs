@@ -52,6 +52,28 @@ namespace ClassLibrary1
             }
         }
 
+        public static List<Guid> GetGuids(this string src)
+        {
+            var guids = new List<Guid>();
+            var hr = SetupDiClassGuidsFromName(src, IntPtr.Zero, 0, out var reqsize);
+            if(reqsize >1)
+            {
+                System.Diagnostics.Trace.WriteLine("");
+            }
+            using (var mem = new IntPtrMem<Guid>((int)reqsize))
+            {
+                
+                var guid = new byte[16];
+                var ss = Marshal.SizeOf<Guid>();
+                Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
+                var gg = new Guid(guid);
+                guids.Add(gg);
+            }
+            var err = Marshal.GetLastWin32Error();
+            return guids;
+
+        }
+
         public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var str = "";
@@ -81,15 +103,14 @@ namespace ClassLibrary1
             using (var mem = new IntPtrMem<byte>((int)reqsize))
             {
                 hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out property_type,mem.Pointer, reqsize, out reqsize);
-
-                var str = Marshal.PtrToStringUni(mem.Pointer); 
-                byte[] b = new byte[reqsize];
+                ids.AddRange(GetStrings(mem.Pointer));
+                //var str = Marshal.PtrToStringUni(mem.Pointer); 
+                //byte[] b = new byte[reqsize];
                
-                Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
+                //Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
                 
-                ids.AddRange(b.Chunk());
+                //ids.AddRange(b.Chunk());
             }
-            //ids = bb.Split(reqsize);
 
 #endif
             return ids;
@@ -103,20 +124,46 @@ namespace ClassLibrary1
             var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out var property_type, IntPtr.Zero, 0, out var reqsize);
 
             var aa = Marshal.GetLastWin32Error();
+            if(reqsize<=0)return ids;
             using (var mem = new IntPtrMem<byte>((int)reqsize))
             {
                 hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out property_type, mem.Pointer, reqsize, out reqsize);
+                ids.AddRange(GetStrings(mem.Pointer));
+                //var str = Marshal.PtrToStringUni(mem.Pointer);
+                //var len = str.Length;
+                //var pp = IntPtr.Add(mem.Pointer, len*2 + 2);
+                //str = Marshal.PtrToStringUni(pp);
+                //len = str.Length;
+                //pp = IntPtr.Add(pp, len * 2 + 2);
+                //str = Marshal.PtrToStringUni(pp);
+                //byte[] b = new byte[reqsize];
 
-                var str = Marshal.PtrToStringUni(mem.Pointer);
-                byte[] b = new byte[reqsize];
-
-                Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
-                ids.AddRange(b.Chunk());
+                //Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
+                //ids.AddRange(b.Chunk());
             }
             //ids = bb.Split(reqsize);
 
 #endif
             return ids;
+        }
+
+        static List<string> GetStrings(this IntPtr src)
+        {
+            var strs = new List<string>();
+            var ptr = src;
+            while(true)
+            {
+                var str = Marshal.PtrToStringUni(ptr);
+                if(str == "")
+                {
+                    break;
+                }
+                var len = str.Length;
+                ptr = IntPtr.Add(ptr, len * 2 + 2);
+                strs.Add(str);
+            }
+
+            return strs;
         }
 
         static List<string> Chunk(this byte[] src)
@@ -180,8 +227,6 @@ namespace ClassLibrary1
 #else
 
 #endif
-
-
             return str;
         }
 
@@ -244,15 +289,7 @@ namespace ClassLibrary1
 
         [LibraryImport("setupapi.dll",EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
-
-
-//        WINSETUPAPI BOOL SetupDiClassNameFromGuidW(
-//  [in]            const GUID* ClassGuid,
-//  [out]           PWSTR ClassName,
-//  [in]            DWORD ClassNameSize,
-//  [out, optional] PDWORD RequiredSize
-//);
+        internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)]string ClassName, IntPtr ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDescriptionW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
