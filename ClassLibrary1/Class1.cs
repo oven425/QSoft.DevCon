@@ -35,7 +35,6 @@ namespace ClassLibrary1
                     devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
                     if (!SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo))
                     {
-                        var err = Marshal.GetLastWin32Error();
                         yield break;
                     }
                     else
@@ -47,8 +46,7 @@ namespace ClassLibrary1
             }
             finally
             {
-                var bb = SetupDiDestroyDeviceInfoList(hDevInfo);
-
+                SetupDiDestroyDeviceInfoList(hDevInfo);
             }
         }
 
@@ -69,7 +67,6 @@ namespace ClassLibrary1
                 var gg = new Guid(guid);
                 guids.Add(gg);
             }
-            var err = Marshal.GetLastWin32Error();
             return guids;
 
         }
@@ -77,73 +74,43 @@ namespace ClassLibrary1
         public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var str = "";
-#if NET8_0_OR_GREATER
             str = GetString(src, SPDRP_FRIENDLYNAME);
-#endif
             return str??"";
         }
 
         public static string GetDeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var str = "";
-#if NET8_0_OR_GREATER
             str = GetString(src, SPDRP_DEVICEDESC);
-#endif
             return str ?? "";
         }
 
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var ids = new List<string>();
-#if NET8_0_OR_GREATER
 
             var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out var property_type, IntPtr.Zero, 0, out  var reqsize);
-            
-            var aa = Marshal.GetLastWin32Error();
+            if (reqsize <= 0) return ids;
             using (var mem = new IntPtrMem<byte>((int)reqsize))
             {
                 hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out property_type,mem.Pointer, reqsize, out reqsize);
                 ids.AddRange(GetStrings(mem.Pointer));
-                //var str = Marshal.PtrToStringUni(mem.Pointer); 
-                //byte[] b = new byte[reqsize];
-               
-                //Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
-                
-                //ids.AddRange(b.Chunk());
             }
 
-#endif
             return ids;
         }
 
         public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var ids = new List<string>();
-#if NET8_0_OR_GREATER
-
             var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out var property_type, IntPtr.Zero, 0, out var reqsize);
-
             var aa = Marshal.GetLastWin32Error();
             if(reqsize<=0)return ids;
             using (var mem = new IntPtrMem<byte>((int)reqsize))
             {
                 hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out property_type, mem.Pointer, reqsize, out reqsize);
                 ids.AddRange(GetStrings(mem.Pointer));
-                //var str = Marshal.PtrToStringUni(mem.Pointer);
-                //var len = str.Length;
-                //var pp = IntPtr.Add(mem.Pointer, len*2 + 2);
-                //str = Marshal.PtrToStringUni(pp);
-                //len = str.Length;
-                //pp = IntPtr.Add(pp, len * 2 + 2);
-                //str = Marshal.PtrToStringUni(pp);
-                //byte[] b = new byte[reqsize];
-
-                //Marshal.Copy(mem.Pointer, b, 0, (int)reqsize);
-                //ids.AddRange(b.Chunk());
             }
-            //ids = bb.Split(reqsize);
-
-#endif
             return ids;
         }
 
@@ -154,7 +121,7 @@ namespace ClassLibrary1
             while(true)
             {
                 var str = Marshal.PtrToStringUni(ptr);
-                if(str == "")
+                if(string.IsNullOrEmpty(str))
                 {
                     break;
                 }
@@ -166,39 +133,18 @@ namespace ClassLibrary1
             return strs;
         }
 
-        static List<string> Chunk(this byte[] src)
-        {
-            List<string> ids = new List<string>();
-            var index = 0;
-            for(int i=0; i<src.Length-5; i++)
-            {
-                if (src[i]==0&& src[i+1]==0 && src[i + 2] == 0)
-                {
-                    int len = i - index+1;
-                    var id = Encoding.Unicode.GetString(src, index, len);
-                    ids.Add(id);
-                    index = i + 3;
-                }
-            }
-            return ids;
-        }
 
         public static string? GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-#if NET8_0_OR_GREATER
             int reqszie = 0;
             var ii = IntPtr.Zero;
-            var bb = _ = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, ii, 0, out reqszie);
+            var bb = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, ii, 0, out reqszie);
             var s1 = Marshal.SizeOf<char>();
             using (var buffer = new IntPtrMem<char>(reqszie*2))
             {
                 SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
                 return Marshal.PtrToStringUni(buffer.Pointer);
             }
-            
-#endif
-
-            return "";
         }
 
         public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -214,7 +160,6 @@ namespace ClassLibrary1
         public static string? GetClassDesc(this Guid guid)
         {
             var str = "";
-#if NET8_0_OR_GREATER
             SetupDiGetClassDescription(guid!, IntPtr.Zero, 0, out var reqsize);
             if(reqsize > 0)
             {
@@ -224,16 +169,15 @@ namespace ClassLibrary1
                     str = Marshal.PtrToStringUni(mem.Pointer);
                 }
             }
-#else
-
-#endif
             return str;
         }
-
-        static string? GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
+        public static string? GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            return GetString(src, SPDRP_MFG);
+        }
+        static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
         {
             var str = "";
-#if NET8_0_OR_GREATER
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
@@ -243,9 +187,29 @@ namespace ClassLibrary1
                     str = Marshal.PtrToStringUni(mem.Pointer);
                 }
             }
-#else
+
+            return str??"";
+        }
+
+        //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
+        public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var str = "";
+#if NET8_0_OR_GREATER
+            uint propertytype = 0;
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverVersion, out propertytype, IntPtr.Zero, 0, out var reqsz, 0);
+            if(reqsz > 0)
+            {
+                using(var mem = new IntPtrMem<byte>(reqsz*2))
+                {
+                    SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverVersion, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
+                    str = Marshal.PtrToStringUni (mem.Pointer);
+
+                }
+            }
+
 #endif
-            return str;
+            return str ?? "";
         }
 
 
@@ -295,6 +259,9 @@ namespace ClassLibrary1
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiGetClassDescription(Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
 
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDevicePropertyW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
 
 #else
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
@@ -305,7 +272,7 @@ namespace ClassLibrary1
         static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, StringBuilder? DeviceInstanceId, int DeviceInstanceIdSize, IntPtr RequiredSize);
+        static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
 
 
         [DllImport("setupapi.dll", SetLastError = true)]
@@ -313,9 +280,32 @@ namespace ClassLibrary1
         
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiClassGuidsFromName(string ClassName, IntPtr guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
 
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool SetupDiGetClassDescription(Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
 
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
 #endif
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DEVPROPKEY
+        {
+            public Guid fmtid;
+            public UInt32 pid;
+        }
+        //https://www.magnumdb.com/search?q=filename%3A%22FunctionDiscoveryKeys_devpkey.h%22
+        public static DEVPROPKEY DPKEY_Device_PowerRelations = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 6 };
+        public static DEVPROPKEY DEVPKEY_Device_Parent = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 8 };
+        public static DEVPROPKEY DEVPKEY_Device_Children = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
+        //public static DEVPROPKEY DEVPKEY_Device_Connected = new DEVPROPKEY() { fmtid = Guid.Parse("{78C34FC8-104A-4ACA-9EA4-524D52996E57}"), pid = 55 };
+        public static DEVPROPKEY DEVPKEY_Device_DevNodeStatus = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 2 };
+        public static DEVPROPKEY DEVPKEY_Device_DriverVersion = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 3 };
+        public static DEVPROPKEY DEVPKEY_Device_DriverDate = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 2 };
+        public static DEVPROPKEY DPKEY_Device_DeviceDesc = new DEVPROPKEY() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
+        public static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
         public const uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         public const uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
@@ -357,7 +347,7 @@ namespace ClassLibrary1
         public const uint SPDRP_MAXIMUM_PROPERTY = (0x00000025);  // Upper bound on ordinals
     }
 
-    public sealed class IntPtrMem<T> : IDisposable
+    public sealed class IntPtrMem<T> : IDisposable where T : struct
     {
         public IntPtr Pointer
         {
@@ -375,7 +365,7 @@ namespace ClassLibrary1
         public int Size { private set; get; } = 0;
         public IntPtrMem(int size)
         {
-            var s1 = Marshal.SizeOf<char>();
+            var s1 = Marshal.SizeOf<T>();
             Size = s1*size;
             m_pBuffer = Marshal.AllocHGlobal(Size);
         }
