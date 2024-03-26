@@ -13,6 +13,8 @@ var ll = Guid.Empty.Devices().Select(x => new
     hardwareids = x.GetHardwaeeIDs(),
     friendname = x.GetFriendName(),
     class_guid = x.GetClassGuid(),
+    children = x.GetChildren(),
+    parent = x.GetParent(),
     desc = x.GetDeviceDesc(),
     class_name = x.GetClassGuid().GetClassDesc(),
     drive_version = x.GetDriverVersion(),
@@ -23,6 +25,8 @@ try
     foreach (var device in ll)
     {
         System.Diagnostics.Trace.WriteLine($"friend name:{device.friendname}");
+        System.Diagnostics.Trace.WriteLine($"children:{device.children}");
+        System.Diagnostics.Trace.WriteLine($"parent:{device.parent}");
         System.Diagnostics.Trace.WriteLine($"mfg:{device.mfg}");
         System.Diagnostics.Trace.WriteLine($"drive_version:{device.drive_version}");
         System.Diagnostics.Trace.WriteLine($"instanceid:{device.instanceid}");
