@@ -50,9 +50,9 @@ namespace ClassLibrary1
             }
         }
 
-        public static string GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static List<string> GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            return GetString(src, DEVPKEY_Device_Children);
+            return src.GetStrings(DEVPKEY_Device_Children);
         }
 
         public static string GetParent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -98,27 +98,58 @@ namespace ClassLibrary1
 
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            var ids = new List<string>();
+            //var ids = new List<string>();
 
-            var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out var property_type, IntPtr.Zero, 0, out  var reqsize);
-            if (reqsize <= 0) return ids;
-            using (var mem = new IntPtrMem<byte>((int)reqsize))
+            //var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out var property_type, IntPtr.Zero, 0, out  var reqsize);
+            //if (reqsize <= 0) return ids;
+            //using (var mem = new IntPtrMem<byte>((int)reqsize))
+            //{
+            //    hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out property_type,mem.Pointer, reqsize, out reqsize);
+            //    ids.AddRange(GetStrings(mem.Pointer));
+            //}
+
+            //return ids;
+            return src.GetStrings(SPDRP_HARDWAREID);
+        }
+
+        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            //var ids = new List<string>();
+            //var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out var property_type, IntPtr.Zero, 0, out var reqsize);
+            //if(reqsize<=0)return ids;
+            //using (var mem = new IntPtrMem<byte>((int)reqsize))
+            //{
+            //    hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out property_type, mem.Pointer, reqsize, out reqsize);
+            //    ids.AddRange(GetStrings(mem.Pointer));
+            //}
+            //return ids;
+            return src.GetStrings(SPDRP_LOCATION_PATHS);
+        }
+
+        static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
+        {
+            var ids = new List<string>();
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_Children, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            if (reqsize > 0)
             {
-                hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out property_type,mem.Pointer, reqsize, out reqsize);
-                ids.AddRange(GetStrings(mem.Pointer));
+                using (var mem = new IntPtrMem<byte>(reqsize * 2))
+                {
+                    SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                    ids.AddRange(GetStrings(mem.Pointer));
+                }
             }
 
             return ids;
         }
 
-        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint property)
         {
             var ids = new List<string>();
-            var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            if(reqsize<=0)return ids;
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
+            if (reqsize <= 0) return ids;
             using (var mem = new IntPtrMem<byte>((int)reqsize))
             {
-                hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out property_type, mem.Pointer, reqsize, out reqsize);
+                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem.Pointer, reqsize, out reqsize);
                 ids.AddRange(GetStrings(mem.Pointer));
             }
             return ids;
@@ -143,18 +174,35 @@ namespace ClassLibrary1
             return strs;
         }
 
-
-        public static string? GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static string GetService(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
         {
-            int reqszie = 0;
-            var ii = IntPtr.Zero;
-            var bb = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, ii, 0, out reqszie);
-            var s1 = Marshal.SizeOf<char>();
-            using (var buffer = new IntPtrMem<char>(reqszie*2))
+            return src.GetString(SPDRP_SERVICE);
+        }
+
+        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        {
+            return src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);                                                      //
+        }
+
+        public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            return src.GetString(DPKEY_Device_PowerRelations);
+        }
+
+
+        public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var str = "";
+            var bb = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqszie);
+            if(reqszie > 0)
             {
-                SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
-                return Marshal.PtrToStringUni(buffer.Pointer);
+                using (var buffer = new IntPtrMem<char>(reqszie * 2))
+                {
+                    SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
+                    str = Marshal.PtrToStringUni(buffer.Pointer);
+                }
             }
+            return str ?? "";
         }
 
         public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -188,7 +236,7 @@ namespace ClassLibrary1
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var str = "";
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_Children, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
             {
                 using (var mem = new IntPtrMem<byte>(reqsize * 2))
@@ -235,7 +283,42 @@ namespace ClassLibrary1
             return str ?? "";
         }
 
+        public static string GetDriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            return src.GetString(DEVPKEY_Device_DriverInfSection);
+        }
 
+        public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            //uint propertytype = 0;
+            //long dd = 0;
+            //int reqsz = 0;
+            //var hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverDate, out propertytype, out dd, 8, out reqsz, 0);
+            //var dq = DateTime.FromFileTime(dd);
+            ////strb = new StringBuilder(reqsz);
+            ////SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
+            ////return strb.ToString();
+            //return dq;
+            return src.GetDateTime(DEVPKEY_Device_DriverDate);
+        }
+
+        static DateTime GetDateTime(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
+        {
+            var datetime = DateTime.FromFileTime(0);
+            var hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var propertytype, IntPtr.Zero, 0, out var reqsz, 0);
+            if(reqsz > 0)
+            {
+                using(var mem = new IntPtrMem<byte>(reqsz))
+                {
+                    SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
+                    var tt = Marshal.ReadInt64(mem.Pointer);
+                    
+                    datetime = DateTime.FromFileTime(tt);
+                }
+            }
+            //var dq = DateTime.FromFileTime(dd);
+            return datetime;
+        }
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         public struct SP_DEVINFO_DATA
