@@ -11,5 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ClassLibrary1\ClassLibrary1.csproj" />
   </ItemGroup>
-
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
 </Project>

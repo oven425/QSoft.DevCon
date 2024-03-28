@@ -3,23 +3,23 @@ using ClassLibrary1;
 using System;
 using System.Linq;
 Console.WriteLine("Hello, World!");
-var guids = "Camera".GetGuids();
 var gg = new Guid("{ca3e7ab9-b4c3-4ae6-8251-579ef933890f}");
 
-//"HTREE\\ROOT\\0";
-var aa = Guid.Empty.Devices().Where(x => x.GetDeviceInstanceId() == "USB\\ROOT_HUB30\\4&11BF4672&0&0")
-    .Select(x => new
-    {
-        parent = x.GetParent()
-    }).ToList();
+var cameras = "Camera".Devices().Select(x => new
+{
+    name = x.GetFriendName(),
+});
+foreach (var cam in cameras)
+{
 
+}
 var ll = Guid.Empty.Devices().Select(x => new
 {
-    
+
     objectname = x.GetPhysicalDeviceObjectName(),
     service = x.GetService(),
     power_relation = x.GetPowerRelations(),
-    mfg=x.GetMFG(),
+    mfg = x.GetMFG(),
     instanceid = x.GetDeviceInstanceId(),
     locationpaths = x.GetLocationPaths(),
     hardwareids = x.GetHardwaeeIDs(),

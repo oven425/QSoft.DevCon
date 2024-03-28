@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -49,6 +50,10 @@ namespace ClassLibrary1
                 SetupDiDestroyDeviceInfoList(hDevInfo);
             }
         }
+        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
+        {
+            return src.GetClassGuids().FirstOrDefault().Devices(showhiddendevice);
+        }
 
         public static List<string> GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -59,21 +64,24 @@ namespace ClassLibrary1
         {
             return GetString(src, DEVPKEY_Device_Parent);
         }
+        public static string GetClass(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            return src.GetString(SPDRP_CLASS);
+        }
 
 
-        public static List<Guid> GetGuids(this string src)
+        public static List<Guid> GetClassGuids(this string src)
         {
             var guids = new List<Guid>();
-            var hr = SetupDiClassGuidsFromName(src, IntPtr.Zero, 0, out var reqsize);
+            SetupDiClassGuidsFromName(src, IntPtr.Zero, 0, out var reqsize);
             if(reqsize >1)
             {
                 System.Diagnostics.Trace.WriteLine("");
             }
             using (var mem = new IntPtrMem<Guid>((int)reqsize))
             {
-                
+                SetupDiClassGuidsFromName(src, mem.Pointer, reqsize, out reqsize);
                 var guid = new byte[16];
-                var ss = Marshal.SizeOf<Guid>();
                 Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
                 var gg = new Guid(guid);
                 guids.Add(gg);
@@ -84,59 +92,33 @@ namespace ClassLibrary1
 
         public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            var str = "";
-            str = GetString(src, SPDRP_FRIENDLYNAME);
-            return str??"";
+            return GetString(src, SPDRP_FRIENDLYNAME);
         }
 
         public static string GetDeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            var str = "";
-            str = GetString(src, SPDRP_DEVICEDESC);
-            return str ?? "";
+            return GetString(src, SPDRP_DEVICEDESC);
         }
 
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            //var ids = new List<string>();
-
-            //var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out var property_type, IntPtr.Zero, 0, out  var reqsize);
-            //if (reqsize <= 0) return ids;
-            //using (var mem = new IntPtrMem<byte>((int)reqsize))
-            //{
-            //    hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_HARDWAREID, out property_type,mem.Pointer, reqsize, out reqsize);
-            //    ids.AddRange(GetStrings(mem.Pointer));
-            //}
-
-            //return ids;
             return src.GetStrings(SPDRP_HARDWAREID);
         }
 
         public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            //var ids = new List<string>();
-            //var hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            //if(reqsize<=0)return ids;
-            //using (var mem = new IntPtrMem<byte>((int)reqsize))
-            //{
-            //    hr = SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_LOCATION_PATHS, out property_type, mem.Pointer, reqsize, out reqsize);
-            //    ids.AddRange(GetStrings(mem.Pointer));
-            //}
-            //return ids;
             return src.GetStrings(SPDRP_LOCATION_PATHS);
         }
 
         static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var ids = new List<string>();
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_Children, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
             {
-                using (var mem = new IntPtrMem<byte>(reqsize * 2))
-                {
-                    SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
-                    ids.AddRange(GetStrings(mem.Pointer));
-                }
+                using var mem = new IntPtrMem<byte>(reqsize * 2);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                ids.AddRange(GetStrings(mem.Pointer));
             }
 
             return ids;
@@ -174,14 +156,14 @@ namespace ClassLibrary1
             return strs;
         }
 
-        public static string GetService(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static string GetService(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             return src.GetString(SPDRP_SERVICE);
         }
 
-        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, StringBuilder strb = null)
+        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            return src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);                                                      //
+            return src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
         }
 
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -196,11 +178,9 @@ namespace ClassLibrary1
             var bb = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqszie);
             if(reqszie > 0)
             {
-                using (var buffer = new IntPtrMem<char>(reqszie * 2))
-                {
-                    SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
-                    str = Marshal.PtrToStringUni(buffer.Pointer);
-                }
+                using var buffer = new IntPtrMem<char>(reqszie * 2);
+                SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
+                str = Marshal.PtrToStringUni(buffer.Pointer);
             }
             return str ?? "";
         }
@@ -221,11 +201,9 @@ namespace ClassLibrary1
             SetupDiGetClassDescription(guid!, IntPtr.Zero, 0, out var reqsize);
             if(reqsize > 0)
             {
-                using(var mem = new IntPtrMem<byte>((int)reqsize *2))
-                {
-                    SetupDiGetClassDescription(guid!, mem.Pointer, reqsize, out reqsize);
-                    str = Marshal.PtrToStringUni(mem.Pointer);
-                }
+                using var mem = new IntPtrMem<byte>((int)reqsize * 2);
+                SetupDiGetClassDescription(guid!, mem.Pointer, reqsize, out reqsize);
+                str = Marshal.PtrToStringUni(mem.Pointer);
             }
             return str;
         }
@@ -239,11 +217,9 @@ namespace ClassLibrary1
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
             {
-                using (var mem = new IntPtrMem<byte>(reqsize * 2))
-                {
-                    SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
-                    str = Marshal.PtrToStringUni(mem.Pointer);
-                }
+                using var mem = new IntPtrMem<byte>(reqsize * 2);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                str = Marshal.PtrToStringUni(mem.Pointer);
             }
 
             return str ?? "";
@@ -255,11 +231,9 @@ namespace ClassLibrary1
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
-                using (var mem = new IntPtrMem<byte>((int)reqsize * 2))
-                {
-                    SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
-                    str = Marshal.PtrToStringUni(mem.Pointer);
-                }
+                using var mem = new IntPtrMem<byte>((int)reqsize * 2);
+                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
+                str = Marshal.PtrToStringUni(mem.Pointer);
             }
 
             return str??"";
@@ -268,19 +242,7 @@ namespace ClassLibrary1
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
         public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            var str = "";
-            uint propertytype = 0;
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverVersion, out propertytype, IntPtr.Zero, 0, out var reqsz, 0);
-            if (reqsz > 0)
-            {
-                using (var mem = new IntPtrMem<byte>(reqsz * 2))
-                {
-                    SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Device_DriverVersion, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
-                    str = Marshal.PtrToStringUni(mem.Pointer);
-
-                }
-            }
-            return str ?? "";
+            return src.GetString(DEVPKEY_Device_DriverVersion);
         }
 
         public static string GetDriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -290,15 +252,6 @@ namespace ClassLibrary1
 
         public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            //uint propertytype = 0;
-            //long dd = 0;
-            //int reqsz = 0;
-            //var hr = SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverDate, out propertytype, out dd, 8, out reqsz, 0);
-            //var dq = DateTime.FromFileTime(dd);
-            ////strb = new StringBuilder(reqsz);
-            ////SetupApi.SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref SetupApi.DEVPKEY_Device_DriverVersion, out propertytype, strb, strb.Capacity, out reqsz, 0);
-            ////return strb.ToString();
-            //return dq;
             return src.GetDateTime(DEVPKEY_Device_DriverDate);
         }
 
@@ -308,15 +261,12 @@ namespace ClassLibrary1
             var hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var propertytype, IntPtr.Zero, 0, out var reqsz, 0);
             if(reqsz > 0)
             {
-                using(var mem = new IntPtrMem<byte>(reqsz))
-                {
-                    SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
-                    var tt = Marshal.ReadInt64(mem.Pointer);
-                    
-                    datetime = DateTime.FromFileTime(tt);
-                }
+                using var mem = new IntPtrMem<byte>(reqsz);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
+                var tt = Marshal.ReadInt64(mem.Pointer);
+
+                datetime = DateTime.FromFileTime(tt);
             }
-            //var dq = DateTime.FromFileTime(dd);
             return datetime;
         }
 
@@ -381,7 +331,7 @@ namespace ClassLibrary1
         internal static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
 
 
-        [DllImport("setupapi.dll", SetLastError = true)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
         
         [DllImport("setupapi.dll", SetLastError = true)]
@@ -403,15 +353,14 @@ namespace ClassLibrary1
             public UInt32 pid;
         }
         //https://www.magnumdb.com/search?q=filename%3A%22FunctionDiscoveryKeys_devpkey.h%22
-        internal static DEVPROPKEY DPKEY_Device_PowerRelations = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 6 };
-        internal static DEVPROPKEY DEVPKEY_Device_Parent = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 8 };
-        internal static DEVPROPKEY DEVPKEY_Device_Children = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
-        //public static DEVPROPKEY DEVPKEY_Device_Connected = new DEVPROPKEY() { fmtid = Guid.Parse("{78C34FC8-104A-4ACA-9EA4-524D52996E57}"), pid = 55 };
-        internal static DEVPROPKEY DEVPKEY_Device_DevNodeStatus = new DEVPROPKEY() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 2 };
-        internal static DEVPROPKEY DEVPKEY_Device_DriverVersion = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 3 };
-        internal static DEVPROPKEY DEVPKEY_Device_DriverDate = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 2 };
-        internal static DEVPROPKEY DPKEY_Device_DeviceDesc = new DEVPROPKEY() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
-        internal static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new DEVPROPKEY() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
+        readonly internal static DEVPROPKEY DPKEY_Device_PowerRelations = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 6 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_Parent = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 8 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_Children = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 9 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_DevNodeStatus = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 2 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_DriverVersion = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 3 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_DriverDate = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 2 };
+        readonly internal static DEVPROPKEY DPKEY_Device_DeviceDesc = new() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
         public const uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         public const uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
