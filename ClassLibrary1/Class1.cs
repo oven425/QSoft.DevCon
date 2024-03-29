@@ -68,7 +68,21 @@ namespace ClassLibrary1
         {
             return src.GetString(SPDRP_CLASS);
         }
-
+        public static IEnumerable<(string letter, string target)> GetVolumeName()
+        {
+            var drives = System.IO.DriveInfo.GetDrives();
+            if(drives == null) yield return Enumerable.Empty<(string letter, string target)>();
+            foreach (var oo in drives)
+            {
+                using (var mem = new IntPtrMem<byte>(256*2))
+                {
+                    QueryDosDevice(oo.Name.Replace("\\", ""), mem.Pointer, 256);
+                    yield return (oo.Name, Marshal.PtrToStringUni(mem.Pointer)??"");
+                }
+                
+                
+            }
+        }
 
         public static List<Guid> GetClassGuids(this string src)
         {
@@ -78,14 +92,18 @@ namespace ClassLibrary1
             {
                 System.Diagnostics.Trace.WriteLine("");
             }
-            using (var mem = new IntPtrMem<Guid>((int)reqsize))
+            if(reqsize > 0)
             {
-                SetupDiClassGuidsFromName(src, mem.Pointer, reqsize, out reqsize);
-                var guid = new byte[16];
-                Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
-                var gg = new Guid(guid);
-                guids.Add(gg);
+                using (var mem = new IntPtrMem<Guid>((int)reqsize))
+                {
+                    SetupDiClassGuidsFromName(src, mem.Pointer, reqsize, out reqsize);
+                    var guid = new byte[16];
+                    Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
+                    var gg = new Guid(guid);
+                    guids.Add(gg);
+                }
             }
+            
             return guids;
 
         }
@@ -344,6 +362,10 @@ namespace ClassLibrary1
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern uint QueryDosDevice(string lpDeviceName, IntPtr lpTargetPath, int ucchMax);
+
+
 #endif
 
         [StructLayout(LayoutKind.Sequential)]
