@@ -3,7 +3,7 @@ using ClassLibrary1;
 using System;
 using System.Linq;
 Console.WriteLine("Hello, World!");
-var gg = new Guid("{ca3e7ab9-b4c3-4ae6-8251-579ef933890f}");
+var gg = Class1.GetVolumeName().ToList();
 
 var cameras = "Camera".Devices().Select(x => new
 {

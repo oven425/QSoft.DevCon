@@ -54,6 +54,78 @@ namespace ClassLibrary1
         {
             return src.GetClassGuids().FirstOrDefault().Devices(showhiddendevice);
         }
+        
+        public static int Enable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
+        {
+            var count = 0;
+            foreach(var oo in src)
+            {
+                oo.ChangeState(true);
+                count++;
+            }
+            return count;
+        }
+
+        public static int Disable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
+        {
+            var count = 0;
+            foreach (var oo in src)
+            {
+                oo.ChangeState(false);
+                count++;
+            }
+            return count;
+        }
+
+        static void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
+        {
+#if NET8_0_OR_GREATER
+            SP_PROPCHANGE_PARAMS params1 = new SP_PROPCHANGE_PARAMS();
+            params1.ClassInstallHeader.cbSize = Marshal.SizeOf(params1.ClassInstallHeader.GetType());
+            params1.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+            params1.Scope = DICS_FLAG_GLOBAL;
+            params1.StateChange = isenable == true ? DICS_ENABLE : DICS_DISABLE;
+
+            // setup proper parameters            
+            //if (!SetupDiSetClassInstallParams(hDevInfo, ptrToDevInfoData, ClassInstallParams, Marshal.SizeOf(params1.GetType())))
+            if (!SetupDiSetClassInstallParams(src.dev, src.devdata, params1, Marshal.SizeOf(params1.GetType())))
+            {
+                int errorcode = Marshal.GetLastWin32Error();
+                errorcode = 0;
+            }
+
+            // use parameters
+            if (!SetupDiCallClassInstaller((uint)DIF_PROPERTYCHANGE, src.dev, ref src.devdata))
+            {
+                int errorcode = Marshal.GetLastWin32Error(); // error here  
+                //var msg = errorcode.GetLastErrorMessage();
+                //throw new Exception(msg);
+            }
+#else
+            SP_PROPCHANGE_PARAMS params1 = new SP_PROPCHANGE_PARAMS();
+            params1.ClassInstallHeader.cbSize = Marshal.SizeOf(params1.ClassInstallHeader.GetType());
+            params1.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+            params1.Scope = DICS_FLAG_GLOBAL;
+            params1.StateChange = isenable == true ? DICS_ENABLE : DICS_DISABLE;
+
+            // setup proper parameters            
+            //if (!SetupDiSetClassInstallParams(hDevInfo, ptrToDevInfoData, ClassInstallParams, Marshal.SizeOf(params1.GetType())))
+            if (!SetupDiSetClassInstallParams(src.dev, src.devdata, params1, Marshal.SizeOf(params1.GetType())))
+            {
+                int errorcode = Marshal.GetLastWin32Error();
+                errorcode = 0;
+            }
+
+            // use parameters
+            if (!SetupDiCallClassInstaller((uint)DIF_PROPERTYCHANGE, src.dev, ref src.devdata))
+            {
+                int errorcode = Marshal.GetLastWin32Error(); // error here  
+                //var msg = errorcode.GetLastErrorMessage();
+                //throw new Exception(msg);
+            }
+
+#endif
+        }
 
         public static List<string> GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -71,17 +143,15 @@ namespace ClassLibrary1
         public static IEnumerable<(string letter, string target)> GetVolumeName()
         {
             var drives = System.IO.DriveInfo.GetDrives();
-            if(drives == null) yield return Enumerable.Empty<(string letter, string target)>();
-            foreach (var oo in drives)
+            foreach (var oo in drives.Select(x => x.Name))
             {
-                using (var mem = new IntPtrMem<byte>(256*2))
+                using (var mem = new IntPtrMem<byte>(256 * 2))
                 {
-                    QueryDosDevice(oo.Name.Replace("\\", ""), mem.Pointer, 256);
-                    yield return (oo.Name, Marshal.PtrToStringUni(mem.Pointer)??"");
+                    QueryDosDevice(oo.Replace("\\", ""), mem.Pointer, 256);
+                    yield return (oo, Marshal.PtrToStringUni(mem.Pointer) ?? "");
                 }
-                
-                
             }
+
         }
 
         public static List<Guid> GetClassGuids(this string src)
@@ -337,6 +407,19 @@ namespace ClassLibrary1
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
 
+
+        [LibraryImport("kernel32.dll", EntryPoint = "QueryDosDeviceW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.U4)]
+        internal static partial uint QueryDosDevice([MarshalAs(UnmanagedType.LPWStr)]string lpDeviceName, IntPtr lpTargetPath, int ucchMax);
+
+
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiSetClassInstallParamsW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool SetupDiSetClassInstallParams(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SP_PROPCHANGE_PARAMS ClassInstallParams, int ClassInstallParamsSize);
+        [LibraryImport("setupapi.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
+
 #else
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
@@ -365,9 +448,33 @@ namespace ClassLibrary1
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern uint QueryDosDevice(string lpDeviceName, IntPtr lpTargetPath, int ucchMax);
 
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool SetupDiSetClassInstallParams(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SP_PROPCHANGE_PARAMS ClassInstallParams, int ClassInstallParamsSize);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
+        
 
 #endif
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SP_PROPCHANGE_PARAMS
+        {
+            public SP_PROPCHANGE_PARAMS()
+            {
+                ClassInstallHeader = new SP_CLASSINSTALL_HEADER();
+            }
+            public SP_CLASSINSTALL_HEADER ClassInstallHeader;
+            public int StateChange;
+            public uint Scope;
+            public int HwProfile;
+        };
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SP_CLASSINSTALL_HEADER
+        {
+            public int cbSize;
+            public int InstallFunction;
+        };
+        public static int DIF_PROPERTYCHANGE = (0x00000012);
         [StructLayout(LayoutKind.Sequential)]
         internal struct DEVPROPKEY
         {
@@ -383,7 +490,7 @@ namespace ClassLibrary1
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverDate = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 2 };
         readonly internal static DEVPROPKEY DPKEY_Device_DeviceDesc = new() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
-        public const uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
+        readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         public const uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
         public const uint SPDRP_UNUSED0 = (0x00000003);  // unused
@@ -422,6 +529,14 @@ namespace ClassLibrary1
         public const uint SPDRP_BASE_CONTAINERID = (0x00000024);  // Base ContainerID (R)
 
         public const uint SPDRP_MAXIMUM_PROPERTY = (0x00000025);  // Upper bound on ordinals
+
+        public const uint DICS_FLAG_GLOBAL = 0x00000001;  // make change in all hardware profiles
+        public const uint DICS_FLAG_CONFIGSPECIFIC = 0x00000002;  // make change in specified profile only
+        public const uint DICS_FLAG_CONFIGGENERAL = 0x00000004;  // 1 or more hardware profile-specific
+        public const uint DIREG_DEV = 0x00000001;         // Open/Create/Delete device key
+        public const uint DIREG_DRV = 0x00000002;        // Open/Create/Delete driver key
+        public const uint DIREG_BOTH = 0x00000004;        // Delete both driver and Device key
+
     }
 
     internal sealed class IntPtrMem<T> : IDisposable where T : struct
