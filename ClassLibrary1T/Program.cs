@@ -2,6 +2,22 @@
 using ClassLibrary1;
 using System;
 using System.Linq;
+Console.WriteLine("begin");
+var ports = "Ports".Devices().Select(x => new
+{
+    portname = x.GetComPortName()
+});
+
+foreach (var oo in ports)
+{
+    Console.WriteLine(oo);
+}
+Console.WriteLine("end");
+
+
+Console.ReadLine();
+return;
+
 Console.WriteLine("Hello, World!");
 var gg = Class1.GetVolumeName().ToList();
 

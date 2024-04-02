@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -6,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 
@@ -14,7 +17,7 @@ namespace ClassLibrary1
     static public partial class Class1
     {
 
-        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice=false)
+        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)
         {
             uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
             if (showhiddendevice)
@@ -54,11 +57,11 @@ namespace ClassLibrary1
         {
             return src.GetClassGuids().FirstOrDefault().Devices(showhiddendevice);
         }
-        
+
         public static int Enable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             var count = 0;
-            foreach(var oo in src)
+            foreach (var oo in src)
             {
                 oo.ChangeState(true);
                 count++;
@@ -158,11 +161,11 @@ namespace ClassLibrary1
         {
             var guids = new List<Guid>();
             SetupDiClassGuidsFromName(src, IntPtr.Zero, 0, out var reqsize);
-            if(reqsize >1)
+            if (reqsize > 1)
             {
                 System.Diagnostics.Trace.WriteLine("");
             }
-            if(reqsize > 0)
+            if (reqsize > 0)
             {
                 using (var mem = new IntPtrMem<Guid>((int)reqsize))
                 {
@@ -173,7 +176,7 @@ namespace ClassLibrary1
                     guids.Add(gg);
                 }
             }
-            
+
             return guids;
 
         }
@@ -229,10 +232,10 @@ namespace ClassLibrary1
         {
             var strs = new List<string>();
             var ptr = src;
-            while(true)
+            while (true)
             {
                 var str = Marshal.PtrToStringUni(ptr);
-                if(string.IsNullOrEmpty(str))
+                if (string.IsNullOrEmpty(str))
                 {
                     break;
                 }
@@ -264,7 +267,7 @@ namespace ClassLibrary1
         {
             var str = "";
             var bb = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqszie);
-            if(reqszie > 0)
+            if (reqszie > 0)
             {
                 using var buffer = new IntPtrMem<char>(reqszie * 2);
                 SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
@@ -287,7 +290,7 @@ namespace ClassLibrary1
         {
             var str = "";
             SetupDiGetClassDescription(guid!, IntPtr.Zero, 0, out var reqsize);
-            if(reqsize > 0)
+            if (reqsize > 0)
             {
                 using var mem = new IntPtrMem<byte>((int)reqsize * 2);
                 SetupDiGetClassDescription(guid!, mem.Pointer, reqsize, out reqsize);
@@ -299,6 +302,26 @@ namespace ClassLibrary1
         {
             return GetString(src, SPDRP_MFG);
         }
+
+#if NET6_0_OR_GREATER
+        [SupportedOSPlatform("windows")]
+#endif
+        public static string GetComPortName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+#if NET8_0_OR_GREATER
+            var hKey1 = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+            using var hKey = new SafeRegistryHandle(hKey1, true);
+
+            if (!hKey.IsInvalid)
+            {
+                using var reg = RegistryKey.FromHandle(hKey);
+                var portname = reg?.GetValue("PortName")?.ToString();
+                return portname ?? "";
+            }
+#endif
+            return "";
+        }
+
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var str = "";
@@ -420,6 +443,11 @@ namespace ClassLibrary1
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
 
+
+        [LibraryImport("Setupapi", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
+        internal static partial IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
+
 #else
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
@@ -451,8 +479,10 @@ namespace ClassLibrary1
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiSetClassInstallParams(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SP_PROPCHANGE_PARAMS ClassInstallParams, int ClassInstallParamsSize);
         [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
+        internal static extern bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
         
+        [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern SafeRegistryHandle SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
 
 #endif
 
@@ -537,6 +567,24 @@ namespace ClassLibrary1
         public const uint DIREG_DRV = 0x00000002;        // Open/Create/Delete driver key
         public const uint DIREG_BOTH = 0x00000004;        // Delete both driver and Device key
 
+        internal const int ERROR_MORE_DATA = 0xEA;
+        internal const int ERROR_SUCCESS = 0;
+        internal const int READ_CONTROL = 0x00020000;
+        internal const int SYNCHRONIZE = 0x00100000;
+        internal const int STANDARD_RIGHTS_READ = READ_CONTROL;
+        internal const int STANDARD_RIGHTS_WRITE = READ_CONTROL;
+        internal const int KEY_QUERY_VALUE = 0x0001;
+        internal const int KEY_SET_VALUE = 0x0002;
+        internal const int KEY_CREATE_SUB_KEY = 0x0004;
+        internal const int KEY_ENUMERATE_SUB_KEYS = 0x0008;
+        internal const int KEY_NOTIFY = 0x0010;
+        internal const int KEY_CREATE_LINK = 0x0020;
+        internal const int KEY_READ = ((STANDARD_RIGHTS_READ |
+                                                           KEY_QUERY_VALUE |
+                                                           KEY_ENUMERATE_SUB_KEYS |
+                                                           KEY_NOTIFY)
+                                                          &
+                                                          (~SYNCHRONIZE));
     }
 
     internal sealed class IntPtrMem<T> : IDisposable where T : struct
