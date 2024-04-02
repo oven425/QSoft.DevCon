@@ -3,9 +3,9 @@ using ClassLibrary1;
 using System;
 using System.Linq;
 Console.WriteLine("begin");
-var ports = "Ports".Devices().Select(x => new
+var ports = "Port".Devices().Select(x => new
 {
-    portname = x.GetComPortName()
+    portname = x.GetClass()
 });
 
 foreach (var oo in ports)

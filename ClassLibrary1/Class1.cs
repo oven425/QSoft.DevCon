@@ -55,6 +55,11 @@ namespace ClassLibrary1
         }
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this string src, bool showhiddendevice = false)
         {
+            var classguids = src.GetClassGuids();
+            if(classguids.Count == 0)
+            {
+                return Enumerable.Empty<(IntPtr dev, SP_DEVINFO_DATA devdata)>();
+            }
             return src.GetClassGuids().FirstOrDefault().Devices(showhiddendevice);
         }
 
@@ -308,7 +313,7 @@ namespace ClassLibrary1
 #endif
         public static string GetComPortName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-#if NET8_0_OR_GREATER
+
             var hKey1 = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
             using var hKey = new SafeRegistryHandle(hKey1, true);
 
@@ -318,7 +323,7 @@ namespace ClassLibrary1
                 var portname = reg?.GetValue("PortName")?.ToString();
                 return portname ?? "";
             }
-#endif
+
             return "";
         }
 
@@ -482,7 +487,7 @@ namespace ClassLibrary1
         internal static extern bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
         
         [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern SafeRegistryHandle SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
+        internal static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
 
 #endif
 
