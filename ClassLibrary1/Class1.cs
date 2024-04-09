@@ -74,6 +74,11 @@ namespace ClassLibrary1
             return count;
         }
 
+        /// <summary>
+        /// need admin
+        /// </summary>
+        /// <param name="src"></param>
+        /// <returns></returns>
         public static int Disable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             var count = 0;
@@ -85,6 +90,40 @@ namespace ClassLibrary1
             return count;
         }
 
+        internal enum FORMAT_MESSAGE : uint
+        {
+            ALLOCATE_BUFFER = 0x00000100,
+            IGNORE_INSERTS = 0x00000200,
+            FROM_SYSTEM = 0x00001000,
+            ARGUMENT_ARRAY = 0x00002000,
+            FROM_HMODULE = 0x00000800,
+            FROM_STRING = 0x00000400
+        }
+
+        internal static string GetLastErrorMessage(this int error)
+        {
+            IntPtr lpBuff = IntPtr.Zero;
+            string sMsg = "";
+#if NET8_0_OR_GREATER
+
+            if (0 != FormatMessage(FORMAT_MESSAGE.ALLOCATE_BUFFER
+                   | FORMAT_MESSAGE.FROM_SYSTEM
+                   | FORMAT_MESSAGE.IGNORE_INSERTS,
+                   IntPtr.Zero,
+                   error,
+                   0,
+                   ref lpBuff,
+                   0,
+                   IntPtr.Zero))
+            {
+                sMsg = Marshal.PtrToStringUni(lpBuff);            //結果爲“重疊 I/O 操作在進行中”，完全正確
+                Marshal.FreeHGlobal(lpBuff);
+            }
+
+#endif
+            return sMsg;
+        }
+
         static void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
         {
 #if NET8_0_OR_GREATER
@@ -92,7 +131,7 @@ namespace ClassLibrary1
             params1.ClassInstallHeader.cbSize = Marshal.SizeOf(params1.ClassInstallHeader.GetType());
             params1.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
             params1.Scope = DICS_FLAG_GLOBAL;
-            params1.StateChange = isenable == true ? DICS_ENABLE : DICS_DISABLE;
+            params1.StateChange = isenable ? DICS_ENABLE : DICS_DISABLE;
 
             // setup proper parameters            
             //if (!SetupDiSetClassInstallParams(hDevInfo, ptrToDevInfoData, ClassInstallParams, Marshal.SizeOf(params1.GetType())))
@@ -106,8 +145,8 @@ namespace ClassLibrary1
             if (!SetupDiCallClassInstaller((uint)DIF_PROPERTYCHANGE, src.dev, ref src.devdata))
             {
                 int errorcode = Marshal.GetLastWin32Error(); // error here  
-                //var msg = errorcode.GetLastErrorMessage();
-                //throw new Exception(msg);
+                var msg = errorcode.GetLastErrorMessage();
+                throw new Exception(msg);
             }
 #else
             SP_PROPCHANGE_PARAMS params1 = new SP_PROPCHANGE_PARAMS();
@@ -313,7 +352,6 @@ namespace ClassLibrary1
 #endif
         public static string GetComPortName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-
             var hKey1 = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
             using var hKey = new SafeRegistryHandle(hKey1, true);
 
@@ -452,7 +490,12 @@ namespace ClassLibrary1
         [LibraryImport("Setupapi", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
-
+        
+        [LibraryImport("kernel32.dll", EntryPoint = "FormatMessageW")]
+        [return: MarshalAs(UnmanagedType.I4)]
+        static internal partial int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource,
+                                 int dwMessageId, int dwLanguageZId,
+                                 ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
 #else
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);

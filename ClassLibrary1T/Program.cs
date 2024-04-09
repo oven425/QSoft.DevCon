@@ -3,15 +3,17 @@ using ClassLibrary1;
 using System;
 using System.Linq;
 Console.WriteLine("begin");
-var ports = "Port".Devices().Select(x => new
-{
-    portname = x.GetClass()
-});
+//var ports = "Port".Devices().Select(x => new
+//{
+//    portname = x.GetClass()
+//});
 
-foreach (var oo in ports)
-{
-    Console.WriteLine(oo);
-}
+//foreach (var oo in ports)
+//{
+//    Console.WriteLine(oo);
+//}
+
+"Camera".Devices().Disable();
 Console.WriteLine("end");
 
 
