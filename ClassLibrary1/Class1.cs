@@ -89,7 +89,7 @@ namespace ClassLibrary1
             }
             return count;
         }
-
+        [Flags]
         internal enum FORMAT_MESSAGE : uint
         {
             ALLOCATE_BUFFER = 0x00000100,
@@ -100,28 +100,35 @@ namespace ClassLibrary1
             FROM_STRING = 0x00000400
         }
 
+        static void ThrowExceptionForLastError()
+        {
+            var error = Marshal.GetLastWin32Error();
+            var msg = error.GetLastErrorMessage();
+            if(string.IsNullOrEmpty(msg))
+            {
+                var ex = new Exception(msg);
+                throw ex;
+            }
+        }
+
         internal static string GetLastErrorMessage(this int error)
         {
             IntPtr lpBuff = IntPtr.Zero;
-            string sMsg = "";
+            var sMsg = "";
 #if NET8_0_OR_GREATER
 
             if (0 != FormatMessage(FORMAT_MESSAGE.ALLOCATE_BUFFER
                    | FORMAT_MESSAGE.FROM_SYSTEM
                    | FORMAT_MESSAGE.IGNORE_INSERTS,
                    IntPtr.Zero,
-                   error,
-                   0,
-                   ref lpBuff,
-                   0,
-                   IntPtr.Zero))
+                   error, 0, ref lpBuff, 0, IntPtr.Zero))
             {
                 sMsg = Marshal.PtrToStringUni(lpBuff);            //結果爲“重疊 I/O 操作在進行中”，完全正確
                 Marshal.FreeHGlobal(lpBuff);
             }
-
+            
 #endif
-            return sMsg;
+            return sMsg??"";
         }
 
         static void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
@@ -133,20 +140,13 @@ namespace ClassLibrary1
             params1.Scope = DICS_FLAG_GLOBAL;
             params1.StateChange = isenable ? DICS_ENABLE : DICS_DISABLE;
 
-            // setup proper parameters            
-            //if (!SetupDiSetClassInstallParams(hDevInfo, ptrToDevInfoData, ClassInstallParams, Marshal.SizeOf(params1.GetType())))
             if (!SetupDiSetClassInstallParams(src.dev, src.devdata, params1, Marshal.SizeOf(params1.GetType())))
             {
-                int errorcode = Marshal.GetLastWin32Error();
-                errorcode = 0;
             }
 
-            // use parameters
             if (!SetupDiCallClassInstaller((uint)DIF_PROPERTYCHANGE, src.dev, ref src.devdata))
             {
-                int errorcode = Marshal.GetLastWin32Error(); // error here  
-                var msg = errorcode.GetLastErrorMessage();
-                throw new Exception(msg);
+                ThrowExceptionForLastError();
             }
 #else
             SP_PROPCHANGE_PARAMS params1 = new SP_PROPCHANGE_PARAMS();
@@ -310,7 +310,7 @@ namespace ClassLibrary1
         public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var str = "";
-            var bb = SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqszie);
+            SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqszie);
             if (reqszie > 0)
             {
                 using var buffer = new IntPtrMem<char>(reqszie * 2);
@@ -412,7 +412,7 @@ namespace ClassLibrary1
         static DateTime GetDateTime(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var datetime = DateTime.FromFileTime(0);
-            var hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var propertytype, IntPtr.Zero, 0, out var reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var propertytype, IntPtr.Zero, 0, out var reqsz, 0);
             if(reqsz > 0)
             {
                 using var mem = new IntPtrMem<byte>(reqsz);
@@ -552,7 +552,7 @@ namespace ClassLibrary1
             public int cbSize;
             public int InstallFunction;
         };
-        public static int DIF_PROPERTYCHANGE = (0x00000012);
+        internal const int DIF_PROPERTYCHANGE = (0x00000012);
         [StructLayout(LayoutKind.Sequential)]
         internal struct DEVPROPKEY
         {
