@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ClassLibrary1\ClassLibrary1.csproj" />
+    <ProjectReference Include="..\ClassLibrary1\QSoft.DevCon.csproj" />
   </ItemGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <PublishAot>true</PublishAot>

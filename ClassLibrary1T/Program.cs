@@ -21,7 +21,7 @@ Console.ReadLine();
 return;
 
 Console.WriteLine("Hello, World!");
-var gg = Class1.GetVolumeName().ToList();
+var gg = DevConExtension.GetVolumeName().ToList();
 
 var cameras = "Camera".Devices().Select(x => new
 {

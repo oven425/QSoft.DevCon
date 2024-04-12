@@ -12,9 +12,9 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 
-namespace ClassLibrary1
+namespace QSoft.DevCon
 {
-    static public partial class Class1
+    static public partial class DevConExtension
     {
 
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)

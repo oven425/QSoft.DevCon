@@ -54,11 +54,5 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\QSoft.DevCon\QSoft.DevCon.csproj">
-      <Project>{09025117-5ef7-4eed-bec3-0bc837cc3f83}</Project>
-      <Name>QSoft.DevCon</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
