@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace QSoft.DevCon
 {
-    static public partial class DevConExtension
+    static public partial class ClassLibrary1
     {
 
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)
