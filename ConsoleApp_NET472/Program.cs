@@ -11,7 +11,6 @@ namespace ConsoleApp_NET472
     {
         static void Main(string[] args)
         {
-            
             var ll = Guid.Empty.Devices().Select(x => new
             {
                 objectname = x.GetPhysicalDeviceObjectName(),

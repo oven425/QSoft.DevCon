@@ -114,7 +114,6 @@ namespace QSoft.DevCon
         {
             IntPtr lpBuff = IntPtr.Zero;
             var sMsg = "";
-//#if NET8_0_OR_GREATER
 
             if (0 != FormatMessage(FORMAT_MESSAGE.ALLOCATE_BUFFER
                    | FORMAT_MESSAGE.FROM_SYSTEM
@@ -122,18 +121,16 @@ namespace QSoft.DevCon
                    IntPtr.Zero,
                    error, 0, ref lpBuff, 0, IntPtr.Zero))
             {
-                sMsg = Marshal.PtrToStringUni(lpBuff);            //結果爲“重疊 I/O 操作在進行中”，完全正確
+                sMsg = Marshal.PtrToStringUni(lpBuff);
                 Marshal.FreeHGlobal(lpBuff);
             }
             
-//#endif
             return sMsg??"";
         }
 
         static void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
         {
-//#if NET8_0_OR_GREATER
-            SP_PROPCHANGE_PARAMS params1 = new SP_PROPCHANGE_PARAMS();
+            SP_PROPCHANGE_PARAMS params1 = new();
             params1.ClassInstallHeader.cbSize = Marshal.SizeOf<SP_CLASSINSTALL_HEADER>();
             params1.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
             params1.Scope = DICS_FLAG_GLOBAL;
@@ -141,42 +138,16 @@ namespace QSoft.DevCon
 
             if (!SetupDiSetClassInstallParams(src.dev, src.devdata, params1, Marshal.SizeOf<SP_PROPCHANGE_PARAMS>()))
             {
+                ThrowExceptionForLastError();
             }
 
             if (!SetupDiCallClassInstaller((uint)DIF_PROPERTYCHANGE, src.dev, ref src.devdata))
             {
                 ThrowExceptionForLastError();
             }
-//#else
-//            SP_PROPCHANGE_PARAMS params1 = new SP_PROPCHANGE_PARAMS();
-//            params1.ClassInstallHeader.cbSize = Marshal.SizeOf(params1.ClassInstallHeader.GetType());
-//            params1.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
-//            params1.Scope = DICS_FLAG_GLOBAL;
-//            params1.StateChange = isenable == true ? DICS_ENABLE : DICS_DISABLE;
-
-//            // setup proper parameters            
-//            //if (!SetupDiSetClassInstallParams(hDevInfo, ptrToDevInfoData, ClassInstallParams, Marshal.SizeOf(params1.GetType())))
-//            if (!SetupDiSetClassInstallParams(src.dev, src.devdata, params1, Marshal.SizeOf(params1.GetType())))
-//            {
-//                int errorcode = Marshal.GetLastWin32Error();
-//                errorcode = 0;
-//            }
-
-//            // use parameters
-//            if (!SetupDiCallClassInstaller((uint)DIF_PROPERTYCHANGE, src.dev, ref src.devdata))
-//            {
-//                int errorcode = Marshal.GetLastWin32Error(); // error here  
-//                //var msg = errorcode.GetLastErrorMessage();
-//                //throw new Exception(msg);
-//            }
-
-//#endif
         }
 
-        public static List<string> GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetStrings(DEVPKEY_Device_Children);
-        }
+        public static List<string> GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetStrings(DEVPKEY_Device_Children);
 
         public static string GetParent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -191,11 +162,9 @@ namespace QSoft.DevCon
             var drives = System.IO.DriveInfo.GetDrives();
             foreach (var oo in drives.Select(x => x.Name))
             {
-                using (var mem = new IntPtrMem<byte>(256 * 2))
-                {
-                    QueryDosDevice(oo.Replace("\\", ""), mem.Pointer, 256);
-                    yield return (oo, Marshal.PtrToStringUni(mem.Pointer) ?? "");
-                }
+                using var mem = new IntPtrMem<byte>(256 * 2);
+                QueryDosDevice(oo.Replace("\\", ""), mem.Pointer, 256);
+                yield return (oo, Marshal.PtrToStringUni(mem.Pointer) ?? "");
             }
 
         }
@@ -210,14 +179,12 @@ namespace QSoft.DevCon
             }
             if (reqsize > 0)
             {
-                using (var mem = new IntPtrMem<Guid>((int)reqsize))
-                {
-                    SetupDiClassGuidsFromName(src, mem.Pointer, reqsize, out reqsize);
-                    var guid = new byte[16];
-                    Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
-                    var gg = new Guid(guid);
-                    guids.Add(gg);
-                }
+                using var mem = new IntPtrMem<Guid>((int)reqsize);
+                SetupDiClassGuidsFromName(src, mem.Pointer, reqsize, out reqsize);
+                var guid = new byte[16];
+                Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
+                var gg = new Guid(guid);
+                guids.Add(gg);
             }
 
             return guids;
@@ -341,10 +308,7 @@ namespace QSoft.DevCon
             }
             return str;
         }
-        public static string? GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return GetString(src, SPDRP_MFG);
-        }
+        public static string? GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetString(SPDRP_MFG);
 
 #if NET6_0_OR_GREATER
         [SupportedOSPlatform("windows")]
@@ -507,10 +471,10 @@ namespace QSoft.DevCon
         internal static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
 
 
-        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
         
-        [DllImport("setupapi.dll", SetLastError = true)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, IntPtr guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
@@ -520,11 +484,11 @@ namespace QSoft.DevCon
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern uint QueryDosDevice(string lpDeviceName, IntPtr lpTargetPath, int ucchMax);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern bool SetupDiSetClassInstallParams(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SP_PROPCHANGE_PARAMS ClassInstallParams, int ClassInstallParamsSize);
+        internal static extern bool SetupDiSetClassInstallParams(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SP_PROPCHANGE_PARAMS ClassInstallParams, int ClassInstallParamsSize);
         [DllImport("setupapi.dll", SetLastError = true)]
         internal static extern bool SetupDiCallClassInstaller(UInt32 InstallFunction, IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData);
         

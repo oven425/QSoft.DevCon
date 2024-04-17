@@ -1,15 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Title>DevCon.NET</Title>
     <VersionPrefix>2.0.0</VersionPrefix>
-    <TargetFrameworks>net8.0;net6.0;net472;net470</TargetFrameworks>
+    <TargetFrameworks>net8.0;net6.0;net472;net481;net462;net460</TargetFrameworks>
     <LangVersion>11.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageIcon>48607350112_057637c3b5_o.jpg</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>setupAPI</PackageTags>
+    <RepositoryUrl>https://github.com/oven425/QSoft.DevCon.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/oven425/QSoft.DevCon</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>Copyright © Ben Hsu 2022</Copyright>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>True</IsAotCompatible>
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net460'">
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\48607350112_057637c3b5_o.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 </Project>
