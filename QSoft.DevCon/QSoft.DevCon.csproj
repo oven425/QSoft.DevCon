@@ -10,11 +10,14 @@
     <PackageIcon>48607350112_057637c3b5_o.jpg</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>setupAPI</PackageTags>
+    <PackageTags>SetupApi, Enable/Disable device, c#, Linq </PackageTags>
     <RepositoryUrl>https://github.com/oven425/QSoft.DevCon.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/oven425/QSoft.DevCon</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright © Ben Hsu 2022</Copyright>
+    <Description>easy get device manager info</Description>
+    <PackageReleaseNotes>1. support multi framework
+2. fix some issue</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

@@ -2,14 +2,9 @@
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters;
 using System.Runtime.Versioning;
-using System.Text;
 using System.Threading;
 
 namespace QSoft.DevCon
@@ -206,19 +201,16 @@ namespace QSoft.DevCon
             return src.GetStrings(SPDRP_HARDWAREID);
         }
 
-        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetStrings(SPDRP_LOCATION_PATHS);
-        }
+        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)=> src.GetStrings(SPDRP_LOCATION_PATHS);
 
         static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var ids = new List<string>();
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
             {
                 using var mem = new IntPtrMem<byte>(reqsize * 2);
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, mem.Pointer, reqsize, out reqsize, 0);
                 ids.AddRange(GetStrings(mem.Pointer));
             }
 
@@ -402,7 +394,7 @@ namespace QSoft.DevCon
         public const int DIGCF_PROFILE = 0x8;
         public const int DIGCF_DEVICEINTERFACE = 0x10;
         public const int DICS_ENABLE = 0x00000001;
-        public const int DICS_DISABLE = 0x00000002;
+        const int DICS_DISABLE = 0x00000002;
         public const int DICS_PROPCHANGE = 0x00000003;
         public const int DICS_START = 0x00000004;
         public const int DICS_STOP = 0x00000005;
