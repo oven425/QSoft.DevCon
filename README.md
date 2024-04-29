@@ -40,6 +40,7 @@ version 1.x.x.x change to 2.x.x.x
 | GetChildren()  | GetChildrens().FirstOrDefault() |
 | GetInstanceId()  | GetDeviceInstanceId() |
 | GetDevClass()  | GetClassGuids() |
+| GetDisplayName()  | GetFriendName() |
 
 
 PS: Thanks for [Simple Device Manager](https://www.codeproject.com/Articles/14469/Simple-Device-Manager).
