@@ -29,7 +29,17 @@ var ports = "Ports".Devices().Where(x => x.GetService() == "Serial")
 
 4. Get all device class name and class guid
 ```c#
-var class_guid = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x => x.GetClassGuid());
+var class_guid = Guid.Empty.Devices()
+    .GroupBy(x => x.GetClass(), x => x.GetClassGuid());
 ```
+PS:
+version 1.x.x.x change to 2.x.x.x
+
+|  Old(1.x.x.x)  | New(2.x.x.x)  |
+|  ----  | ----  |
+| GetChildren()  | GetChildrens().FirstOrDefault() |
+| GetInstanceId()  | GetDeviceInstanceId() |
+| GetDevClass()  | GetClassGuids() |
+
 
 PS: Thanks for [Simple Device Manager](https://www.codeproject.com/Articles/14469/Simple-Device-Manager).

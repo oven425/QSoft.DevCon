@@ -11,7 +11,7 @@ var ll = Guid.Empty.Devices().Select(x => new
     hardwareids = x.GetHardwaeeIDs(),
     friendname = x.GetFriendName(),
     class_guid = x.GetClassGuid(),
-    children = x.GetChildren(),
+    children = x.GetChildrens(),
     parent = x.GetParent(),
     desc = x.GetDeviceDesc(),
     class_name = x.GetClassGuid().GetClassDesc(),

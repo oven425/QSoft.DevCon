@@ -142,7 +142,7 @@ namespace QSoft.DevCon
             }
         }
 
-        public static List<string> GetChildren(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetStrings(DEVPKEY_Device_Children);
+        public static List<string> GetChildrens(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetStrings(DEVPKEY_Device_Children);
 
         public static string GetParent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -291,7 +291,7 @@ namespace QSoft.DevCon
         public static string? GetClassDesc(this Guid guid)
         {
             var str = "";
-            SetupDiGetClassDescription(guid!, IntPtr.Zero, 0, out var reqsize);
+            SetupDiGetClassDescription(guid, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
                 using var mem = new IntPtrMem<byte>((int)reqsize * 2);
