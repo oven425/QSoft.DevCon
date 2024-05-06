@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <Title>DevCon.NET</Title>
-    <VersionPrefix>2.0.0</VersionPrefix>
-    <TargetFrameworks>net8.0;net6.0;net472;net481;net462;net460</TargetFrameworks>
+    <VersionPrefix>2.0.0.1</VersionPrefix>
+    <TargetFrameworks>net8.0-windows;net6.0-windows;net472;net481;net462;net460</TargetFrameworks>
     <LangVersion>11.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -19,8 +19,9 @@
     <PackageReleaseNotes>1. support multi framework
 2. fix some issue
 3. some method change</PackageReleaseNotes>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>True</IsAotCompatible>
     <IsTrimmable>true</IsTrimmable>
