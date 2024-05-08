@@ -11,6 +11,12 @@ namespace ConsoleApp_NET472
     {
         static void Main(string[] args)
         {
+            foreach (var oo in "Camera".Devices())
+            {
+                var friendname = oo.GetFriendName();
+                oo.SetFriendName($"USB2.0 HD UVC WebCam");
+            }
+
             var ll = Guid.Empty.Devices().Select(x => new
             {
                 objectname = x.GetPhysicalDeviceObjectName(),

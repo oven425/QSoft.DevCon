@@ -98,7 +98,7 @@ namespace QSoft.DevCon
         {
             var error = Marshal.GetLastWin32Error();
             var msg = error.GetLastErrorMessage();
-            if(string.IsNullOrEmpty(msg))
+            if(!string.IsNullOrEmpty(msg))
             {
                 var ex = new Exception(msg);
                 throw ex;
@@ -189,6 +189,11 @@ namespace QSoft.DevCon
         public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             return GetString(src, SPDRP_FRIENDLYNAME);
+        }
+
+        public static void SetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data)
+        {
+            src.SetString(data, SPDRP_FRIENDLYNAME);
         }
 
         public static string GetDeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -348,6 +353,15 @@ namespace QSoft.DevCon
             return str??"";
         }
 
+        static void SetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data, uint spdrp)
+        {
+            using var mem = new IntPtrMem<byte>(Marshal.StringToHGlobalUni(data));
+            if(!SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, mem.Pointer, (uint)data.Length*2))
+            {
+                ThrowExceptionForLastError();
+            }
+        }
+
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
         public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -415,6 +429,9 @@ namespace QSoft.DevCon
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceRegistryPropertyW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiSetDeviceRegistryPropertyW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, IntPtr PropertyBuffer, uint PropertyBufferSize);
 
         [LibraryImport("setupapi.dll",EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -470,6 +487,11 @@ namespace QSoft.DevCon
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, IntPtr guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, IntPtr PropertyBuffer, uint PropertyBufferSize);
+
+
+
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiGetClassDescription(Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
@@ -617,6 +639,11 @@ namespace QSoft.DevCon
             var s1 = Marshal.SizeOf<T>();
             Size = s1*size;
             m_pBuffer = Marshal.AllocHGlobal(Size);
+        }
+
+        public IntPtrMem(IntPtr ptr)
+        {
+            m_pBuffer = ptr;
         }
 
         IntPtr m_pBuffer = IntPtr.Zero;

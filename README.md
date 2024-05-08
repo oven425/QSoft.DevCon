@@ -12,7 +12,8 @@ var alldevices = Guid.Empty.Devices()
 ```
 2. Get all serial port info
 ```c#
-var ports = "Ports".Devices().Where(x => x.GetService() == "Serial")
+var ports = "Ports".Devices()
+        .Where(x => x.GetService() == "Serial")
         .Select(x => new
         {
             portname = x.GetComPortName(),
@@ -30,7 +31,17 @@ var ports = "Ports".Devices().Where(x => x.GetService() == "Serial")
 4. Get all device class name and class guid
 ```c#
 var class_guid = Guid.Empty.Devices()
-    .GroupBy(x => x.GetClass(), x => x.GetClassGuid());
+        .GroupBy(x => x.GetClass(), x => x.GetClassGuid());
+```
+
+5. change friend name
+```c#
+//change camera friend name
+foreach (var oo in "Camera".Devices())
+{
+    var friendname = oo.GetFriendName();
+    oo.SetFriendName($"test {friendname}");
+}
 ```
 PS:
 version 1.x.x.x change to 2.x.x.x

@@ -1,4 +1,5 @@
 ﻿//using QSoft.DevCon;
+using QSoft.DevCon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,20 +38,25 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
+            foreach (var oo in "Camera".Devices())
+            {
+                var friendname = oo.GetFriendName();
+                Console.WriteLine(friendname);
+            }
             //try
             //{
-                //var driver = Guid.Empty.Devices().Select(x =>new
-                //{
-                //    date = x.GetDriverDate(),
-                //    ds = x.GetDisplayName(),
-                //    fr = x.GetFriendName(),
-                //    desc = x.GetDescription(),
-                //    decs1 = x.GetDescription1(),
-                //    driverversion = x.GetDriverVersion(),
-                //   sectioninf = x.GetDriverInfSection(),
-                //   guid = x.GetClassGuid(),
-                //}).ToList();
-                Console.ReadLine();
+            //var driver = Guid.Empty.Devices().Select(x =>new
+            //{
+            //    date = x.GetDriverDate(),
+            //    ds = x.GetDisplayName(),
+            //    fr = x.GetFriendName(),
+            //    desc = x.GetDescription(),
+            //    decs1 = x.GetDescription1(),
+            //    driverversion = x.GetDriverVersion(),
+            //   sectioninf = x.GetDriverInfSection(),
+            //   guid = x.GetClassGuid(),
+            //}).ToList();
+            Console.ReadLine();
 
             //var ports = "Ports".Devices().Where(x=>x.GetService()=="Serial").Select(x => x.GetComPortName()).ToList();
             //var letters = DevMgrExtension.GetVolumeName().ToList();

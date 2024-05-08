@@ -16,9 +16,8 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright © Ben Hsu 2022</Copyright>
     <Description>easy get device manager info</Description>
-    <PackageReleaseNotes>1. support multi framework
-2. fix some issue
-3. some method change</PackageReleaseNotes>
+    <PackageReleaseNotes>1. change support platform, only windows
+2. new setfriendname function, require admin</PackageReleaseNotes>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
