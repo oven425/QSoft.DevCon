@@ -14,6 +14,7 @@ namespace ConsoleApp_NET472
             foreach (var oo in "Camera".Devices())
             {
                 var panel = oo.Panel();
+                var driverprovider = oo.GetDriverProvider();
                 var friendname = oo.GetFriendName();
                 //oo.SetFriendName($"USB2.0 HD UVC WebCam");
             }

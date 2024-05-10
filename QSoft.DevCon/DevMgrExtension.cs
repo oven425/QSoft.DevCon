@@ -260,14 +260,10 @@ namespace QSoft.DevCon
         }
 
         public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
-        }
+            => src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
 
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetString(DPKEY_Device_PowerRelations);
-        }
+            => src.GetString(DPKEY_Device_PowerRelations);
 
 
         public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -377,6 +373,9 @@ namespace QSoft.DevCon
         {
             return src.GetDateTime(DEVPKEY_Device_DriverDate);
         }
+
+        public static string GetDriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetString(DEVPKEY_Device_DriverProvider);
+
 
         static DateTime GetDateTime(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
@@ -551,6 +550,7 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverDate = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 2 };
         readonly internal static DEVPROPKEY DPKEY_Device_DeviceDesc = new() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_DriverProvider = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 9 };
         readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         public const uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
@@ -611,11 +611,15 @@ namespace QSoft.DevCon
         internal const int KEY_NOTIFY = 0x0010;
         internal const int KEY_CREATE_LINK = 0x0020;
         internal const int KEY_READ = ((STANDARD_RIGHTS_READ |
-                                                           KEY_QUERY_VALUE |
-                                                           KEY_ENUMERATE_SUB_KEYS |
-                                                           KEY_NOTIFY)
-                                                          &
-                                                          (~SYNCHRONIZE));
+                            KEY_QUERY_VALUE |
+                            KEY_ENUMERATE_SUB_KEYS |
+                            KEY_NOTIFY)
+                            &
+                            (~SYNCHRONIZE));
+        internal const int KEY_WRITE = ((STANDARD_RIGHTS_WRITE |
+                            KEY_SET_VALUE |
+                            KEY_CREATE_SUB_KEY) &
+                            (~SYNCHRONIZE));
     }
 
     internal sealed class IntPtrMem<T> : IDisposable where T : struct

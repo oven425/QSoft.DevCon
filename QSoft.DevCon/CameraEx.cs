@@ -19,18 +19,11 @@ namespace QSoft.DevCon
             uint propertytype = 0;
 
             int reqsz = 0;
-            var hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, IntPtr.Zero, 0, out reqsz, 0);
-            if (!hr)
-            {
-                var err = Marshal.GetLastWin32Error();
-            }
-            //var buffer = Marshal.AllocHGlobal((int)reqsz);
-            //hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, buffer, reqsz, out reqsz, 0);
-            //byte[] lbuffer = new byte[reqsz];
-            //Marshal.Copy(buffer, lbuffer, 0, (int)reqsz);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, IntPtr.Zero, 0, out reqsz, 0);
+
 
             using var mem = new IntPtrMem<byte>(reqsz);
-            hr = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
             byte[] lbuffer = new byte[reqsz];
             Marshal.Copy(mem.Pointer, lbuffer, 0, reqsz);
 
@@ -38,9 +31,6 @@ namespace QSoft.DevCon
             BitArray myBA3 = new BitArray(lbuffer);
 
             Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
-
-            //int errcode = Marshal.GetLastWin32Error();
-            //Marshal.FreeHGlobal(buffer);
 
             return (CameraPanel)Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
 
@@ -56,7 +46,7 @@ namespace QSoft.DevCon
                 {
                     dd = dd << 1;
                 }
-                int o = src[i] == true ? 1 : 0;
+                int o = src[i] ? 1 : 0;
                 dd = dd | o;
 
 
