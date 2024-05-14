@@ -255,9 +255,7 @@ namespace QSoft.DevCon
         }
 
         public static string GetService(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetString(SPDRP_SERVICE);
-        }
+            => src.GetString(SPDRP_SERVICE);
 
         public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
@@ -370,9 +368,8 @@ namespace QSoft.DevCon
         }
 
         public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetDateTime(DEVPKEY_Device_DriverDate);
-        }
+            => src.GetDateTime(DEVPKEY_Device_DriverDate);
+        
 
         public static string GetDriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetString(DEVPKEY_Device_DriverProvider);
 
@@ -551,6 +548,9 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DPKEY_Device_DeviceDesc = new() { fmtid = Guid.Parse("{a45c254e-df1c-4efd-8020-67d146a850e0}"), pid = 2 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverProvider = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 9 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_Siblings = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 10 };
+
+
         readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
         public const uint SPDRP_COMPATIBLEIDS = (0x00000002);  // CompatibleIDs (R/W)
