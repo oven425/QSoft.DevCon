@@ -358,9 +358,7 @@ namespace QSoft.DevCon
 
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
         public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetString(DEVPKEY_Device_DriverVersion);
-        }
+            => src.GetString(DEVPKEY_Device_DriverVersion);
 
         public static string GetDriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -370,10 +368,13 @@ namespace QSoft.DevCon
         public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_DriverDate);
         
+        public static string GetDriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
+            => src.GetString(DEVPKEY_Device_DriverProvider);
 
-        public static string GetDriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetString(DEVPKEY_Device_DriverProvider);
-
-
+        public static List<string> GetSiblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            return src.GetStrings(DEVPKEY_Device_Siblings);
+        }
         static DateTime GetDateTime(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var datetime = DateTime.FromFileTime(0);
