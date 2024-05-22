@@ -11,11 +11,13 @@ namespace ConsoleApp_NET472
     {
         static void Main(string[] args)
         {
+            var pps = Guid.Empty.Devices().Where(x => x.GetProblemCode() != 0);
             foreach (var oo in "Camera".Devices())
             {
                 var panel = oo.Panel();
                 var siblings = oo.GetSiblings();
                 var driverprovider = oo.GetDriverProvider();
+                var problemcode = oo.GetProblemCode();
                 var friendname = oo.GetFriendName();
                 //oo.SetFriendName($"USB2.0 HD UVC WebCam");
             }

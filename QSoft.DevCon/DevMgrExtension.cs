@@ -145,13 +145,10 @@ namespace QSoft.DevCon
         public static List<string> GetChildrens(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetStrings(DEVPKEY_Device_Children);
 
         public static string GetParent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return GetString(src, DEVPKEY_Device_Parent);
-        }
+            => src.GetString(DEVPKEY_Device_Parent);
+
         public static string GetClass(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetString(SPDRP_CLASS);
-        }
+            => src.GetString(SPDRP_CLASS);
         public static IEnumerable<(string letter, string target)> GetVolumeName()
         {
             var drives = System.IO.DriveInfo.GetDrives();
@@ -187,24 +184,16 @@ namespace QSoft.DevCon
         }
 
         public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return GetString(src, SPDRP_FRIENDLYNAME);
-        }
+            => GetString(src, SPDRP_FRIENDLYNAME);
 
         public static void SetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data)
-        {
-            src.SetString(data, SPDRP_FRIENDLYNAME);
-        }
+            => src.SetString(data, SPDRP_FRIENDLYNAME);
 
         public static string GetDeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return GetString(src, SPDRP_DEVICEDESC);
-        }
+            => GetString(src, SPDRP_DEVICEDESC);
 
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetStrings(SPDRP_HARDWAREID);
-        }
+            => src.GetStrings(SPDRP_HARDWAREID);
 
         public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)=> src.GetStrings(SPDRP_LOCATION_PATHS);
 
@@ -262,7 +251,10 @@ namespace QSoft.DevCon
 
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DPKEY_Device_PowerRelations);
-
+        public static int GetProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            return src.GetInt32(DEVPKEY_Device_Device_ProblemCode);
+        }
 
         public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -299,7 +291,9 @@ namespace QSoft.DevCon
             }
             return str;
         }
-        public static string? GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) => src.GetString(SPDRP_MFG);
+
+        public static string? GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
+            => src.GetString(SPDRP_MFG);
 
 #if NET6_0_OR_GREATER
         [SupportedOSPlatform("windows")]
@@ -317,6 +311,20 @@ namespace QSoft.DevCon
             }
 
             return "";
+        }
+
+        static int GetInt32(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
+        {
+            var str = 0;
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            if (reqsize > 0)
+            {
+                using var mem = new IntPtrMem<byte>(reqsize);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                str = Marshal.ReadInt32(mem.Pointer);
+            }
+
+            return str;
         }
 
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
@@ -550,7 +558,7 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverProvider = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 9 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_Siblings = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 10 };
-
+        readonly internal static DEVPROPKEY DEVPKEY_Device_Device_ProblemCode = new() { fmtid=Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=3 };
 
         readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
