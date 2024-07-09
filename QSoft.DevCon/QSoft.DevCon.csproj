@@ -19,6 +19,10 @@
     <PackageReleaseNotes>1. change support platform, only windows
 2. new setfriendname function, require admin</PackageReleaseNotes>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <PackageId>$(MSBuildProjectName)</PackageId>
+    <Authors>$(MSBuildProjectName)</Authors>
+    <Product>$(MSBuildProjectName)</Product>
+    <AssemblyName>$(MSBuildProjectName).$(VersionPrefix)</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

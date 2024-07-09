@@ -16,12 +16,17 @@ namespace ConsoleApp_NET472
             //{
             //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
             //}
+            var vvvs = "Volume".Devices(true).Select(x => new
+            {
+                connected = x.IsConnected(),
+                id = x.GetDeviceInstanceId(),
+            }).ToList();
             foreach (var oo in "Camera".Devices())
             {
                 var firstinstalldate = oo.GetFirstInstallDate();
-                
+                var isconnected= oo.IsConnected();
                 var panel = oo.Panel();
-                var siblings = oo.GetSiblings();
+                var siblings = oo.Siblings();
                 var driverprovider = oo.GetDriverProvider();
                 var problemcode = oo.GetProblemCode();
                 var infsection = oo.GetDriverInfSection();

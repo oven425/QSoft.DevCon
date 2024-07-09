@@ -3,6 +3,8 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -196,7 +198,8 @@ namespace QSoft.DevCon
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_HARDWAREID);
 
-        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)=> src.GetStrings(SPDRP_LOCATION_PATHS);
+        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetStrings(SPDRP_LOCATION_PATHS);
 
         static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
@@ -244,7 +247,10 @@ namespace QSoft.DevCon
             return strs;
         }
 
+        [Obsolete("remove next version")]
         public static string GetService(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString(SPDRP_SERVICE);
+        public static string Service(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_SERVICE);
 
         public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -253,8 +259,12 @@ namespace QSoft.DevCon
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DPKEY_Device_PowerRelations);
         public static int GetProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetInt32(DEVPKEY_Device_Device_ProblemCode);
+
+        public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            return src.GetInt32(DEVPKEY_Device_Device_ProblemCode);
+            var status = src.GetInt32(DEVPKEY_Device_DevNodeStatus);
+            return status != 0;
         }
 
         public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -289,7 +299,11 @@ namespace QSoft.DevCon
             return str;
         }
 
-        public static string? GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
+        [Obsolete("remove next version")]
+        public static string GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
+            => src.GetString(SPDRP_MFG);
+
+        public static string Manufacturer(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_MFG);
 
 #if NET6_0_OR_GREATER
@@ -320,7 +334,7 @@ namespace QSoft.DevCon
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
                 str = Marshal.ReadInt32(mem.Pointer);
             }
-
+            var err = Marshal.GetLastWin32Error();
             return str;
         }
 
@@ -379,7 +393,7 @@ namespace QSoft.DevCon
         public static DateTime GetFirstInstallDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_FirstInstallDate);
 
-        public static List<string> GetSiblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static List<string> Siblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             return src.GetStrings(DEVPKEY_Device_Siblings);
         }
@@ -567,6 +581,9 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_Siblings = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 10 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_Device_ProblemCode = new() { fmtid=Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=3 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_FirstInstallDate = new DEVPROPKEY(0x83da6326, 0x97a6, 0x4088, 0x94, 0x53, 0xa1, 0x92, 0x3f, 0x57, 0x3b, 0x29, 101);   // DEVPROP_TYPE_FILETIME
+
+
+        readonly internal static DEVPROPKEY DEVPKEY_DeviceContainer_IsConnected = new DEVPROPKEY(0x78c34fc8, 0x104a, 0x4aca, 0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57, 55);   // DEVPROP_TYPE_FILETIME
 
         readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
