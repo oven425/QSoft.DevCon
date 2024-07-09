@@ -11,13 +11,20 @@ namespace ConsoleApp_NET472
     {
         static void Main(string[] args)
         {
-            var pps = Guid.Empty.Devices().Where(x => x.GetProblemCode() != 0);
+            //var pps = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x=>x.GetClassGuid());
+            //foreach(var oo in pps)
+            //{
+            //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
+            //}
             foreach (var oo in "Camera".Devices())
             {
+                var firstinstalldate = oo.GetFirstInstallDate();
+                
                 var panel = oo.Panel();
                 var siblings = oo.GetSiblings();
                 var driverprovider = oo.GetDriverProvider();
                 var problemcode = oo.GetProblemCode();
+                var infsection = oo.GetDriverInfSection();
                 var friendname = oo.GetFriendName();
                 //oo.SetFriendName($"USB2.0 HD UVC WebCam");
             }
@@ -60,7 +67,7 @@ namespace ConsoleApp_NET472
 
 
 
-                    System.Diagnostics.Trace.WriteLine($"mfg:{device.mfg}");
+                    System.Diagnostics.Debug.WriteLine($"mfg:{device.mfg}");
                     System.Diagnostics.Trace.WriteLine($"driver_inf:{device.driver_inf}");
                     System.Diagnostics.Trace.WriteLine($"drive_version:{device.drive_version}");
                     System.Diagnostics.Trace.WriteLine($"driver_date:{device.driver_date}");

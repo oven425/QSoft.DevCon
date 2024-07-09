@@ -21,9 +21,9 @@ using namespace std;
 int aa = CM_DEVCAP_HARDWAREDISABLED;
 BOOL ListDeviceInstancePath1()
 {
-
-	GUID guid1;
-	HidD_GetHidGuid(&guid1);
+	DEVPKEY_Device_FirstInstallDate
+	//GUID guid1;
+	//HidD_GetHidGuid(&guid1);
 	//SetupDiSetDeviceRegistryProperty
 	//SetupDiSetDeviceRegistryProperty
 	//spDevInfoData.ClassGuid = {745A17A0-74D3-11D0-B6FE-00A0C90F57DA}
