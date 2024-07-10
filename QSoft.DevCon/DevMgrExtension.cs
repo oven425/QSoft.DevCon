@@ -258,8 +258,8 @@ namespace QSoft.DevCon
 
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DPKEY_Device_PowerRelations);
-        public static int GetProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetInt32(DEVPKEY_Device_Device_ProblemCode);
+        public static int ProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetInt32(DEVPKEY_Device_ProblemCode);
 
         public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -334,7 +334,6 @@ namespace QSoft.DevCon
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
                 str = Marshal.ReadInt32(mem.Pointer);
             }
-            var err = Marshal.GetLastWin32Error();
             return str;
         }
 
@@ -379,18 +378,16 @@ namespace QSoft.DevCon
         public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_DriverVersion);
 
-        public static string GetDriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetString(DEVPKEY_Device_DriverInfSection);
-        }
+        public static string DriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString(DEVPKEY_Device_DriverInfSection);
 
         public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_DriverDate);
         
-        public static string GetDriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
+        public static string DriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
             => src.GetString(DEVPKEY_Device_DriverProvider);
 
-        public static DateTime GetFirstInstallDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static DateTime FirstInstallDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_FirstInstallDate);
 
         public static List<string> Siblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -579,7 +576,7 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverInfSection = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 6 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_DriverProvider = new() { fmtid = Guid.Parse("{a8b865dd-2e3d-4094-ad97-e593a70c75d6}"), pid = 9 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_Siblings = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 10 };
-        readonly internal static DEVPROPKEY DEVPKEY_Device_Device_ProblemCode = new() { fmtid=Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=3 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_ProblemCode = new() { fmtid=Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=3 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_FirstInstallDate = new DEVPROPKEY(0x83da6326, 0x97a6, 0x4088, 0x94, 0x53, 0xa1, 0x92, 0x3f, 0x57, 0x3b, 0x29, 101);   // DEVPROP_TYPE_FILETIME
 
 

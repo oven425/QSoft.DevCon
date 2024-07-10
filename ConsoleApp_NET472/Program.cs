@@ -23,13 +23,13 @@ namespace ConsoleApp_NET472
             }).ToList();
             foreach (var oo in "Camera".Devices())
             {
-                var firstinstalldate = oo.GetFirstInstallDate();
+                var firstinstalldate = oo.FirstInstallDate();
                 var isconnected= oo.IsConnected();
                 var panel = oo.Panel();
                 var siblings = oo.Siblings();
-                var driverprovider = oo.GetDriverProvider();
-                var problemcode = oo.GetProblemCode();
-                var infsection = oo.GetDriverInfSection();
+                var driverprovider = oo.DriverProvider();
+                var problemcode = oo.ProblemCode();
+                var infsection = oo.DriverInfSection();
                 var friendname = oo.GetFriendName();
                 //oo.SetFriendName($"USB2.0 HD UVC WebCam");
             }
@@ -50,7 +50,7 @@ namespace ConsoleApp_NET472
                 desc = x.GetDeviceDesc(),
                 class_name = x.GetClassGuid().GetClassDesc(),
                 drive_version = x.GetDriverVersion(),
-                driver_inf = x.GetDriverInfSection(),
+                driver_inf = x.DriverInfSection(),
                 driver_date = x.GetDriverDate(),
             });
 
