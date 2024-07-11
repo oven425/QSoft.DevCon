@@ -193,11 +193,14 @@ BOOL ListDeviceInstancePath()
 #include <Devpropdef.h>
 #include <devguid.h>
 #include <Devpkey.h>
+#include <propkey.h>
 int main()
 {
+	//DEVPROP_TYPE_INT16
 	//ERROR_INVALID_FLAGS
 	//DN_DEVICE_DISCONNECTED
 	//DIGCF_PROFILE
+	
 	DWORD reqszie = 0;
 	auto uu = SetupDiClassGuidsFromNameW(_T("Camera"), nullptr, 0, &reqszie);
 	auto guids = new GUID[reqszie];

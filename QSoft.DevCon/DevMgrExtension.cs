@@ -2,6 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
@@ -263,6 +264,40 @@ namespace QSoft.DevCon
 
         public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
+#if NET472
+            var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
+            var ss = Marshal.SizeOf<DEVPROPKEY>();
+            ss = ss * (int)cc;
+            var ptr = Marshal.AllocHGlobal((int)ss);
+            bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, ptr, cc, out cc, 0);
+            List<DEVPROPKEY> keys = new List<DEVPROPKEY>();
+            for(int i= 0; i<cc; i++)
+            {
+                ptr = IntPtr.Add(ptr, Marshal.SizeOf<DEVPROPKEY>());
+                var kk = Marshal.PtrToStructure<DEVPROPKEY>(ptr);
+                keys.Add(kk);
+            }
+            var aa = keys.ToLookup(x => x.fmtid);
+            foreach(var oo in aa)
+            {
+                
+                foreach(var ooo in oo)
+                {
+                    System.Diagnostics.Trace.WriteLine($"{oo.Key} {ooo.pid}");
+                }
+
+            }
+#endif
+            var str = 0;
+            var devkey = DEVPKEY_Devices_IsConnected;
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            if (reqsize > 0)
+            {
+                using var mem = new IntPtrMem<byte>(reqsize);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                str = Marshal.ReadByte(mem.Pointer);
+            }
+            
             var status = src.GetInt32(DEVPKEY_Device_DevNodeStatus);
             return status != 0;
         }
@@ -505,8 +540,8 @@ namespace QSoft.DevCon
         internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, IntPtr PropertyBuffer, uint PropertyBufferSize);
-
-
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern bool SetupDiGetDevicePropertyKeys(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, IntPtr PropertyKeyArray, uint PropertyKeyCount, out uint RequiredPropertyKeyCount, uint Flags);
 
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -578,8 +613,10 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_Siblings = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 10 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_ProblemCode = new() { fmtid=Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid=3 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_FirstInstallDate = new DEVPROPKEY(0x83da6326, 0x97a6, 0x4088, 0x94, 0x53, 0xa1, 0x92, 0x3f, 0x57, 0x3b, 0x29, 101);   // DEVPROP_TYPE_FILETIME
+        readonly internal static DEVPROPKEY DEVPKEY_Device_IsPresent = new DEVPROPKEY() { fmtid = new Guid(0x540b947e, 0x8b40, 0x45bc, 0xa8, 0xa2, 0x6a, 0x0b, 0x89, 0x4c, 0xbd, 0xa2), pid = 5 };
 
-
+        readonly internal static DEVPROPKEY DEVPKEY_Devices_IsConnected = new() { fmtid = Guid.Parse("{83DA6326-97A6-4088-9453-A1923F573B29}"), pid = 15 };
+        //
         readonly internal static DEVPROPKEY DEVPKEY_DeviceContainer_IsConnected = new DEVPROPKEY(0x78c34fc8, 0x104a, 0x4aca, 0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57, 55);   // DEVPROP_TYPE_FILETIME
 
         readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
@@ -651,6 +688,38 @@ namespace QSoft.DevCon
                             KEY_SET_VALUE |
                             KEY_CREATE_SUB_KEY) &
                             (~SYNCHRONIZE));
+
+
+
+        internal const int DEVPROP_TYPE_EMPTY = 0x00000000;  // nothing, no property data
+        internal const int DEVPROP_TYPE_NULL= 0x00000001;  // null property data
+        internal const int DEVPROP_TYPE_SBYTE = 0x00000002;  // 8-bit signed int (SBYTE)
+//#define DEVPROP_TYPE_BYTE                       0x00000003  // 8-bit unsigned int (BYTE)
+//#define DEVPROP_TYPE_INT16                      0x00000004  // 16-bit signed int (SHORT)
+//#define DEVPROP_TYPE_UINT16                     0x00000005  // 16-bit unsigned int (USHORT)
+//#define DEVPROP_TYPE_INT32                      0x00000006  // 32-bit signed int (LONG)
+//#define DEVPROP_TYPE_UINT32                     0x00000007  // 32-bit unsigned int (ULONG)
+//#define DEVPROP_TYPE_INT64                      0x00000008  // 64-bit signed int (LONG64)
+//#define DEVPROP_TYPE_UINT64                     0x00000009  // 64-bit unsigned int (ULONG64)
+//#define DEVPROP_TYPE_FLOAT                      0x0000000A  // 32-bit floating-point (FLOAT)
+//#define DEVPROP_TYPE_DOUBLE                     0x0000000B  // 64-bit floating-point (DOUBLE)
+//#define DEVPROP_TYPE_DECIMAL                    0x0000000C  // 128-bit data (DECIMAL)
+//#define DEVPROP_TYPE_GUID                       0x0000000D  // 128-bit unique identifier (GUID)
+//#define DEVPROP_TYPE_CURRENCY                   0x0000000E  // 64 bit signed int currency value (CURRENCY)
+//#define DEVPROP_TYPE_DATE                       0x0000000F  // date (DATE)
+//#define DEVPROP_TYPE_FILETIME                   0x00000010  // file time (FILETIME)
+//#define DEVPROP_TYPE_BOOLEAN                    0x00000011  // 8-bit boolean (DEVPROP_BOOLEAN)
+//#define DEVPROP_TYPE_STRING                     0x00000012  // null-terminated string
+//#define DEVPROP_TYPE_STRING_LIST (DEVPROP_TYPE_STRING|DEVPROP_TYPEMOD_LIST) // multi-sz string list
+//#define DEVPROP_TYPE_SECURITY_DESCRIPTOR        0x00000013  // self-relative binary SECURITY_DESCRIPTOR
+//#define DEVPROP_TYPE_SECURITY_DESCRIPTOR_STRING 0x00000014  // security descriptor string (SDDL format)
+//#define DEVPROP_TYPE_DEVPROPKEY                 0x00000015  // device property key (DEVPROPKEY)
+//#define DEVPROP_TYPE_DEVPROPTYPE                0x00000016  // device property type (DEVPROPTYPE)
+//#define DEVPROP_TYPE_BINARY      (DEVPROP_TYPE_BYTE|DEVPROP_TYPEMOD_ARRAY)  // custom binary data
+//#define DEVPROP_TYPE_ERROR                      0x00000017  // 32-bit Win32 system error code
+//#define DEVPROP_TYPE_NTSTATUS                   0x00000018  // 32-bit NTSTATUS code
+//#define DEVPROP_TYPE_STRING_INDIRECT            0x00000019  // string resource (@[path\]<dllname>,-<strId>)
+
     }
 
     internal sealed class IntPtrMem<T> : IDisposable where T : struct
