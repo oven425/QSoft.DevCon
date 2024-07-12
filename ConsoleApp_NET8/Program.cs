@@ -11,9 +11,9 @@ var ll = Guid.Empty.Devices().Select(x => new
 {
 
     objectname = x.GetPhysicalDeviceObjectName(),
-    service = x.GetService(),
+    service = x.Service(),
     power_relation = x.GetPowerRelations(),
-    mfg = x.GetMFG(),
+    mfg = x.Manufacturer(),
     instanceid = x.GetDeviceInstanceId(),
     locationpaths = x.GetLocationPaths(),
     hardwareids = x.GetHardwaeeIDs(),
@@ -24,7 +24,7 @@ var ll = Guid.Empty.Devices().Select(x => new
     desc = x.GetDeviceDesc(),
     class_name = x.GetClassGuid().GetClassDesc(),
     drive_version = x.GetDriverVersion(),
-    driver_inf = x.GetDriverInfSection(),
+    driver_inf = x.DriverInfSection(),
     driver_date = x.GetDriverDate(),
 });
 

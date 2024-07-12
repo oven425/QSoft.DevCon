@@ -263,43 +263,33 @@ namespace QSoft.DevCon
             => src.GetInt32(DEVPKEY_Device_ProblemCode);
 
         public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetBoolean(DEVPKEY_Devices_IsConnected);
+
+        static List<DEVPROPKEY> GetDevicePropertyKeys(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-#if NET472
             var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
             var ss = Marshal.SizeOf<DEVPROPKEY>();
             ss = ss * (int)cc;
             var ptr = Marshal.AllocHGlobal((int)ss);
             bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, ptr, cc, out cc, 0);
             List<DEVPROPKEY> keys = new List<DEVPROPKEY>();
-            for(int i= 0; i<cc; i++)
+            for (int i = 0; i < cc; i++)
             {
                 ptr = IntPtr.Add(ptr, Marshal.SizeOf<DEVPROPKEY>());
                 var kk = Marshal.PtrToStructure<DEVPROPKEY>(ptr);
                 keys.Add(kk);
             }
             var aa = keys.ToLookup(x => x.fmtid);
-            foreach(var oo in aa)
+            foreach (var oo in aa)
             {
-                
-                foreach(var ooo in oo)
+
+                foreach (var ooo in oo)
                 {
                     System.Diagnostics.Trace.WriteLine($"{oo.Key} {ooo.pid}");
                 }
 
             }
-#endif
-            var str = 0;
-            var devkey = DEVPKEY_Devices_IsConnected;
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
-            if (reqsize > 0)
-            {
-                using var mem = new IntPtrMem<byte>(reqsize);
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
-                str = Marshal.ReadByte(mem.Pointer);
-            }
-            
-            var status = src.GetInt32(DEVPKEY_Device_DevNodeStatus);
-            return status != 0;
+            return new List<DEVPROPKEY>();
         }
 
         public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -370,6 +360,21 @@ namespace QSoft.DevCon
                 str = Marshal.ReadInt32(mem.Pointer);
             }
             return str;
+        }
+
+        static bool GetBoolean(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
+        {
+            var str = 0;
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            if (reqsize > 0)
+            {
+                using var mem = new IntPtrMem<byte>(reqsize);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                str = Marshal.ReadByte(mem.Pointer);
+            }
+
+            var status = src.GetInt32(DEVPKEY_Device_DevNodeStatus);
+            return status == 255;
         }
 
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
@@ -519,6 +524,11 @@ namespace QSoft.DevCon
         static internal partial int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource,
                                  int dwMessageId, int dwLanguageZId,
                                  ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
+
+        [LibraryImport("setupapi.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static internal partial bool SetupDiGetDevicePropertyKeys(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, IntPtr PropertyKeyArray, uint PropertyKeyCount, out uint RequiredPropertyKeyCount, uint Flags);
+
 #else
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
@@ -616,8 +626,7 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_IsPresent = new DEVPROPKEY() { fmtid = new Guid(0x540b947e, 0x8b40, 0x45bc, 0xa8, 0xa2, 0x6a, 0x0b, 0x89, 0x4c, 0xbd, 0xa2), pid = 5 };
 
         readonly internal static DEVPROPKEY DEVPKEY_Devices_IsConnected = new() { fmtid = Guid.Parse("{83DA6326-97A6-4088-9453-A1923F573B29}"), pid = 15 };
-        //
-        readonly internal static DEVPROPKEY DEVPKEY_DeviceContainer_IsConnected = new DEVPROPKEY(0x78c34fc8, 0x104a, 0x4aca, 0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57, 55);   // DEVPROP_TYPE_FILETIME
+
 
         readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
