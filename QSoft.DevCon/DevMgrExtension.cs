@@ -248,9 +248,7 @@ namespace QSoft.DevCon
             return strs;
         }
 
-        [Obsolete("remove next version")]
-        public static string GetService(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString(SPDRP_SERVICE);
+        
         public static string Service(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_SERVICE);
 
@@ -265,6 +263,16 @@ namespace QSoft.DevCon
         public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetBoolean(DEVPKEY_Devices_IsConnected);
 
+        public static bool IsPresent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var pps = src.GetDevicePropertyKeys();
+            foreach(var oo in pps)
+            {
+                System.Diagnostics.Trace.WriteLine($"{oo.fmtid} {oo.pid}");
+            }
+            return src.GetBoolean(DEVPKEY_Device_IsPresent);
+            //DEVPKEY_Device_IsPresent
+        }
         static List<DEVPROPKEY> GetDevicePropertyKeys(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
@@ -324,10 +332,6 @@ namespace QSoft.DevCon
             return str;
         }
 
-        [Obsolete("remove next version")]
-        public static string GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
-            => src.GetString(SPDRP_MFG);
-
         public static string Manufacturer(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_MFG);
 
@@ -373,8 +377,7 @@ namespace QSoft.DevCon
                 str = Marshal.ReadByte(mem.Pointer);
             }
 
-            var status = src.GetInt32(DEVPKEY_Device_DevNodeStatus);
-            return status == 255;
+            return str == 255;
         }
 
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)

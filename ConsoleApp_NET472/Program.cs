@@ -19,6 +19,7 @@ namespace ConsoleApp_NET472
             var vvvs = "Volume".Devices(true).Select(x => new
             {
                 connected = x.IsConnected(),
+                present = x.IsPresent(),
                 id = x.GetDeviceInstanceId(),
             }).ToList();
             foreach (var oo in "Camera".Devices())
