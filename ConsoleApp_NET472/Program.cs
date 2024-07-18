@@ -21,9 +21,11 @@ namespace ConsoleApp_NET472
                 connected = x.IsConnected(),
                 present = x.IsPresent(),
                 id = x.GetDeviceInstanceId(),
+                biosname = x.BiosDeviceName()
             }).ToList();
             foreach (var oo in "Camera".Devices())
             {
+                var biosname = oo.BiosDeviceName();
                 var firstinstalldate = oo.FirstInstallDate();
                 var isconnected= oo.IsConnected();
                 var panel = oo.Panel();

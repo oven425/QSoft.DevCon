@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
+using static QSoft.DevCon.DevConExtension;
 
 namespace QSoft.DevCon
 {
@@ -264,15 +265,8 @@ namespace QSoft.DevCon
             => src.GetBoolean(DEVPKEY_Devices_IsConnected);
 
         public static bool IsPresent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            var pps = src.GetDevicePropertyKeys();
-            foreach(var oo in pps)
-            {
-                System.Diagnostics.Trace.WriteLine($"{oo.fmtid} {oo.pid}");
-            }
-            return src.GetBoolean(DEVPKEY_Device_IsPresent);
-            //DEVPKEY_Device_IsPresent
-        }
+            => src.GetBoolean(DEVPKEY_Device_IsPresent);
+
         static List<DEVPROPKEY> GetDevicePropertyKeys(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
@@ -429,6 +423,9 @@ namespace QSoft.DevCon
         
         public static string DriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
             => src.GetString(DEVPKEY_Device_DriverProvider);
+
+        public static string BiosDeviceName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString(DEVPKEY_Device_BiosDeviceName);
 
         public static DateTime FirstInstallDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_FirstInstallDate);
@@ -629,7 +626,7 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_IsPresent = new DEVPROPKEY() { fmtid = new Guid(0x540b947e, 0x8b40, 0x45bc, 0xa8, 0xa2, 0x6a, 0x0b, 0x89, 0x4c, 0xbd, 0xa2), pid = 5 };
 
         readonly internal static DEVPROPKEY DEVPKEY_Devices_IsConnected = new() { fmtid = Guid.Parse("{83DA6326-97A6-4088-9453-A1923F573B29}"), pid = 15 };
-
+        internal static readonly DEVPROPKEY DEVPKEY_Device_BiosDeviceName = new(0x540b947e, 0x8b40, 0x45bc, 0xa8, 0xa2, 0x6a, 0x0b, 0x89, 0x4c, 0xbd, 0xa2, 10);    // DEVPROP_TYPE_STRING
 
         readonly internal static uint SPDRP_DEVICEDESC = 0x00000000;  // DeviceDesc (R/W)
         public const uint SPDRP_HARDWAREID = (0x00000001);  // HardwareID (R/W)
