@@ -19,7 +19,7 @@ foreach (var oo in tt2)
 {
 
 }
-static class LinqEx
+public static partial class LeftJoinExtension
 {
     public static IEnumerable<(T1, T2?)> LeftJoin<T1, T2, TKey>(this IEnumerable<T1> t1, IEnumerable<T2> t2, Func<T1, TKey> key1, Func<T2, TKey> key2)
     {

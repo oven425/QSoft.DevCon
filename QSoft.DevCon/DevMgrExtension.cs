@@ -300,7 +300,7 @@ namespace QSoft.DevCon
             SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqszie);
             if (reqszie > 0)
             {
-                using var buffer = new IntPtrMem<char>(reqszie * 2);
+                using var buffer = new IntPtrMem<char>(reqszie);
                 SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
                 str = Marshal.PtrToStringUni(buffer.Pointer);
             }
@@ -380,7 +380,7 @@ namespace QSoft.DevCon
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
             {
-                using var mem = new IntPtrMem<byte>(reqsize * 2);
+                using var mem = new IntPtrMem<char>(reqsize);
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
                 str = Marshal.PtrToStringUni(mem.Pointer);
             }
@@ -394,7 +394,7 @@ namespace QSoft.DevCon
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
-                using var mem = new IntPtrMem<byte>((int)reqsize * 2);
+                using var mem = new IntPtrMem<char>((int)reqsize);
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
                 str = Marshal.PtrToStringUni(mem.Pointer);
             }
