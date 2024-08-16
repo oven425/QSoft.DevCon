@@ -21,8 +21,20 @@ namespace ConsoleApp_NET472
                 connected = x.IsConnected(),
                 present = x.IsPresent(),
                 id = x.GetDeviceInstanceId(),
-                biosname = x.BiosDeviceName()
-            }).ToList();
+                //biosname = x.BiosDeviceName()
+            });
+            try
+            {
+                foreach (var oo in vvvs)
+                {
+                    Console.WriteLine(oo);
+                }
+            }
+            catch(Exception ee)
+            {
+
+            }
+            
             foreach (var oo in "Camera".Devices())
             {
                 var biosname = oo.BiosDeviceName();

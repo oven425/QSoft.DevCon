@@ -297,11 +297,15 @@ namespace QSoft.DevCon
         public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             var str = "";
-            SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqszie);
-            if (reqszie > 0)
+            SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqsize);
+            System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
+            if (reqsize > 0)
             {
-                using var buffer = new IntPtrMem<char>(reqszie);
-                SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqszie, out reqszie);
+                var aa = sizeof(char);
+                var ll = Marshal.SizeOf<char>();
+                var ll1 = Marshal.SizeOf<byte>();
+                using var buffer = new IntPtrMem<char>(reqsize);
+                SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqsize, out reqsize);
                 str = Marshal.PtrToStringUni(buffer.Pointer);
             }
             return str ?? "";
@@ -749,8 +753,14 @@ namespace QSoft.DevCon
         public int Size { private set; get; } = 0;
         public IntPtrMem(int size)
         {
+            
             var s1 = Marshal.SizeOf<T>();
+            
             Size = s1*size;
+            if (typeof(T) == typeof(char))
+            {
+                Size = Size * 2;
+            }
             m_pBuffer = Marshal.AllocHGlobal(Size);
         }
 
