@@ -13,6 +13,12 @@ using static QSoft.DevCon.DevConExtension;
 
 namespace QSoft.DevCon
 {
+    public record Student
+    {
+        public IntPtr dev { set; get; }
+        public SP_DEVINFO_DATA devdata { set; get; }
+    }
+
     static public partial class DevConExtension
     {
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)
@@ -27,6 +33,8 @@ namespace QSoft.DevCon
             {
                 flags |= DIGCF_ALLCLASSES;
             }
+
+
             uint index = 0;
             IntPtr hDevInfo = SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
             try
@@ -41,6 +49,7 @@ namespace QSoft.DevCon
                     }
                     else
                     {
+                        Student aa = new Student() { dev = hDevInfo, devdata = devinfo };
                         yield return (hDevInfo, devinfo);
                     }
                     index++;
