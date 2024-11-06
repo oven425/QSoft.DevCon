@@ -16,11 +16,9 @@ namespace QSoft.DevCon
         static DEVPROPKEY DEVPKEY_Devices_PhysicalDeviceLocation = new DEVPROPKEY() { fmtid = Guid.Parse("{540B947E-8B40-45BC-A8A2-6A0B894CBDA2}"), pid = 9 };
         public static CameraPanel Panel(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            uint propertytype = 0;
-
             int reqsz = 0;
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, IntPtr.Zero, 0, out reqsz, 0);
-
+            var bb = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out var propertytype, IntPtr.Zero, 0, out reqsz, 0);
+            if (!bb && reqsz == 0) return CameraPanel.Unknow;
 
             using var mem = new IntPtrMem<byte>(reqsz);
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
