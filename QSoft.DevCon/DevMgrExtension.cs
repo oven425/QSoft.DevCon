@@ -335,23 +335,6 @@ namespace QSoft.DevCon
         public static string Manufacturer(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_MFG);
 
-#if NET6_0_OR_GREATER
-        [SupportedOSPlatform("windows")]
-#endif
-        public static string GetComPortName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            var hKey1 = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
-            using var hKey = new SafeRegistryHandle(hKey1, true);
-
-            if (!hKey.IsInvalid)
-            {
-                using var reg = RegistryKey.FromHandle(hKey);
-                var portname = reg?.GetValue("PortName")?.ToString();
-                return portname ?? "";
-            }
-
-            return "";
-        }
 
         static int GetInt32(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
