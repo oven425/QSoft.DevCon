@@ -7,15 +7,30 @@ using QSoft.DevCon;
 
 namespace ConsoleApp_NET472
 {
+    //public class AA
+    //{
+    //    string AAa = "123";
+    //}
     internal class Program
     {
+        //static void AA(out AA aa)
+        //{
+        //    aa = null;
+        //}
         static void Main(string[] args)
         {
+            //AA(out _);
             //var pps = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x=>x.GetClassGuid());
             //foreach(var oo in pps)
             //{
             //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
             //}
+            var guid = Guid.Parse("4D1E55B2-F16F-11CF-88CB-001111000030");
+            foreach(var oo in guid.Interfaces())
+            {
+
+            }
+
             var vvvs = "Volume".Devices(true).Select(x => new
             {
                 connected = x.IsConnected(),

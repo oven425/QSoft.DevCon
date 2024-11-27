@@ -3,7 +3,8 @@
 var cameras = "Camera".Devices();
 foreach(var cam in cameras)
 {
-    cam.SetFriendName("USB2.0 HD UVC WebCam");
+    Console.WriteLine($"{cam.GetDeviceDesc()}");
+    //cam.SetFriendName("USB2.0 HD UVC WebCam");
 }
     
 
