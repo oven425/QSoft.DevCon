@@ -25,8 +25,9 @@ namespace ConsoleApp_NET472
             //{
             //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
             //}
+
             var guid = Guid.Parse("4D1E55B2-F16F-11CF-88CB-001111000030");
-            foreach(var oo in guid.Interfaces())
+            foreach(var oo in Guid.Empty.Interfaces())
             {
 
             }

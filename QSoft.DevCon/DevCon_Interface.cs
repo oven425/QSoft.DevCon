@@ -47,12 +47,23 @@ namespace QSoft.DevCon
                     }
                     else
                     {
-#if !NET8_0_OR_GREATER
+//#if !NET8_0_OR_GREATER
                         
-                        var bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo,  out _, 0, out var reqsize, out _);
+                        var bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo,  IntPtr.Zero, 0, out var reqsize, IntPtr.Zero);
                         var err = Marshal.GetLastWin32Error();
+                        var ptr = Marshal.AllocHGlobal((int)reqsize);
+                        Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
+                        uint nBytes = reqsize;
+                        bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo, ptr, nBytes, out reqsize, IntPtr.Zero);
 
-#endif
+                        byte[] bb1 = new byte[nBytes];
+                        Marshal.Copy(ptr, bb1, 0, bb1.Length);
+                        var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
+                        string str1 = Encoding.Unicode.GetString(bb1, 4, (int)nBytes - 4);
+                        Marshal.FreeHGlobal(ptr);
+                        
+                        
+                        //#endif
                         yield return (hDevInfo, interfaceinfo);
                     }
                     index++;
@@ -63,10 +74,16 @@ namespace QSoft.DevCon
                 SetupDiDestroyDeviceInfoList(hDevInfo);
             }
         }
-
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
+        //[DllImport("setupapi.dll", SetLastError = true)]
+        //static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, out SP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, out SP_DEVINFO_DATA DeviceInfoData);
+        [DllImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", CharSet = CharSet.Ansi, SetLastError = true)]
+        static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, IntPtr DeviceInfoData);
+        readonly public static Guid GUID_DEVINTERFACE_IMAGE = new ("6BDD1FC6-810F-11D0-BEC7-08002BE2092F");
     }
-
     
+
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct SP_DEVICE_INTERFACE_DATA
@@ -84,128 +101,3 @@ namespace QSoft.DevCon
     };
 }
 
-//namespace QSoft.DevCon
-//{
-//    internal class DevCon_Interface
-//    {
-//        BOOL Enum(USHORT m_Pid, USHORT m_Vid, USHORT m_Pvn, char* str, int* len)
-
-//    DWORD DeviceNum = 0;
-//        GUID hidGuid;
-//	//获取HID设备的GUID
-//	::HidD_GetHidGuid((LPGUID)&hidGuid);
-
-//        HDEVINFO hDevInfoList = SetupDiGetClassDevs(&hidGuid, NULL, NULL, (DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
-//	if (hDevInfoList != NULL)
-//	{
-//		SP_DEVICE_INTERFACE_DATA deviceInfoData;
-
-//        // Clear data structure
-//        ZeroMemory(&deviceInfoData, sizeof(deviceInfoData));
-//        deviceInfoData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-//		SetLastError(NO_ERROR);
-//		while (1)
-//		{
-//			int ret = GetLastError();
-//			if (ret == ERROR_NO_MORE_ITEMS)
-//			{
-//				break;
-//			}
-//			ZeroMemory(&deviceInfoData, sizeof(deviceInfoData));
-//        deviceInfoData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-//			// retrieves a context structure for a device interface of a device information set.
-//			if (SetupDiEnumDeviceInterfaces(hDevInfoList, 0, &hidGuid, DeviceNum, &deviceInfoData))
-//			{
-//				// Must get the detailed information in two steps
-//				// First get the length of the detailed information and allocate the buffer
-//				// retrieves detailed information about a specified device interface.
-//				PSP_DEVICE_INTERFACE_DETAIL_DATA functionClassDeviceData = NULL;
-//        ULONG predictedLength, requiredLength;
-
-//        predictedLength = requiredLength = 0;
-//				SetupDiGetDeviceInterfaceDetail(hDevInfoList,
-//					&deviceInfoData,
-//                    NULL,			// Not yet allocated
-//					0,				// Set output buffer length to zero 
-//					&requiredLength,// Find out memory requirement
-//                    NULL);
-
-//        predictedLength = requiredLength;
-//				functionClassDeviceData = (PSP_DEVICE_INTERFACE_DETAIL_DATA) malloc(predictedLength);
-//        functionClassDeviceData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-//				SP_DEVINFO_DATA did = { sizeof(SP_DEVINFO_DATA) };
-
-//				// Second, get the detailed information
-//				if (SetupDiGetDeviceInterfaceDetail(hDevInfoList,
-//					&deviceInfoData,
-//					functionClassDeviceData,
-//					predictedLength,
-//					&requiredLength,
-//					&did))
-//				{
-//					TCHAR fname[256];
-
-//					// Try by friendly name first.
-//					if (!SetupDiGetDeviceRegistryProperty(hDevInfoList, &did, SPDRP_FRIENDLYNAME, NULL, (PBYTE) fname, sizeof(fname), NULL))
-//					{	// Try by device description if friendly name fails.
-//						if (!SetupDiGetDeviceRegistryProperty(hDevInfoList, &did, SPDRP_DEVICEDESC, NULL, (PBYTE) fname, sizeof(fname), NULL))
-//						{	// Use the raw path information for linkname and friendlyname
-//							strncpy_s(fname, 256, (char*) functionClassDeviceData->DevicePath, 256);
-//    }
-//}
-
-
-//HANDLE UdiskDevice = CreateFile(functionClassDeviceData->DevicePath,
-//    GENERIC_READ | GENERIC_WRITE,
-//    FILE_SHARE_READ | FILE_SHARE_WRITE,
-//    NULL,
-//    OPEN_EXISTING,
-//    0,
-//    NULL);
-
-
-
-////=============== Get Attribute ===============
-//HIDD_ATTRIBUTES Attributes;
-//ZeroMemory(&Attributes, sizeof(Attributes));
-//Attributes.Size = sizeof(HIDD_ATTRIBUTES);
-//if (!HidD_GetAttributes(UdiskDevice, &Attributes))
-//{
-//    CloseHandle(UdiskDevice);
-//    DeviceNum++;
-//    continue;
-//}
-//if (Attributes.ProductID == m_Pid && Attributes.VendorID == m_Vid
-//    && Attributes.VersionNumber == m_Pvn)
-//{
-//    //Save Device Path
-//    CString m_linkname = functionClassDeviceData->DevicePath;
-//    memcpy(str, m_linkname.GetBuffer(), m_linkname.GetLength());
-//    *len = m_linkname.GetLength();
-//    free(functionClassDeviceData);
-//    SetupDiDestroyDeviceInfoList(hDevInfoList);
-//    return TRUE;
-//}
-
-//free(functionClassDeviceData);
-//CloseHandle(UdiskDevice);
-//UdiskDevice = INVALID_HANDLE_VALUE;
-//				}
-//				DeviceNum++;
-//			}
-//		}
-//	}
-
-//	// SetupDiDestroyDeviceInfoList() destroys a device information set
-//	// and frees all associated memory.
-//	SetupDiDestroyDeviceInfoList(hDevInfoList);
-//return FALSE;
-//}
-//————————————————
-
-//                            版权声明：本文为博主原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。
-
-//原文链接：https://blog.csdn.net/newworldis/article/details/127755767
-//    }
-//}

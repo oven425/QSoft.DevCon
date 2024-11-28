@@ -16,12 +16,6 @@ namespace QSoft.DevCon
         internal static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, out SP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, out SP_DEVINFO_DATA DeviceInfoData);
-        [DllImport("setupapi.dll", SetLastError = true)]
-        static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, IntPtr DeviceInfoData);
 
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
