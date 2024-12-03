@@ -47,8 +47,9 @@ namespace QSoft.DevCon
                     }
                     else
                     {
-//#if !NET8_0_OR_GREATER
-                        
+                        //#if !NET8_0_OR_GREATER
+                        int length = 3;
+                        //var numbers = stackalloc int[length];
                         var bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo,  IntPtr.Zero, 0, out var reqsize, IntPtr.Zero);
                         var err = Marshal.GetLastWin32Error();
                         var ptr = Marshal.AllocHGlobal((int)reqsize);
@@ -59,7 +60,6 @@ namespace QSoft.DevCon
                         byte[] bb1 = new byte[nBytes];
                         Marshal.Copy(ptr, bb1, 0, bb1.Length);
                         var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
-                        string str1 = Encoding.Unicode.GetString(bb1, 4, (int)nBytes - 4);
                         Marshal.FreeHGlobal(ptr);
                         
                         
