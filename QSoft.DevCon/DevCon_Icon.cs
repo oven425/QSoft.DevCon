@@ -7,16 +7,18 @@ using static QSoft.DevCon.DevConExtension;
 
 namespace QSoft.DevCon
 {
-    public static partial class DevMgrExtension
+    public static partial class DevConExtension
     {
         public static IntPtr Icon(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-#if NET5_0_OR_GREATER
+            SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 96, 96, 0, out var icon);
 
-#else
-            SetupDiLoadDeviceIcon(src.dev, src.devdata, 96, 96, 0, out var icon);
-#endif
+            return icon;
         }
 
+        public static void DestoryIcon(this IntPtr ptr)
+        {
+            DestoryIcon(ptr);
+        }
     }
 }

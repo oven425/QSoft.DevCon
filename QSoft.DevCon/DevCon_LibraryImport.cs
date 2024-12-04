@@ -25,6 +25,12 @@ namespace QSoft.DevCon
         //[return: MarshalAs(UnmanagedType.Bool)]
         //internal static partial bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, out SP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, out SP_DEVINFO_DATA DeviceInfoData);
 
+        [LibraryImport("setupapi.dll", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool SetupDiLoadDeviceIcon(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
+        [LibraryImport("setupapi.dll", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static partial bool DestroyIcon(IntPtr hIcon);
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInstanceIdW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

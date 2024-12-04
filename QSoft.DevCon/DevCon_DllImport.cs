@@ -19,6 +19,8 @@ namespace QSoft.DevCon
         static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, uint MemberIndex, ref SP_DEVINFO_DATA DeviceInfoData);
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiLoadDeviceIcon(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool DestroyIcon(IntPtr hIcon);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
