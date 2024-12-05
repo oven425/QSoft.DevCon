@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <Title>DevCon.NET</Title>
     <VersionPrefix>2.0.0.3</VersionPrefix>
     <TargetFrameworks>net8.0-windows;net6.0-windows;net472;net481;net462;net460</TargetFrameworks>

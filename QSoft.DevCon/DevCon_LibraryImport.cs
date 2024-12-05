@@ -28,7 +28,7 @@ namespace QSoft.DevCon
         [LibraryImport("setupapi.dll", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiLoadDeviceIcon(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
-        [LibraryImport("setupapi.dll", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
+        [LibraryImport("User32.dll", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DestroyIcon(IntPtr hIcon);
 

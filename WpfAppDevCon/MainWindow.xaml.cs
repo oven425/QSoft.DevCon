@@ -28,10 +28,8 @@ namespace WpfAppDevCon
             var cameras = "Camera".Devices();
             foreach(var cam in cameras)
             {
-                var iconptr = cam.Icon();
-                var icon = Imaging.CreateBitmapSourceFromHIcon(iconptr, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                //iconptr.DestoryIcon();
-                this.image.Source = icon;
+                
+                this.image.Source = cam.Icon();
 
             }
         }
