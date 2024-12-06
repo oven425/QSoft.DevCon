@@ -8,6 +8,20 @@
         Loaded="Window_Loaded"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Image x:Name="image"/>
+
+        <ListView ItemsSource="{Binding Devices}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Icon">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding Icon}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="friendname" DisplayMemberBinding="{Binding FriendName}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
     </Grid>
 </Window>

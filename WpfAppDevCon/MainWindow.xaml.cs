@@ -10,6 +10,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using QSoft.DevCon;
 using System.Windows.Interop;
+using System.Collections.ObjectModel;
 
 namespace WpfAppDevCon
 {
@@ -22,16 +23,35 @@ namespace WpfAppDevCon
         {
             InitializeComponent();
         }
-
+        MainUI m_MainUI;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var cameras = "Camera".Devices();
-            foreach(var cam in cameras)
+            if(m_MainUI == null)
             {
-                
-                this.image.Source = cam.Icon();
+                this.DataContext = m_MainUI = new MainUI();
+                var cameras = "Camera".Devices();
+                foreach (var cam in cameras)
+                {
+                    this.m_MainUI.Devices.Add(new DeviceData()
+                    {
+                        Icon = cam.Icon(),
+                        FriendName = cam.GetDeviceDesc()
+                    });
 
+                }
             }
+            
         }
+    }
+    
+    public class MainUI
+    {
+        public ObservableCollection<DeviceData> Devices { set; get; } = new ObservableCollection<DeviceData>();
+    }
+
+    public class DeviceData
+    {
+        public BitmapSource Icon { set; get; }
+        public string FriendName { set; get; }
     }
 }
