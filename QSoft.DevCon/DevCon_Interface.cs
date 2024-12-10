@@ -48,8 +48,6 @@ namespace QSoft.DevCon
                     else
                     {
                         //#if !NET8_0_OR_GREATER
-                        int length = 3;
-                        //var numbers = stackalloc int[length];
                         var bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo,  IntPtr.Zero, 0, out var reqsize, IntPtr.Zero);
                         var err = Marshal.GetLastWin32Error();
                         var ptr = Marshal.AllocHGlobal((int)reqsize);
@@ -82,6 +80,8 @@ namespace QSoft.DevCon
         static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, IntPtr DeviceInfoData);
         readonly public static Guid GUID_DEVINTERFACE_IMAGE = new ("6BDD1FC6-810F-11D0-BEC7-08002BE2092F");
     }
+
+    
     
 
 

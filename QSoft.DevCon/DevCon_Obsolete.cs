@@ -14,5 +14,15 @@ namespace QSoft.DevCon
         [Obsolete("Obsoleted, please use Manufacturer")]
         public static string GetMFG(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_MFG);
+        [Obsolete("Obsoleted, please use Parent")]
+        public static string GetParent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString(DEVPKEY_Device_Parent);
+        [Obsolete("Obsoleted, please use Childrens")]
+        public static List<string> GetChildrens(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetStrings(DEVPKEY_Device_Children);
+        [Obsolete("Obsoleted, please use HardwaeeIDs")]
+        public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetStrings(SPDRP_HARDWAREID);
+
     }
 }
