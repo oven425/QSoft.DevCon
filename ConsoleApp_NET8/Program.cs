@@ -1,5 +1,8 @@
 ﻿using QSoft.DevCon;
 
+
+var aa = DevConExtension.GUID_DEVINTERFACE_HID.Interfaces().ToList();
+var aaa = "Camera".Devices().Select(x => x.Interface()).ToList();
 var cameras = "Camera".Devices();
 foreach(var cam in cameras)
 {

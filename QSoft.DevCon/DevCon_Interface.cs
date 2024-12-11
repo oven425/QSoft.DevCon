@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Xml.Linq;
 
 namespace QSoft.DevCon
@@ -72,8 +74,52 @@ namespace QSoft.DevCon
                 SetupDiDestroyDeviceInfoList(hDevInfo);
             }
         }
+
+        public static string Interface(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            uint index = 0;
+            while (true)
+            {
+                SP_DEVINFO_DATA devinfo = new();
+                devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+
+                SP_DEVICE_INTERFACE_DATA interfaceinfo = new();
+                interfaceinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+                //IntPtrMem<SP_DEVICE_INTERFACE_DATA> interfaceinfo = new();
+                //interfaceinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+                if (!SetupDiEnumDeviceInterfaces(src.dev, src.devdata, Guid.Empty, index, out interfaceinfo))
+                {
+                    var err = Marshal.GetLastWin32Error();
+                    break;
+                }
+                else
+                {
+                    //#if !NET8_0_OR_GREATER
+                    var bb = SetupDiGetDeviceInterfaceDetail(src.dev, interfaceinfo, IntPtr.Zero, 0, out var reqsize, IntPtr.Zero);
+                    var err = Marshal.GetLastWin32Error();
+                    var ptr = Marshal.AllocHGlobal((int)reqsize);
+                    Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
+                    uint nBytes = reqsize;
+                    bb = SetupDiGetDeviceInterfaceDetail(src.dev, interfaceinfo, ptr, nBytes, out reqsize, IntPtr.Zero);
+
+                    byte[] bb1 = new byte[nBytes];
+                    Marshal.Copy(ptr, bb1, 0, bb1.Length);
+                    var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
+                    Marshal.FreeHGlobal(ptr);
+
+
+                    //#endif
+                    //yield return (hDevInfo, interfaceinfo);
+                }
+                index++;
+            }
+            return "";
+        }
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
+
+        [DllImport("setupapi.dll", SetLastError = true)]
+        static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
         //[DllImport("setupapi.dll", SetLastError = true)]
         //static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, out SP_DEVICE_INTERFACE_DETAIL_DATA DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, out SP_DEVINFO_DATA DeviceInfoData);
         [DllImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", CharSet = CharSet.Ansi, SetLastError = true)]

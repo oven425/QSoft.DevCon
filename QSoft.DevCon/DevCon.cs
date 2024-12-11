@@ -16,12 +16,12 @@ namespace QSoft.DevCon
     {
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)
         {
-            uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
+            uint flags = DIGCF_PRESENT | DIGCF_PROFILE| DIGCF_ALLCLASSES;
             if (showhiddendevice)
             {
                 flags = DIGCF_PROFILE;
             }
-            //flags |= DIGCF_DEVICEINTERFACE;
+            flags |= DIGCF_DEVICEINTERFACE;
             if (guid == Guid.Empty)
             {
                 flags |= DIGCF_ALLCLASSES;
