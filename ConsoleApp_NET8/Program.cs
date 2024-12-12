@@ -1,8 +1,14 @@
 ﻿using QSoft.DevCon;
 
 
-var aa = DevConExtension.GUID_DEVINTERFACE_HID.Interfaces().ToList();
-var aaa = "Camera".Devices().Select(x => x.Interface()).ToList();
+var aa = DevConExtension.GUID_DEVINTERFACE_DISK.Interfaces();
+foreach(var oo in aa)
+{
+    Console.WriteLine(oo.filepath);
+    Console.WriteLine($"FriendName:{oo.devclass.GetDeviceDesc()}");
+    Console.WriteLine($"DeviceInstanceId:{oo.devclass.DeviceInstanceId()}");
+}
+//var aaa = "Camera".Devices().Select(x => x.Interface()).ToList();
 var cameras = "Camera".Devices();
 foreach(var cam in cameras)
 {

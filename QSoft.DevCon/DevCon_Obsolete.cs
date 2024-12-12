@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,6 +24,23 @@ namespace QSoft.DevCon
         [Obsolete("Obsoleted, please use HardwaeeIDs")]
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_HARDWAREID);
+        [Obsolete("Obsoleted, please use DeviceInstanceId")]
+        public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var str = "";
+            SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqsize);
+            System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
+            if (reqsize > 0)
+            {
+                var aa = sizeof(char);
+                var ll = Marshal.SizeOf<char>();
+                var ll1 = Marshal.SizeOf<byte>();
+                using var buffer = new IntPtrMem<char>(reqsize);
+                SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqsize, out reqsize);
+                str = Marshal.PtrToStringUni(buffer.Pointer);
+            }
+            return str ?? "";
+        }
 
     }
 }
