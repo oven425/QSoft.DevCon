@@ -1,12 +1,18 @@
 ﻿using QSoft.DevCon;
 
 
-var aa = DevConExtension.GUID_DEVINTERFACE_DISK.Interfaces();
-foreach(var oo in aa)
+//var aa = DevConExtension.GUID_DEVINTERFACE_DISK.Interfaces();
+//foreach(var oo in aa)
+//{
+//    Console.WriteLine(oo.filepath);
+//    Console.WriteLine($"FriendName:{oo.devclass.GetDeviceDesc()}");
+//    Console.WriteLine($"DeviceInstanceId:{oo.devclass.DeviceInstanceId()}");
+//}
+
+var aaa = DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface(false);
+foreach(var oo in aaa)
 {
-    Console.WriteLine(oo.filepath);
-    Console.WriteLine($"FriendName:{oo.devclass.GetDeviceDesc()}");
-    Console.WriteLine($"DeviceInstanceId:{oo.devclass.DeviceInstanceId()}");
+    System.Diagnostics.Trace.WriteLine($"{oo.DeviceInstanceId()}");
 }
 //var aaa = "Camera".Devices().Select(x => x.Interface()).ToList();
 var cameras = "Camera".Devices();

@@ -263,7 +263,7 @@ namespace QSoft.DevCon
             => src.GetInt32(DEVPKEY_Device_ProblemCode);
 
         public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetBoolean(DEVPKEY_Devices_IsConnected);
+            => src.GetBoolean(DEVPKEY_Device_IsConnected);
 
         public static bool IsPresent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetBoolean(DEVPKEY_Device_IsPresent);
@@ -296,18 +296,22 @@ namespace QSoft.DevCon
         }
 
         public static string DeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            var str = "";
-            SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqsize);
-            System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
-            if (reqsize > 0)
-            {
-                using var buffer = new IntPtrMem<char>(reqsize);
-                SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqsize, out reqsize);
-                str = Marshal.PtrToStringUni(buffer.Pointer);
-            }
-            return str ?? "";
-        }
+            => src.GetString(DEVPKEY_Device_InstanceId);
+
+
+        //public static string DeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        //{
+        //    var str = "";
+        //    SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqsize);
+        //    //System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
+        //    if (reqsize > 0)
+        //    {
+        //        using var buffer = new IntPtrMem<char>(reqsize);
+        //        SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqsize, out reqsize);
+        //        str = Marshal.PtrToStringUni(buffer.Pointer);
+        //    }
+        //    return str ?? "";
+        //}
 
         public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
@@ -359,42 +363,7 @@ namespace QSoft.DevCon
             return str == 255;
         }
 
-        static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
-        {
-            var str = "";
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
-            if (reqsize > 0)
-            {
-                using var mem = new IntPtrMem<char>(reqsize);
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
-                str = Marshal.PtrToStringUni(mem.Pointer);
-            }
 
-            return str ?? "";
-        }
-
-        static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
-        {
-            var str = "";
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            if (reqsize > 0)
-            {
-                using var mem = new IntPtrMem<char>((int)reqsize);
-                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
-                str = Marshal.PtrToStringUni(mem.Pointer);
-            }
-
-            return str??"";
-        }
-
-        static void SetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data, uint spdrp)
-        {
-            using var mem = new IntPtrMem<byte>(Marshal.StringToHGlobalUni(data));
-            if(!SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, mem.Pointer, (uint)data.Length*2))
-            {
-                ThrowExceptionForLastError();
-            }
-        }
 
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
         public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -416,9 +385,7 @@ namespace QSoft.DevCon
             => src.GetDateTime(DEVPKEY_Device_FirstInstallDate);
 
         public static List<string> Siblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            return src.GetStrings(DEVPKEY_Device_Siblings);
-        }
+            => src.GetStrings(DEVPKEY_Device_Siblings);
         static DateTime GetDateTime(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var datetime = DateTime.FromFileTime(0);

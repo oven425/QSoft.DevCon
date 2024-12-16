@@ -36,8 +36,9 @@ namespace QSoft.DevCon
         readonly internal static DEVPROPKEY DEVPKEY_Device_ProblemCode = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 3 };
         readonly internal static DEVPROPKEY DEVPKEY_Device_FirstInstallDate = new DEVPROPKEY(0x83da6326, 0x97a6, 0x4088, 0x94, 0x53, 0xa1, 0x92, 0x3f, 0x57, 0x3b, 0x29, 101);   // DEVPROP_TYPE_FILETIME
         readonly internal static DEVPROPKEY DEVPKEY_Device_IsPresent = new DEVPROPKEY() { fmtid = new Guid(0x540b947e, 0x8b40, 0x45bc, 0xa8, 0xa2, 0x6a, 0x0b, 0x89, 0x4c, 0xbd, 0xa2), pid = 5 };
-        readonly internal static  DEVPROPKEY DEVPKEY_Device_BiosDeviceName = new(0x540b947e, 0x8b40, 0x45bc, 0xa8, 0xa2, 0x6a, 0x0b, 0x89, 0x4c, 0xbd, 0xa2, 10);    // DEVPROP_TYPE_STRING
-        readonly internal static DEVPROPKEY DEVPKEY_Devices_IsConnected = new() { fmtid = Guid.Parse("{83DA6326-97A6-4088-9453-A1923F573B29}"), pid = 15 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_BiosDeviceName = new(0x540b947e, 0x8b40, 0x45bc, 0xa8, 0xa2, 0x6a, 0x0b, 0x89, 0x4c, 0xbd, 0xa2, 10);    // DEVPROP_TYPE_STRING
+        readonly internal static DEVPROPKEY DEVPKEY_Device_IsConnected = new() { fmtid = Guid.Parse("{83DA6326-97A6-4088-9453-A1923F573B29}"), pid = 15 };
+        readonly internal static DEVPROPKEY DEVPKEY_Device_InstanceId = new() { fmtid = Guid.Parse("{78c34fc8-104a-4aca-9ea4-524d52996e57}"), pid = 256 };
 
     }
 }
