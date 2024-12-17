@@ -29,12 +29,9 @@ namespace QSoft.DevCon
         {
             var str = "";
             SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqsize);
-            System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
+            //System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
             if (reqsize > 0)
             {
-                var aa = sizeof(char);
-                var ll = Marshal.SizeOf<char>();
-                var ll1 = Marshal.SizeOf<byte>();
                 using var buffer = new IntPtrMem<char>(reqsize);
                 SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqsize, out reqsize);
                 str = Marshal.PtrToStringUni(buffer.Pointer);

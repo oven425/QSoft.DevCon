@@ -21,14 +21,10 @@ namespace QSoft.DevCon
         static extern bool SetupDiLoadDeviceIcon(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
         [DllImport("User32.dll", SetLastError = true)]
         static extern bool DestroyIcon(IntPtr hIcon);
-
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
-
-
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, ref Guid ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
-
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, IntPtr guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -61,6 +57,8 @@ namespace QSoft.DevCon
                                  int dwMessageId, int dwLanguageZId,
                                  ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
 
+        [DllImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", CharSet = CharSet.Ansi, SetLastError = true)]
+        static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
 
 
     }
