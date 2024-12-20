@@ -217,10 +217,5 @@ namespace QSoft.DevCon
         public UIntPtr Reserved;
     };
 
-    struct SP_DEVICE_INTERFACE_DETAIL_DATA
-    {
-        uint cbSize;
-        //char DevicePath[ANYSIZE_ARRAY];
-    };
 }
 

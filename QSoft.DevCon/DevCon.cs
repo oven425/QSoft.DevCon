@@ -57,7 +57,7 @@ namespace QSoft.DevCon
             var classguids = src.GetClassGuids();
             if(classguids.Count == 0)
             {
-                return Enumerable.Empty<(IntPtr dev, SP_DEVINFO_DATA devdata)>();
+                return [];
             }
             return src.GetClassGuids().FirstOrDefault().Devices(showhiddendevice);
         }
@@ -275,7 +275,7 @@ namespace QSoft.DevCon
             ss = ss * (int)cc;
             var ptr = Marshal.AllocHGlobal((int)ss);
             bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, ptr, cc, out cc, 0);
-            List<DEVPROPKEY> keys = new List<DEVPROPKEY>();
+            List<DEVPROPKEY> keys = [];
             for (int i = 0; i < cc; i++)
             {
                 ptr = IntPtr.Add(ptr, Marshal.SizeOf<DEVPROPKEY>());
@@ -292,7 +292,7 @@ namespace QSoft.DevCon
                 }
 
             }
-            return new List<DEVPROPKEY>();
+            return [];
         }
 
         public static string DeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -336,32 +336,8 @@ namespace QSoft.DevCon
             => src.GetString(SPDRP_MFG);
 
 
-        static int GetInt32(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
-        {
-            var str = 0;
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
-            if (reqsize > 0)
-            {
-                using var mem = new IntPtrMem<byte>(reqsize);
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
-                str = Marshal.ReadInt32(mem.Pointer);
-            }
-            return str;
-        }
 
-        static bool GetBoolean(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
-        {
-            var str = 0;
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
-            if (reqsize > 0)
-            {
-                using var mem = new IntPtrMem<byte>(reqsize);
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
-                str = Marshal.ReadByte(mem.Pointer);
-            }
 
-            return str == 255;
-        }
 
 
 

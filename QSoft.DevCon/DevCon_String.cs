@@ -22,16 +22,7 @@ namespace QSoft.DevCon
 
             return str ?? "";
         }
-
-        static void SetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data, uint spdrp)
-        {
-            using var mem = new IntPtrMem<byte>(Marshal.StringToHGlobalUni(data));
-            if (!SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, mem.Pointer, (uint)data.Length * 2))
-            {
-                ThrowExceptionForLastError();
-            }
-        }
-
+        
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var str = "";
@@ -45,6 +36,17 @@ namespace QSoft.DevCon
 
             return str ?? "";
         }
+        
+        static void SetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data, uint spdrp)
+        {
+            using var mem = new IntPtrMem<byte>(Marshal.StringToHGlobalUni(data));
+            if (!SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, mem.Pointer, (uint)data.Length * 2))
+            {
+                ThrowExceptionForLastError();
+            }
+        }
+
+        
 
 
     }
