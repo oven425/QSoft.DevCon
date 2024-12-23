@@ -9,16 +9,17 @@
 //    Console.WriteLine($"DeviceInstanceId:{oo.devclass.DeviceInstanceId()}");
 //}
 
-var aaa = DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface(false);
-foreach(var oo in aaa)
-{
-    System.Diagnostics.Trace.WriteLine($"{oo.DeviceInstanceId()}");
-}
+//var aaa = DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface(false);
+//foreach(var oo in aaa)
+//{
+//    System.Diagnostics.Trace.WriteLine($"{oo.DeviceInstanceId()}");
+//}
 //var aaa = "Camera".Devices().Select(x => x.Interface()).ToList();
 var cameras = "Camera".Devices();
 foreach(var cam in cameras)
 {
     Console.WriteLine($"{cam.GetDeviceDesc()}");
+    cam.PowerData();
     //cam.SetFriendName("USB2.0 HD UVC WebCam");
 }
     

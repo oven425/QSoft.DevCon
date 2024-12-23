@@ -16,16 +16,17 @@ namespace QSoft.DevCon
     {
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)
         {
-            uint flags = DIGCF_PRESENT | DIGCF_PROFILE| DIGCF_ALLCLASSES;
+            //uint flags = DIGCF_PRESENT | DIGCF_PROFILE| DIGCF_ALLCLASSES;
+            uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
             if (showhiddendevice)
             {
                 flags = DIGCF_PROFILE;
             }
-            flags |= DIGCF_DEVICEINTERFACE;
-            if (guid == Guid.Empty)
-            {
-                flags |= DIGCF_ALLCLASSES;
-            }
+            //flags |= DIGCF_DEVICEINTERFACE;
+            //if (guid == Guid.Empty)
+            //{
+            //    flags |= DIGCF_ALLCLASSES;
+            //}
 
 
             uint index = 0;
@@ -257,7 +258,7 @@ namespace QSoft.DevCon
         public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
 
-        public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static string PowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DPKEY_Device_PowerRelations);
         public static int ProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetInt32(DEVPKEY_Device_ProblemCode);
@@ -272,7 +273,7 @@ namespace QSoft.DevCon
         {
             var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
             var ss = Marshal.SizeOf<DEVPROPKEY>();
-            ss = ss * (int)cc;
+            ss *= (int)cc;
             var ptr = Marshal.AllocHGlobal((int)ss);
             bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, ptr, cc, out cc, 0);
             List<DEVPROPKEY> keys = [];
@@ -315,8 +316,11 @@ namespace QSoft.DevCon
 
         public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            Guid.TryParse(GetString(src, SPDRP_CLASSGUID), out var guid);
-            return guid;
+            if(Guid.TryParse(GetString(src, SPDRP_CLASSGUID), out var guid))
+            {
+                return guid;
+            }
+            return Guid.Empty;
         }
 
         public static string? GetClassDesc(this Guid guid)
@@ -362,20 +366,6 @@ namespace QSoft.DevCon
 
         public static List<string> Siblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(DEVPKEY_Device_Siblings);
-        static DateTime GetDateTime(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
-        {
-            var datetime = DateTime.FromFileTime(0);
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var propertytype, IntPtr.Zero, 0, out var reqsz, 0);
-            if(reqsz > 0)
-            {
-                using var mem = new IntPtrMem<byte>(reqsz);
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out propertytype, mem.Pointer, reqsz, out reqsz, 0);
-                var tt = Marshal.ReadInt64(mem.Pointer);
-
-                datetime = DateTime.FromFileTime(tt);
-            }
-            return datetime;
-        }
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         public struct SP_DEVINFO_DATA

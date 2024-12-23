@@ -21,7 +21,7 @@ using namespace std;
 int aa = CM_DEVCAP_HARDWAREDISABLED;
 BOOL ListDeviceInstancePath1()
 {
-	
+	//PDCAP_D0_SUPPORTED
 	DEVPKEY_Device_FirstInstallDate
 	//GUID guid1;
 	//HidD_GetHidGuid(&guid1);

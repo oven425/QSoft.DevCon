@@ -35,7 +35,7 @@ namespace ConsoleApp_NET472
             {
                 connected = x.IsConnected(),
                 present = x.IsPresent(),
-                id = x.GetDeviceInstanceId(),
+                id = x.DeviceInstanceId(),
                 //biosname = x.BiosDeviceName()
             });
             try
@@ -67,16 +67,16 @@ namespace ConsoleApp_NET472
             var ll = Guid.Empty.Devices().Select(x => new
             {
                 objectname = x.GetPhysicalDeviceObjectName(),
-                service = x.GetService(),
-                power_relation = x.GetPowerRelations(),
-                mfg = x.GetMFG(),
-                instanceid = x.GetDeviceInstanceId(),
+                service = x.Service(),
+                power_relation = x.PowerRelations(),
+                mfg = x.Manufacturer(),
+                instanceid = x.DeviceInstanceId(),
                 locationpaths = x.GetLocationPaths(),
-                hardwareids = x.GetHardwaeeIDs(),
+                hardwareids = x.HardwaeeIDs(),
                 friendname = x.GetFriendName(),
                 class_guid = x.GetClassGuid(),
-                children = x.GetChildrens(),
-                parent = x.GetParent(),
+                children = x.Childrens(),
+                parent = x.Parent(),
                 desc = x.GetDeviceDesc(),
                 class_name = x.GetClassGuid().GetClassDesc(),
                 drive_version = x.GetDriverVersion(),
