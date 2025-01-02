@@ -15,11 +15,19 @@
 //    System.Diagnostics.Trace.WriteLine($"{oo.DeviceInstanceId()}");
 //}
 //var aaa = "Camera".Devices().Select(x => x.Interface()).ToList();
+var lls = Guid.Empty.Devices().Where(x => x.BusRelations().Count>0).ToList();
+foreach(var oo in lls)
+{
+    System.Diagnostics.Trace.WriteLine(oo.GetDeviceDesc());
+}
 var cameras = "Camera".Devices();
 foreach(var cam in cameras)
 {
     Console.WriteLine($"{cam.GetDeviceDesc()}");
-    cam.PowerData();
+    var ss = cam.BiosDeviceName();
+    ss = cam.GetPhysicalDeviceObjectName();
+    var siblings = cam.Siblings();
+    var buss = cam.Parent();
     //cam.SetFriendName("USB2.0 HD UVC WebCam");
 }
     

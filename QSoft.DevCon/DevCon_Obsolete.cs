@@ -40,7 +40,7 @@ namespace QSoft.DevCon
         }
         [Obsolete("Obsoleted, please use PowerRelations")]
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString(DPKEY_Device_PowerRelations);
+            => src.GetString(DEVPKEY_Device_PowerRelations);
 
 
     }

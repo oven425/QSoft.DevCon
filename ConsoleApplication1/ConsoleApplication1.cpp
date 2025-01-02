@@ -21,8 +21,9 @@ using namespace std;
 int aa = CM_DEVCAP_HARDWAREDISABLED;
 BOOL ListDeviceInstancePath1()
 {
+	DEVPKEY_Device_DriverDate
 	//PDCAP_D0_SUPPORTED
-	DEVPKEY_Device_FirstInstallDate
+	//DEVPKEY_Device_FirstInstallDate
 	//GUID guid1;
 	//HidD_GetHidGuid(&guid1);
 	//SetupDiSetDeviceRegistryProperty

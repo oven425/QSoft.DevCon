@@ -148,11 +148,6 @@ namespace QSoft.DevCon
             }
         }
 
-        public static List<string> Childrens(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
-            => src.GetStrings(DEVPKEY_Device_Children);
-
-        public static string Parent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString(DEVPKEY_Device_Parent);
 
         public static string GetClass(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_CLASS);
@@ -205,51 +200,6 @@ namespace QSoft.DevCon
         public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_LOCATION_PATHS);
 
-        static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
-        {
-            var ids = new List<string>();
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
-            if (reqsize > 0)
-            {
-                using var mem = new IntPtrMem<byte>(reqsize * 2);
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, mem.Pointer, reqsize, out reqsize, 0);
-                ids.AddRange(GetStrings(mem.Pointer));
-            }
-
-            return ids;
-        }
-
-        static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint property)
-        {
-            var ids = new List<string>();
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            if (reqsize <= 0) return ids;
-            using (var mem = new IntPtrMem<byte>((int)reqsize))
-            {
-                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem.Pointer, reqsize, out reqsize);
-                ids.AddRange(GetStrings(mem.Pointer));
-            }
-            return ids;
-        }
-
-        static List<string> GetStrings(this IntPtr src)
-        {
-            var strs = new List<string>();
-            var ptr = src;
-            while (true)
-            {
-                var str = Marshal.PtrToStringUni(ptr);
-                if (string.IsNullOrEmpty(str))
-                {
-                    break;
-                }
-                var len = str.Length;
-                ptr = IntPtr.Add(ptr, len * 2 + 2);
-                strs.Add(str);
-            }
-
-            return strs;
-        }
 
         
         public static string Service(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -258,8 +208,6 @@ namespace QSoft.DevCon
         public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
 
-        public static string PowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString(DPKEY_Device_PowerRelations);
         public static int ProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetInt32(DEVPKEY_Device_ProblemCode);
 
@@ -346,17 +294,6 @@ namespace QSoft.DevCon
 
 
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
-        public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString(DEVPKEY_Device_DriverVersion);
-
-        public static string DriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString(DEVPKEY_Device_DriverInfSection);
-
-        public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetDateTime(DEVPKEY_Device_DriverDate);
-        
-        public static string DriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src) 
-            => src.GetString(DEVPKEY_Device_DriverProvider);
 
         public static string BiosDeviceName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_BiosDeviceName);
@@ -364,8 +301,6 @@ namespace QSoft.DevCon
         public static DateTime FirstInstallDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_FirstInstallDate);
 
-        public static List<string> Siblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetStrings(DEVPKEY_Device_Siblings);
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         public struct SP_DEVINFO_DATA

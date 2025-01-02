@@ -24,16 +24,6 @@ namespace QSoft.DevCon
             return null;
         }
 
-        //#define PDCAP_D0_SUPPORTED              0x00000001
-        //#define PDCAP_D1_SUPPORTED              0x00000002
-        //#define PDCAP_D2_SUPPORTED              0x00000004
-        //#define PDCAP_D3_SUPPORTED              0x00000008
-        //#define PDCAP_WAKE_FROM_D0_SUPPORTED    0x00000010
-        //#define PDCAP_WAKE_FROM_D1_SUPPORTED    0x00000020
-        //#define PDCAP_WAKE_FROM_D2_SUPPORTED    0x00000040
-        //#define PDCAP_WAKE_FROM_D3_SUPPORTED    0x00000080
-        //#define PDCAP_WARM_EJECT_SUPPORTED      0x00000100
-
         [Flags]
         public enum PDCAP
         {
@@ -67,6 +57,7 @@ namespace QSoft.DevCon
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 7)]
             public DEVICE_POWER_STATE[] PD_PowerStateMapping;
             public SYSTEM_POWER_STATE PD_DeepestSystemWake;
+
         };
 
         public enum SYSTEM_POWER_STATE
