@@ -15,8 +15,11 @@ namespace QSoft.DevCon
             => src.GetString(DEVPKEY_Device_Parent);
         public static List<string> Siblings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(DEVPKEY_Device_Siblings);
-        public static string PowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString(DEVPKEY_Device_PowerRelations);
+        //public static string PowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        //    => src.GetString(DEVPKEY_Device_PowerRelations);
+        public static List<string> PowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetStrings(DEVPKEY_Device_PowerRelations);
+
         public static List<string> BusRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(DEVPKEY_Device_BusRelations);
 

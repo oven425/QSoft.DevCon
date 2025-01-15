@@ -20,12 +20,12 @@ foreach(var oo in lls)
 {
     System.Diagnostics.Trace.WriteLine(oo.GetDeviceDesc());
 }
-var cameras = "Camera".Devices();
+var cameras = "Volume".Devices();
 foreach(var cam in cameras)
 {
     Console.WriteLine($"{cam.GetDeviceDesc()}");
-    var ss = cam.BiosDeviceName();
-    ss = cam.GetPhysicalDeviceObjectName();
+    var ss = cam.PowerRelations();
+    var ss1 = cam.GetPhysicalDeviceObjectName();
     var siblings = cam.Siblings();
     var buss = cam.Parent();
     //cam.SetFriendName("USB2.0 HD UVC WebCam");
