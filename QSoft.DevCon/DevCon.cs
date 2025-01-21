@@ -197,6 +197,9 @@ namespace QSoft.DevCon
         public static List<string> HardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_HARDWAREID);
 
+        public static List<string> CompatibleIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetStrings(SPDRP_COMPATIBLEIDS);
+
         public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_LOCATION_PATHS);
 
@@ -248,19 +251,6 @@ namespace QSoft.DevCon
             => src.GetString(DEVPKEY_Device_InstanceId);
 
 
-        //public static string DeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        //{
-        //    var str = "";
-        //    SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqsize);
-        //    //System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
-        //    if (reqsize > 0)
-        //    {
-        //        using var buffer = new IntPtrMem<char>(reqsize);
-        //        SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqsize, out reqsize);
-        //        str = Marshal.PtrToStringUni(buffer.Pointer);
-        //    }
-        //    return str ?? "";
-        //}
 
         public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {

@@ -46,12 +46,13 @@ namespace WpfAppDevCon
     
     public class MainUI
     {
-        public ObservableCollection<DeviceData> Devices { set; get; } = new ObservableCollection<DeviceData>();
+        public ObservableCollection<DeviceData> Devices { set; get; } = [];
     }
 
     public class DeviceData
     {
         public BitmapSource Icon { set; get; }
         public string FriendName { set; get; }
+        public ObservableCollection<DeviceData> Devices { set; get; } = [];
     }
 }

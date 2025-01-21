@@ -8,8 +8,16 @@
         Loaded="Window_Loaded"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
-        <ListView ItemsSource="{Binding Devices}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <TreeView ItemsSource="{Binding Devices}" Grid.Row="1">
+                
+            </TreeView>
+        </Grid>
+        <!--<ListView ItemsSource="{Binding Devices}">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Icon">
@@ -22,6 +30,6 @@
                     <GridViewColumn Header="friendname" DisplayMemberBinding="{Binding FriendName}"/>
                 </GridView>
             </ListView.View>
-        </ListView>
+        </ListView>-->
     </Grid>
 </Window>
