@@ -16,20 +16,20 @@ namespace QSoft.DevCon
     //[get deviceclss form device interface]("https://github.com/hiyohiyo/CrystalDiskInfo/blob/bdf4e44cc449225ec814c011c5d6c537da3c71fc/EnumVolumeDrive.cpp#L98")
     static public partial class DevConExtension
     {
-        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> DevicesFromInterface(this Guid guid, bool showhiddendevice)
+        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfacedata)> DevicesFromInterface(this Guid guid, bool showhiddendevice)
         {
             uint flags = DIGCF_PRESENT;
             if (showhiddendevice)
             {
-                flags = DIGCF_PROFILE;
+                flags |= DIGCF_PROFILE;
             }
             flags |= DIGCF_DEVICEINTERFACE;
             //if (guid == Guid.Empty)
             //{
-            //    flags |= DIGCF_ALLCLASSES;
+                //flags |= DIGCF_ALLCLASSES;
             //}
 
-
+            Guid ggid = Guid.Empty;
             uint index = 0;
             IntPtr hDevInfo = SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
             try
@@ -51,18 +51,18 @@ namespace QSoft.DevCon
                         SP_DEVINFO_DATA devinfo = new();
                         devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
                         var bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo, IntPtr.Zero, 0, out var reqsize, ref devinfo);
-                        var err = Marshal.GetLastWin32Error();
-                        var ptr = Marshal.AllocHGlobal((int)reqsize);
-                        Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
-                        uint nBytes = reqsize;
-                        bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
+                        //var err = Marshal.GetLastWin32Error();
+                        //var ptr = Marshal.AllocHGlobal((int)reqsize);
+                        //Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
+                        //uint nBytes = reqsize;
+                        //bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
 
-                        byte[] bb1 = new byte[nBytes];
-                        Marshal.Copy(ptr, bb1, 0, bb1.Length);
-                        var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
-                        Marshal.FreeHGlobal(ptr);
+                        //byte[] bb1 = new byte[nBytes];
+                        //Marshal.Copy(ptr, bb1, 0, bb1.Length);
+                        //var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
+                        //Marshal.FreeHGlobal(ptr);
 
-                        yield return (hDevInfo, devinfo);
+                        yield return (hDevInfo, devinfo, interfaceinfo);
                     }
                     index++;
                 }
@@ -74,20 +74,33 @@ namespace QSoft.DevCon
 
         }
 
-        public static string Interface(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> AsDevices(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo)> src)
         {
-            //var bb = SetupDiGetDeviceInterfaceDetail(src.dev, interfaceinfo, IntPtr.Zero, 0, out var reqsize, ref devinfo);
-            //var err = Marshal.GetLastWin32Error();
-            //var ptr = Marshal.AllocHGlobal((int)reqsize);
-            //Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
-            //uint nBytes = reqsize;
-            //bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
+            return src.Select(x=>(x.dev, x.devdata));
+            //return (src.dev, src.devdata);
+        }
 
-            //byte[] bb1 = new byte[nBytes];
-            //Marshal.Copy(ptr, bb1, 0, bb1.Length);
-            //var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
-            //Marshal.FreeHGlobal(ptr);
-            return "";
+        public static (IntPtr dev, SP_DEVINFO_DATA devdata) AsDevice(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo) src)
+        {
+            return (src.dev, src.devdata);
+        }
+
+        public static string Interface(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo) src)
+        {
+            SP_DEVINFO_DATA devinfo = new();
+            devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+            var bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, IntPtr.Zero, 0, out var reqsize, ref devinfo);
+            var err = Marshal.GetLastWin32Error();
+            var ptr = Marshal.AllocHGlobal((int)reqsize);
+            Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
+            uint nBytes = reqsize;
+            bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
+
+            byte[] bb1 = new byte[nBytes];
+            Marshal.Copy(ptr, bb1, 0, bb1.Length);
+            var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
+            Marshal.FreeHGlobal(ptr);
+            return po;
         }
 
         //public static IEnumerable<(string filepath, (IntPtr dev, SP_DEVINFO_DATA devdata) devclass)> Interfaces(this Guid guid, bool showhiddendevice = false)

@@ -7,37 +7,33 @@ using QSoft.DevCon;
 
 namespace ConsoleApp_NET472
 {
-    //public class AA
-    //{
-    //    string AAa = "123";
-    //}
+
     internal class Program
     {
-        //static void AA(out AA aa)
-        //{
-        //    aa = null;
-        //}
+
         static void Main(string[] args)
         {
-            //AA(out _);
+
             //var pps = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x=>x.GetClassGuid());
             //foreach(var oo in pps)
             //{
             //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
             //}
 
-            //foreach(var oo in DevConExtension.GUID_DEVINTERFACE_HID.Interfaces())
-            //{
-
-            //}
-
-            var vvvs = "Volume".Devices(true).Select(x => new
+            foreach (var oo in DevConExtension.GUID_DEVINTERFACE_NET.DevicesFromInterface(true))
             {
-                connected = x.IsConnected(),
-                present = x.IsPresent(),
-                id = x.DeviceInstanceId(),
-                //biosname = x.BiosDeviceName()
-            });
+                var aa = (oo.dev, oo.devdata).GetClass();
+                System.Diagnostics.Trace.WriteLine(oo.GetFriendName());
+            }
+
+            var vvvs = "Volume".Devices(true)
+                .Select(x => new
+                {
+                    connected = x.IsConnected(),
+                    present = x.IsPresent(),
+                    id = x.DeviceInstanceId(),
+                    //biosname = x.BiosDeviceName()
+                });
             try
             {
                 foreach (var oo in vvvs)
