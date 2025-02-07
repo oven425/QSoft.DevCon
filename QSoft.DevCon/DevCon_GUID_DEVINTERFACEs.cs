@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace QSoft.DevCon
 {
+    //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/kscategory-video-camera
+    //全部都要加
     static public partial class DevConExtension
     {
         public static Guid GUID_DEVINTERFACE_BRIGHTNESS => new("FDE5BBA4-B3F9-46FB-BDAA-0728CE3100B4");
