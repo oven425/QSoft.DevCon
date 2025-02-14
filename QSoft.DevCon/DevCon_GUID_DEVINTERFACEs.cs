@@ -43,5 +43,6 @@ namespace QSoft.DevCon
         public static Guid GUID_DEVINTERFACE_WPD_PRIVATE => new("BA0C718F-4DED-49B7-BDD3-FABE28661211");
         public static Guid GUID_DEVINTERFACE_WRITEONCEDISK => new("53F5630C-B6BF-11D0-94F2-00A0C91EFB8B");
 
+        public static Guid KSCATEGORY_VIDEO_CAMERA => new("E5323777-F976-4f5b-9B55-B94699C46E44");
     }
 }
