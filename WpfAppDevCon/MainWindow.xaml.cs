@@ -11,6 +11,7 @@ using System.Windows.Shapes;
 using QSoft.DevCon;
 using System.Windows.Interop;
 using System.Collections.ObjectModel;
+using QSoft.DevCon.WPF;
 
 namespace WpfAppDevCon
 {

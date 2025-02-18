@@ -23,14 +23,13 @@ namespace ConsoleApp_NET472
             var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
             var ddd = ggu.GetClassDesc();
             var cameraa = Guid.Parse("{E5323777-F976-4f5b-9B55-B94699C46E44}");
-            foreach (var oo in DevConExtension.KSCATEGORY_VIDEO_CAMERA.DevicesFromInterface(true))
-            {
-                var aa = (oo.dev, oo.devdata).GetClass();
-                System.Diagnostics.Trace.WriteLine(oo.DeviceName());
-                //var (dev, devdata) = oo;
-                var ooo = oo;
-                System.Diagnostics.Trace.WriteLine(oo.As().GetFriendName());
-            }
+            var cameras = DevConExtension.KSCATEGORY_VIDEO_CAMERA.DevicesFromInterface()
+                .Select(x => new
+                {
+                    devicepath = x.DevicePath(),
+                    friendname = x.As().GetFriendName(),
+                    panel = x.As().Panel(),
+                });
 
             var vvvs = "Volume".Devices(true)
                 .Select(x => new

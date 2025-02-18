@@ -9,7 +9,7 @@ using static QSoft.DevCon.DevConExtension;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace QSoft.DevCon
+namespace QSoft.DevCon.WPF
 {
     public static partial class DevConExtension
     {

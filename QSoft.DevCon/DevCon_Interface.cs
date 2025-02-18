@@ -16,7 +16,7 @@ namespace QSoft.DevCon
     //[get deviceclss form device interface]("https://github.com/hiyohiyo/CrystalDiskInfo/blob/bdf4e44cc449225ec814c011c5d6c537da3c71fc/EnumVolumeDrive.cpp#L98")
     static public partial class DevConExtension
     {
-        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfacedata)> DevicesFromInterface(this Guid guid, bool showhiddendevice)
+        public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfacedata)> DevicesFromInterface(this Guid guid, bool showhiddendevice = false)
         {
             uint flags = DIGCF_PRESENT;
             if (showhiddendevice)
@@ -79,30 +79,32 @@ namespace QSoft.DevCon
             return (src.dev, src.devdata);
         }
 
-        public static string DeviceName(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo) src)
+        public static string DevicePath(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo) src)
         {
             SP_DEVINFO_DATA devinfo = new();
             devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
             var bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, IntPtr.Zero, 0, out var reqsize, ref devinfo);
             var err = Marshal.GetLastWin32Error();
-            var ptr = Marshal.AllocHGlobal((int)reqsize);
-            Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
-            uint nBytes = reqsize;
-            bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
+            if(reqsize >0)
+            {
+                var ptr = Marshal.AllocHGlobal((int)reqsize);
+                Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
+                uint nBytes = reqsize;
+                bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
 
-            byte[] bb1 = new byte[nBytes];
-            Marshal.Copy(ptr, bb1, 0, bb1.Length);
-            var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
-            Marshal.FreeHGlobal(ptr);
-            return po;
+                byte[] bb1 = new byte[nBytes];
+                Marshal.Copy(ptr, bb1, 0, bb1.Length);
+                var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
+                Marshal.FreeHGlobal(ptr);
+                return po;
+            }
+            return "";
         }
-        
-        
-        [DllImport("setupapi.dll", SetLastError = true)]
-        static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
 
-        [DllImport("setupapi.dll", SetLastError = true)]
-        static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
+
+        //[DllImport("setupapi.dll", SetLastError = true)]
+        //static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
+
 
     }
 

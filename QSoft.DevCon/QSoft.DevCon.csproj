@@ -1,10 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
     <Title>DevCon.NET</Title>
-    <VersionPrefix>2.0.0.3</VersionPrefix>
+    <VersionPrefix>2.0.0.4</VersionPrefix>
     <TargetFrameworks>net8.0-windows;net6.0-windows;net472;net481;net462;net460</TargetFrameworks>
     <LangVersion>12.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -18,7 +16,8 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright © Ben Hsu 2022</Copyright>
     <Description>easy get device manager info</Description>
-    <PackageReleaseNotes>1. fix crash when camera panel can't read</PackageReleaseNotes>
+    <PackageReleaseNotes>1. add devicefrominterface function can get device path
+2. add Icon function can get icon for WPF</PackageReleaseNotes>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <PackageId>$(MSBuildProjectName)</PackageId>
     <Authors>$(MSBuildProjectName)</Authors>
