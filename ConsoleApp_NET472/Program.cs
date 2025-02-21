@@ -29,7 +29,7 @@ namespace ConsoleApp_NET472
                     devicepath = x.DevicePath(),
                     friendname = x.As().GetFriendName(),
                     panel = x.As().Panel(),
-                });
+                }).ToList();
 
             var vvvs = "Volume".Devices(true)
                 .Select(x => new

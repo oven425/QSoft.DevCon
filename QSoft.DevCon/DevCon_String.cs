@@ -22,7 +22,21 @@ namespace QSoft.DevCon
 
             return str ?? "";
         }
-        
+
+        static string? GetStringNull(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
+        {
+            string? str = null;
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
+            if (reqsize > 0)
+            {
+                using var mem = new IntPtrMem<char>((int)reqsize);
+                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
+                str = Marshal.PtrToStringUni(mem.Pointer);
+            }
+
+            return str;
+        }
+
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var str = "";

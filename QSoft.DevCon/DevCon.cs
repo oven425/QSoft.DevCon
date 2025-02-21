@@ -185,11 +185,8 @@ namespace QSoft.DevCon
 
         }
 
-        //public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interdaata) src)
-        //    => (src.dev, src.devdata).GetFriendName();
-
-        public static string GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => GetString(src, SPDRP_FRIENDLYNAME);
+        public static string? GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => GetStringNull(src, SPDRP_FRIENDLYNAME);
 
         public static void SetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data)
             => src.SetString(data, SPDRP_FRIENDLYNAME);
