@@ -22,7 +22,7 @@
     <PackageId>$(MSBuildProjectName)</PackageId>
     <Authors>$(MSBuildProjectName)</Authors>
     <Product>$(MSBuildProjectName)</Product>
-    <AssemblyName>$(MSBuildProjectName).$(VersionPrefix)</AssemblyName>
+    <AssemblyName></AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
