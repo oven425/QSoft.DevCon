@@ -29,5 +29,18 @@ namespace QSoft.DevCon
             return "";
         }
 
+        //must be administrator privileges
+        public static void SetComPortName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string portname)
+        {
+            var hKey1 = SetupDiOpenDevRegKey(src.dev, ref src.devdata, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_WRITE);
+            using var hKey = new SafeRegistryHandle(hKey1, true);
+
+            if (!hKey.IsInvalid)
+            {
+                using var reg = RegistryKey.FromHandle(hKey);
+                reg?.SetValue("PortName", portname);
+            }
+        }
+
     }
 }

@@ -63,6 +63,7 @@ namespace QSoft.DevCon
             return src.GetClassGuids().FirstOrDefault().Devices(showhiddendevice);
         }
 
+        //must be administrator privileges
         public static int Enable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             var count = 0;
@@ -73,12 +74,7 @@ namespace QSoft.DevCon
             }
             return count;
         }
-
-        /// <summary>
-        /// need admin
-        /// </summary>
-        /// <param name="src"></param>
-        /// <returns></returns>
+        //must be administrator privileges
         public static int Disable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             var count = 0;
