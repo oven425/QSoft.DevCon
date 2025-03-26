@@ -21,20 +21,30 @@ var ports = "Ports".Devices()
         locationpaths = x.GetLocationPaths()
     });
 ```
+3. Get serial port info from Modem
+```c#
+var ffs = "Modem".Devices()
+    .Select(x=>new 
+    { 
+        port = x.GetComPortName(),
+        desc = x.GetDeviceDesc(),
+    });
 
-3. Enable/Disable camera, need administrator privileges
+```
+
+4. Enable/Disable camera, need administrator privileges
 ```c#
 "Camera".Devices().Enable();
 "Camera".Devices().Disable();
 ```
 
-4. Get all device class name and class guid
+5. Get all device class name and class guid
 ```c#
 var class_guid = Guid.Empty.Devices()
     .GroupBy(x => x.GetClass(), x => x.GetClassGuid());
 ```
 
-5. change friend name
+6. Change friend name
 ```c#
 //change camera friend name
 foreach (var oo in "Camera".Devices())
@@ -43,7 +53,7 @@ foreach (var oo in "Camera".Devices())
     oo.SetFriendName($"test {friendname}");
 }
 ```
-6. get device path
+7. Get device path
 ```c#   
 var cameras = DevConExtension.KSCATEGORY_VIDEO_CAMERA
     .DevicesFromInterface()
@@ -54,7 +64,7 @@ var cameras = DevConExtension.KSCATEGORY_VIDEO_CAMERA
         panel = x.As().Panel(),
     });
 ```
-7. get device icon
+8. Get device icon
 ```c#
 using QSoft.DevCon.WPF;
 
