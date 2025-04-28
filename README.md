@@ -17,7 +17,7 @@ var ports = "Ports".Devices()
     .Select(x => new
     {
         portname = x.GetComPortName(),
-        instanceid = x.GetInstanceId(),
+        instanceid = x.DeviceInstanceId(),
         locationpaths = x.GetLocationPaths()
     });
 ```
