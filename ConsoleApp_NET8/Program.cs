@@ -2,8 +2,10 @@
 using System.Runtime.InteropServices;
 
 
-Span<char> span = stackalloc char[1024];
-string str = new string(span);
-
+var aaa = "Camera".Devices().Select(x => new
+{
+    name = x.Service()
+});
+aaa.ToArray();
 
 Console.ReadLine();

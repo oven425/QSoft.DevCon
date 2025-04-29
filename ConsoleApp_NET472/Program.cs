@@ -19,6 +19,13 @@ namespace ConsoleApp_NET472
             //{
             //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
             //}
+
+            var aaa = "Camera".Devices().Select(x => new
+            {
+                name = x.Service()
+            });
+            aaa.ToArray();
+
             var ffs = "Camera".GetClassGuids();
             var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
             var ddd = ggu.GetClassDesc();
