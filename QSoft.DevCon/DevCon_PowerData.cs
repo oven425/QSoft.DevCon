@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +12,19 @@ namespace QSoft.DevCon
     {
         public static CM_Power_Data? PowerData(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            var str = "";
+#if NET8_0_OR_GREATER
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICE_POWER_DATA, out var property_type, [], 0, out var reqsize);
+            if (reqsize > 0)
+            {
+                Span<byte> mem = stackalloc byte[(int)reqsize];
+                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICE_POWER_DATA, out property_type, mem, reqsize, out reqsize);
+                
+                
+                var pd = MemoryMarshal.AsRef<CM_Power_Data>(mem);
+                
+                return pd;
+            }
+#else
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICE_POWER_DATA, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
@@ -21,6 +34,7 @@ namespace QSoft.DevCon
                 var ddd = ((PDCAP)pd.PD_Capabilities);
                 return pd;
             }
+#endif
             return null;
         }
 
@@ -46,6 +60,14 @@ namespace QSoft.DevCon
             PowerDeviceD3,
             PowerDeviceMaximum
         };
+#if NET8_0_OR_GREATER
+        [InlineArray(7)] // 指定陣列大小為 7
+        public struct DevicePowerStateInlineArray
+        {
+            private DEVICE_POWER_STATE _element0; // 內聯陣列的內部實現細節
+        }
+#endif
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct CM_Power_Data
         {
             public uint PD_Size;
@@ -54,8 +76,13 @@ namespace QSoft.DevCon
             public uint PD_D1Latency;
             public uint PD_D2Latency;
             public uint PD_D3Latency;
+#if NET8_0_OR_GREATER
+            public DevicePowerStateInlineArray PD_PowerStateMapping;
+#else
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 7)]
             public DEVICE_POWER_STATE[] PD_PowerStateMapping;
+#endif
+
             public SYSTEM_POWER_STATE PD_DeepestSystemWake;
 
         };

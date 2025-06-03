@@ -13,7 +13,6 @@ namespace ConsoleApp_NET472
 
         static void Main(string[] args)
         {
-
             //var pps = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x=>x.GetClassGuid());
             //foreach(var oo in pps)
             //{
@@ -22,7 +21,8 @@ namespace ConsoleApp_NET472
 
             var aaa = "Camera".Devices().Select(x => new
             {
-                name = x.Service()
+                name = x.Service(),
+                power = x.PowerData(),
             });
             aaa.ToArray();
 

@@ -12,6 +12,9 @@ namespace QSoft.DevCon
         static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var ids = new List<string>();
+#if NET8_0_OR_GREATER
+
+#else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
             {
@@ -19,22 +22,35 @@ namespace QSoft.DevCon
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, mem.Pointer, reqsize, out reqsize, 0);
                 ids.AddRange(GetStrings(mem.Pointer));
             }
-
+#endif
             return ids;
         }
 
         static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint property)
         {
             var ids = new List<string>();
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            if (reqsize <= 0) return ids;
-            using (var mem = new IntPtrMem<byte>((int)reqsize))
-            {
-                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem.Pointer, reqsize, out reqsize);
-                ids.AddRange(GetStrings(mem.Pointer));
-            }
+#if NET8_0_OR_GREATER
+
+#else
+            //SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
+            //if (reqsize <= 0) return ids;
+            //using (var mem = new IntPtrMem<byte>((int)reqsize))
+            //{
+            //    SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem.Pointer, reqsize, out reqsize);
+            //    ids.AddRange(GetStrings(mem.Pointer));
+            //}
+#endif
             return ids;
         }
+#if NET8_0_OR_GREATER
+        static List<string> GetStrings(this Span<byte> src)
+        {
+            var strs = new List<string>();
+            var str = Encoding.Unicode.GetString(src);
+            strs.Add(str);
+            return strs;
+        }
+#else
 
         static List<string> GetStrings(this IntPtr src)
         {
@@ -54,6 +70,7 @@ namespace QSoft.DevCon
 
             return strs;
         }
+#endif
 
     }
 }

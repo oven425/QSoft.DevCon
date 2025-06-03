@@ -1,10 +1,12 @@
 ﻿using QSoft.DevCon;
-using System.Runtime.InteropServices;
 
 
 var aaa = "Camera".Devices().Select(x => new
 {
-    name = x.Service()
+    id = x.DeviceInstanceId(),
+    name = x.Service(),
+    problemcode = x.ProblemCode(),
+    powerdata = x.PowerData(),
 });
 aaa.ToArray();
 
