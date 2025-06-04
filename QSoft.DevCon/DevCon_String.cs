@@ -68,11 +68,14 @@ namespace QSoft.DevCon
         {
             var str = "";
 #if NET8_0_OR_GREATER
+            
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, [], 0, out var reqsize, 0);
             if (reqsize <= 2) return "";
-            Span<byte> span = stackalloc byte[(int)reqsize];
+            Span<byte> span = stackalloc byte[reqsize];
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, span, reqsize, out reqsize, 0);
-            str = Encoding.Unicode.GetString(span[..^2]);
+            //str = Encoding.Unicode.GetString(span[..^2]);
+            //var cast = MemoryMarshal.Cast<byte, char>(span);
+            str = new string(MemoryMarshal.Cast<byte, char>(span[..^2]));
 #else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
