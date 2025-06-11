@@ -23,10 +23,10 @@ namespace QSoft.DevCon
                 flags = DIGCF_PROFILE;
             }
             //flags |= DIGCF_DEVICEINTERFACE;
-            //if (guid == Guid.Empty)
-            //{
-            //    flags |= DIGCF_ALLCLASSES;
-            //}
+            if (guid == Guid.Empty)
+            {
+                flags |= DIGCF_ALLCLASSES;
+            }
 
 
             uint index = 0;

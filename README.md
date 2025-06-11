@@ -6,14 +6,14 @@
 var alldevices = Guid.Empty.Devices()
     .Select(x => new
     {
-        displayname = x.GetDisplayName(),
-        description = x.GetDescription()
+        displayname = x.GetFriendName(),
+        description = x.GetDeviceDesc()
     });
 ```
 2. Get all serial port info
 ```c#
 var ports = "Ports".Devices()
-    .Where(x => x.GetService() == "Serial")
+    .Where(x => x.Service() == "Serial")
     .Select(x => new
     {
         portname = x.GetComPortName(),
