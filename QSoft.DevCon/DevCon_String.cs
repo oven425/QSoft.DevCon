@@ -55,13 +55,10 @@ namespace QSoft.DevCon
                 using var mem = new IntPtrMem<char>((int)reqsize);
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
                 str = Marshal.PtrToStringUni(mem.Pointer);
-
-                //byte[] bb = new byte[reqsize];
-                //Marshal.Copy(mem.Pointer, bb, 0, bb.Length);
             }
 #endif
 
-            return str;
+            return str??"";
         }
 
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)

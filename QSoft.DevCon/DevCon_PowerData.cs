@@ -21,7 +21,6 @@ namespace QSoft.DevCon
                 
                 
                 var pd = MemoryMarshal.AsRef<CM_Power_Data>(mem);
-                
                 return pd;
             }
 #else
@@ -84,7 +83,33 @@ namespace QSoft.DevCon
 #endif
 
             public SYSTEM_POWER_STATE PD_DeepestSystemWake;
+            public override string ToString()
+            {
+                
+                var sb = new StringBuilder();
+                sb.AppendLine($"目前的電源狀態:");
+                sb.AppendLine($"{PD_MostRecentPowerState}");
+                sb.AppendLine();
+                sb.AppendLine($"電源能力:");
+                sb.AppendLine($"{PD_Capabilities:x08}");
+                var dps = (PDCAP)PD_Capabilities;
+                foreach (var oo in Enum.GetValues(typeof(PDCAP)).Cast<PDCAP>().Where(x => dps.HasFlag(x)))
+                {
+                    sb.AppendLine($"{oo}");
+                }
+                sb.AppendLine();
 
+                int index = 0;
+                foreach (var oo in PD_PowerStateMapping)
+                {
+                    if(index >0)
+                    {
+                        sb.AppendLine($"S{index-1}-> {oo}");
+                    }
+                    index++;
+                }
+                return sb.ToString();
+            }
         };
 
         public enum SYSTEM_POWER_STATE
