@@ -13,7 +13,14 @@ namespace QSoft.DevCon
         {
             var ids = new List<string>();
 #if NET8_0_OR_GREATER
-
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, [], 0, out var reqsize, 0);
+            if (reqsize > 0)
+            {
+                
+                Span<byte> mem = stackalloc byte[reqsize];
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, mem, reqsize, out reqsize, 0);
+                //ids.AddRange(GetStrings(mem.Pointer.Span));
+            }
 #else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
@@ -30,22 +37,33 @@ namespace QSoft.DevCon
         {
             var ids = new List<string>();
 #if NET8_0_OR_GREATER
-
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, [], 0, out var reqsize);
+            if (reqsize > 0)
+            {
+                Span<byte> mem = stackalloc byte[(int)reqsize];
+                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem, reqsize, out reqsize);
+                System.IO.File.WriteAllBytes("test", mem.ToArray());
+                ids.AddRange(GetStrings(mem));
+            }
 #else
-            //SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            //if (reqsize <= 0) return ids;
-            //using (var mem = new IntPtrMem<byte>((int)reqsize))
-            //{
-            //    SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem.Pointer, reqsize, out reqsize);
-            //    ids.AddRange(GetStrings(mem.Pointer));
-            //}
+            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
+            if (reqsize <= 0) return ids;
+            using (var mem = new IntPtrMem<byte>((int)reqsize))
+            {
+                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem.Pointer, reqsize, out reqsize);
+                ids.AddRange(GetStrings(mem.Pointer));
+            }
 #endif
+            
             return ids;
         }
 #if NET8_0_OR_GREATER
         static List<string> GetStrings(this Span<byte> src)
         {
+            var cast = MemoryMarshal.Cast<byte, char>(src);
+            
             var strs = new List<string>();
+            
             var str = Encoding.Unicode.GetString(src);
             strs.Add(str);
             return strs;
