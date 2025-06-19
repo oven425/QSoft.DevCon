@@ -1,10 +1,37 @@
 ﻿using QSoft.DevCon;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Controls;
 
 Span<byte> mem = File.ReadAllBytes("test").AsSpan();
-var cc = MemoryMarshal.Cast<byte, char>(mem);
-cc.IndexOf('\0'); // 0x00 is the null terminator in UTF-16 encoding
 
+var lls = GetStrings(mem);
+lls.Clear();
+
+static List<string> GetStrings(Span<byte> src)
+{
+    var cc = MemoryMarshal.Cast<byte, char>(src);
+    var list = new List<string>();
+
+    while (!cc.IsEmpty)
+    {
+        int index = cc.IndexOf('\0');
+        if (index == -1) // 找不到分隔符，表示這是最後一段
+        {
+            list.Add(cc.ToString());
+            break;
+        }
+
+        var str = cc[..index].ToString();
+        if (String.IsNullOrEmpty(str))
+        {
+            break;
+        }
+        list.Add(str);
+        cc = cc[(index + 1)..];
+    }
+    return list;
+}
 var cameras = DevConExtension.KSCATEGORY_AUDIO.DevicesFromInterface()
                 .Select(x => new
                 {

@@ -16,10 +16,9 @@ namespace QSoft.DevCon
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, [], 0, out var reqsize, 0);
             if (reqsize > 0)
             {
-                
                 Span<byte> mem = stackalloc byte[reqsize];
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, mem, reqsize, out reqsize, 0);
-                //ids.AddRange(GetStrings(mem.Pointer.Span));
+                ids.AddRange(mem.GetStrings());
             }
 #else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
@@ -42,8 +41,7 @@ namespace QSoft.DevCon
             {
                 Span<byte> mem = stackalloc byte[(int)reqsize];
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem, reqsize, out reqsize);
-                System.IO.File.WriteAllBytes("test", mem.ToArray());
-                ids.AddRange(GetStrings(mem));
+                ids.AddRange(mem.GetStrings());
             }
 #else
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
@@ -60,13 +58,27 @@ namespace QSoft.DevCon
 #if NET8_0_OR_GREATER
         static List<string> GetStrings(this Span<byte> src)
         {
-            var cast = MemoryMarshal.Cast<byte, char>(src);
-            
-            var strs = new List<string>();
-            
-            var str = Encoding.Unicode.GetString(src);
-            strs.Add(str);
-            return strs;
+            var cc = MemoryMarshal.Cast<byte, char>(src);
+            var list = new List<string>();
+
+            while (!cc.IsEmpty)
+            {
+                int index = cc.IndexOf('\0');
+                if (index == -1) // 找不到分隔符，表示這是最後一段
+                {
+                    list.Add(cc.ToString());
+                    break;
+                }
+
+                var str = cc[..index].ToString();
+                if (String.IsNullOrEmpty(str))
+                {
+                    break;
+                }
+                list.Add(str);
+                cc = cc[(index + 1)..];
+            }
+            return list;
         }
 #else
 
