@@ -20,10 +20,8 @@ namespace QSoft.DevCon
             byte[] lbuffer = new byte[reqsz];
             Marshal.Copy(mem.Pointer, lbuffer, 0, reqsz);
 
-
-            BitArray myBA3 = new BitArray(lbuffer);
-
-            Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
+            BitArray myBA3 = new(lbuffer);
+            var rotate = Convert(myBA3.Get(82), myBA3.Get(81), myBA3.Get(80), myBA3.Get(79));
 
             return (CameraPanel)Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
 
