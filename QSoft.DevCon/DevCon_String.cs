@@ -31,13 +31,6 @@ namespace QSoft.DevCon
             return str;
         }
 
-        //string DecodeUtf16(ReadOnlySpan<byte> buffer, int length)
-        //{
-        //    ReadOnlySpan<char> src = MemoryMarshal.Cast<byte, char>(buffer).Slice(0, length);
-        //    return new string(src);
-        //}
-
-
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
         {
             string str = "";

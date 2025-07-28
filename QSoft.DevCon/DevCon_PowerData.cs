@@ -87,10 +87,10 @@ namespace QSoft.DevCon
             {
                 
                 var sb = new StringBuilder();
-                sb.AppendLine($"目前的電源狀態:");
+                sb.AppendLine($"Current Power State:");
                 sb.AppendLine($"{PD_MostRecentPowerState}");
                 sb.AppendLine();
-                sb.AppendLine($"電源能力:");
+                sb.AppendLine($"Power Capabilities:");
                 sb.AppendLine($"{PD_Capabilities:x08}");
                 var dps = (PDCAP)PD_Capabilities;
                 foreach (var oo in Enum.GetValues(typeof(PDCAP)).Cast<PDCAP>().Where(x => dps.HasFlag(x)))
