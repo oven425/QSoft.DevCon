@@ -338,7 +338,9 @@ EnumerateHostControllers (
                 OOPS();
                 break;
             }
-
+            OutputDebugStringA("deviceDetailData->DevicePath:");
+			OutputDebugStringA(deviceDetailData->DevicePath);
+			OutputDebugStringA("\r\n");
             hHCDev = CreateFile(deviceDetailData->DevicePath,
                                 GENERIC_WRITE,
                                 FILE_SHARE_WRITE,
@@ -755,7 +757,9 @@ EnumerateHub (
                             OPEN_EXISTING,
                             0,
                             NULL);
-
+    OutputDebugStringA("deviceName");
+    OutputDebugStringA(deviceName);
+	OutputDebugStringA("\r\n");
     // Done with temp buffer for full hub device name
     //
     FREE(deviceName);
@@ -771,6 +775,7 @@ EnumerateHub (
     // This will tell us the number of downstream ports to enumerate, among
     // other things.
     //
+	OutputDebugStringA("EnumerateHub: IOCTL_USB_GET_NODE_INFORMATION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_NODE_INFORMATION,
                               hubInfo,
@@ -785,7 +790,7 @@ EnumerateHub (
         OOPS();
         goto EnumerateHubError;
     }
-
+	OutputDebugStringA("EnumerateHub: IOCTL_USB_GET_HUB_INFORMATION_EX\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_HUB_INFORMATION_EX,
                               hubInfoEx,
@@ -815,6 +820,7 @@ EnumerateHub (
     //
     // Obtain Hub Capabilities
     //
+	OutputDebugStringA("EnumerateHub: IOCTL_USB_GET_HUB_CAPABILITIES_EX\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_HUB_CAPABILITIES_EX,
                               hubCapabilityEx,
@@ -1077,7 +1083,7 @@ EnumerateHubPorts (
         //
 
         portConnectorProps.ConnectionIndex = index;
-
+		OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES\r\n");
         success = DeviceIoControl(hHubDevice,
                                   IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES,
                                   &portConnectorProps,
@@ -1095,7 +1101,7 @@ EnumerateHubPorts (
             if (pPortConnectorProps != NULL)
             {
                 pPortConnectorProps->ConnectionIndex = index;
-                
+                OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES\r\n");
                 success = DeviceIoControl(hHubDevice,
                                           IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES,
                                           pPortConnectorProps,
@@ -1116,7 +1122,7 @@ EnumerateHubPorts (
         connectionInfoExV2->ConnectionIndex = index;
         connectionInfoExV2->Length = sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2);
         connectionInfoExV2->SupportedUsbProtocols.Usb300 = 1;
-
+        OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2\r\n");
         success = DeviceIoControl(hHubDevice,
                                   IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2,
                                   connectionInfoExV2,
@@ -1133,7 +1139,7 @@ EnumerateHubPorts (
         }
 
         connectionInfoEx->ConnectionIndex = index;
-
+        OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX\r\n");
         success = DeviceIoControl(hHubDevice,
                                   IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX,
                                   connectionInfoEx,
@@ -1191,7 +1197,7 @@ EnumerateHubPorts (
             }
 
             connectionInfo->ConnectionIndex = index;
-
+			OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION\r\n");
             success = DeviceIoControl(hHubDevice,
                                       IOCTL_USB_GET_NODE_CONNECTION_INFORMATION,
                                       connectionInfo,
@@ -1537,6 +1543,8 @@ PCHAR GetRootHubName (
     // Get the length of the name of the Root Hub attached to the
     // Host Controller
     //
+
+    OutputDebugStringA("GetRootHubName: IOCTL_USB_GET_ROOT_HUB_NAME\r\n");
     success = DeviceIoControl(HostController,
                               IOCTL_USB_GET_ROOT_HUB_NAME,
                               0,
@@ -1565,6 +1573,8 @@ PCHAR GetRootHubName (
 
     // Get the name of the Root Hub attached to the Host Controller
     //
+
+    OutputDebugStringA("GetRootHubName: IOCTL_USB_GET_ROOT_HUB_NAME\r\n");
     success = DeviceIoControl(HostController,
                               IOCTL_USB_GET_ROOT_HUB_NAME,
                               NULL,
@@ -1623,7 +1633,7 @@ PCHAR GetExternalHubName (
     // specified port.
     //
     extHubName.ConnectionIndex = ConnectionIndex;
-
+    OutputDebugStringA("GetExternalHubName: IOCTL_USB_GET_NODE_CONNECTION_NAME\r\n");
     success = DeviceIoControl(Hub,
                               IOCTL_USB_GET_NODE_CONNECTION_NAME,
                               &extHubName,
@@ -1660,7 +1670,7 @@ PCHAR GetExternalHubName (
     // Get the name of the external hub attached to the specified port
     //
     extHubNameW->ConnectionIndex = ConnectionIndex;
-
+    OutputDebugStringA("GetExternalHubName: IOCTL_USB_GET_NODE_CONNECTION_NAME\r\n");
     success = DeviceIoControl(Hub,
                               IOCTL_USB_GET_NODE_CONNECTION_NAME,
                               extHubNameW,
@@ -1722,7 +1732,7 @@ PCHAR GetDriverKeyName (
     // the specified port.
     //
     driverKeyName.ConnectionIndex = ConnectionIndex;
-
+    OutputDebugStringA("GetDriverKeyName: IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME\r\n");
     success = DeviceIoControl(Hub,
                               IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME,
                               &driverKeyName,
@@ -1759,7 +1769,7 @@ PCHAR GetDriverKeyName (
     // the specified port.
     //
     driverKeyNameW->ConnectionIndex = ConnectionIndex;
-
+    OutputDebugStringA("GetDriverKeyName: IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME\r\n");
     success = DeviceIoControl(Hub,
                               IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME,
                               driverKeyNameW,
@@ -1820,6 +1830,8 @@ PCHAR GetHCDDriverKeyName (
 
     // Get the length of the name of the driver key of the HCD
     //
+
+	OutputDebugStringA("GetHCDDriverKeyName: IOCTL_GET_HCD_DRIVERKEY_NAME\r\n");
     success = DeviceIoControl(HCD,
                               IOCTL_GET_HCD_DRIVERKEY_NAME,
                               &driverKeyName,
@@ -1854,7 +1866,7 @@ PCHAR GetHCDDriverKeyName (
     // Get the name of the driver key of the device attached to
     // the specified port.
     //
-
+    OutputDebugStringA("GetHCDDriverKeyName: IOCTL_GET_HCD_DRIVERKEY_NAME\r\n");
     success = DeviceIoControl(HCD,
                               IOCTL_GET_HCD_DRIVERKEY_NAME,
                               driverKeyNameW,
@@ -1965,6 +1977,8 @@ GetConfigDescriptor (
 
     // Now issue the get descriptor request.
     //
+
+	OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
                               configDescReq,
@@ -2031,7 +2045,7 @@ GetConfigDescriptor (
 
     // Now issue the get descriptor request.
     //
-
+    OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
                               configDescReq,
@@ -2132,6 +2146,8 @@ GetBOSDescriptor (
 
     // Now issue the get descriptor request.
     //
+
+    OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
                               bosDescReq,
@@ -2198,6 +2214,7 @@ GetBOSDescriptor (
     // Now issue the get descriptor request.
     //
 
+    OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
                               bosDescReq,
@@ -2591,6 +2608,8 @@ GetStringDescriptor (
 
     // Now issue the get descriptor request.
     //
+
+    OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
                               stringDescReq,
@@ -2947,6 +2966,8 @@ GetHostControllerPowerMap(
         // Now query USBHUB for the USB_POWER_INFO structure for this hub.
         // For Selective Suspend support
         //
+
+		OutputDebugStringA("GetHostControllerPowerMap: IOCTL_USB_USER_REQUEST\r\n");
         bSuccess = DeviceIoControl(hHCDev,
                                   IOCTL_USB_USER_REQUEST,
                                   &UsbPowerInfoRequest,
@@ -3016,6 +3037,8 @@ GetHostControllerInfo(
     //
     // Query for the USB_CONTROLLER_INFO_0 structure
     //
+
+    OutputDebugStringA("GetHostControllerPowerMap: IOCTL_USB_USER_REQUEST\r\n");
     bSuccess = DeviceIoControl(hHCDev,
             IOCTL_USB_USER_REQUEST,
             &UsbControllerInfo,
