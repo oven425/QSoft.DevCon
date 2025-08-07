@@ -6,15 +6,26 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace ConsoleApp_NET8
+namespace QSoft.DevCon
 {
-    static public partial class DevConExtension
+    static public partial class DevConExtensiona
     {
         public static string GetHCDDriverKeyName(this SafeFileHandle src)
         {
+            Span<byte> buffer = stackalloc byte[6];
+            var b1 = DeviceIoControl(src, 0x00220424, buffer, (uint)buffer.Length, buffer, (uint)buffer.Length, out var ss, IntPtr.Zero);
+            var ii = BitConverter.ToUInt32(buffer);
+            buffer = stackalloc byte[(int)ii];
+            b1 = DeviceIoControl(src, 0x00220424, buffer, (uint)buffer.Length, buffer, (uint)buffer.Length, out ss, IntPtr.Zero);
 
-            return "";
+            var vvv = buffer[4..^4];
+            var ccs = MemoryMarshal.Cast<byte, char>(vvv);
+            var str = new string(ccs);
+            //{36fc9e60-c465-11cf-8056-444553540000}\0000
+            var err = Marshal.GetLastWin32Error();
+            return str;
         }
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
@@ -30,6 +41,101 @@ namespace ConsoleApp_NET8
         uint nOutBufferSize,
         out uint lpBytesReturned,
         IntPtr lpOverlapped);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct USB_HCD_DRIVERKEY_NAME
+        {
+            public uint ActualLength;
+            public char DriverKeyName;
+        }
+
+        enum WDMUSB_POWER_STATE
+        {
+
+            WdmUsbPowerNotMapped = 0,
+
+            WdmUsbPowerSystemUnspecified = 100,
+            WdmUsbPowerSystemWorking,
+            WdmUsbPowerSystemSleeping1,
+            WdmUsbPowerSystemSleeping2,
+            WdmUsbPowerSystemSleeping3,
+            WdmUsbPowerSystemHibernate,
+            WdmUsbPowerSystemShutdown,
+
+            WdmUsbPowerDeviceUnspecified = 200,
+            WdmUsbPowerDeviceD0,
+            WdmUsbPowerDeviceD1,
+            WdmUsbPowerDeviceD2,
+            WdmUsbPowerDeviceD3
+
+        };
+
+
+        enum USB_USER_ERROR_CODE
+        {
+            UsbUserSuccess = 0,
+            UsbUserNotSupported,
+            UsbUserInvalidRequestCode,
+            UsbUserFeatureDisabled,
+            UsbUserInvalidHeaderParameter,
+            UsbUserInvalidParameter,
+            UsbUserMiniportError,
+            UsbUserBufferTooSmall,
+            UsbUserErrorNotMapped,
+            UsbUserDeviceNotStarted,
+            UsbUserNoDeviceConnected
+
+        };
+
+
+        struct USBUSER_REQUEST_HEADER
+        {
+            uint UsbUserRequest;
+            /*
+                status code returned by port driver
+            */
+            USB_USER_ERROR_CODE UsbUserStatusCode;
+            /*
+                size of client input/output buffer
+                we always use the same buffer for input
+                and output
+            */
+            uint RequestBufferLength;
+            /*
+                size of buffer required to get all of the data
+            */
+            uint ActualBufferLength;
+
+        };
+
+        struct USB_POWER_INFO
+        {
+
+            /* input */
+            WDMUSB_POWER_STATE SystemState;
+            /* output */
+            WDMUSB_POWER_STATE HcDevicePowerState;
+            WDMUSB_POWER_STATE HcDeviceWake;
+            WDMUSB_POWER_STATE HcSystemWake;
+
+            WDMUSB_POWER_STATE RhDevicePowerState;
+            WDMUSB_POWER_STATE RhDeviceWake;
+            WDMUSB_POWER_STATE RhSystemWake;
+
+            WDMUSB_POWER_STATE LastSystemSleepState;
+
+            bool CanWakeup;
+            bool IsPowered;
+
+        };
+
+        struct USBUSER_POWER_INFO_REQUEST
+        {
+
+            USBUSER_REQUEST_HEADER Header;
+            USB_POWER_INFO PowerInformation;
+
+        };
 
 
         static uint IOCTL_GET_HCD_DRIVERKEY_NAME = CTL_CODE(

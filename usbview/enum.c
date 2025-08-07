@@ -1831,6 +1831,24 @@ PCHAR GetHCDDriverKeyName (
     // Get the length of the name of the driver key of the HCD
     //
 
+    auto f1 = FILE_DEVICE_USB;
+    auto ff1 = FILE_DEVICE_USB << 16;
+    auto f2 = HCD_GET_DRIVERKEY_NAME;
+    auto ff2 = HCD_GET_DRIVERKEY_NAME<<14;
+    auto f3 = METHOD_BUFFERED;
+    auto f4 = FILE_ANY_ACCESS;
+//#define CTL_CODE( DeviceType, Function, Method, Access ) (                 \
+//    ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
+//)
+
+//#define IOCTL_GET_HCD_DRIVERKEY_NAME   CTL_CODE(FILE_DEVICE_USB,  \
+//                                                HCD_GET_DRIVERKEY_NAME,  \
+//                                                METHOD_BUFFERED,  \
+//                                                FILE_ANY_ACCESS)
+
+    auto ff = ((FILE_DEVICE_USB) << 16) | ((HCD_GET_DRIVERKEY_NAME) << 14);
+    auto aaa = IOCTL_GET_HCD_DRIVERKEY_NAME;
+	auto sssss1 = sizeof(driverKeyName);
 	OutputDebugStringA("GetHCDDriverKeyName: IOCTL_GET_HCD_DRIVERKEY_NAME\r\n");
     success = DeviceIoControl(HCD,
                               IOCTL_GET_HCD_DRIVERKEY_NAME,

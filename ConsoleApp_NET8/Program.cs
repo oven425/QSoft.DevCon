@@ -3,11 +3,15 @@ using QSoft.DevCon;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Controls;
+
 var usbs = DevConExtension.GUID_DEVINTERFACE_USB_HOST_CONTROLLER.DevicesFromInterface();
 foreach(var usb in usbs)
 {
     var devicepath = usb.DevicePath();
-    var ff = File.Open(devicepath, FileMode.Open);
+
+    using var ff = File.OpenHandle(devicepath, FileMode.Open);
+    var dkn = ff.GetHCDDriverKeyName();
+
     var firendname = usb.As().GetDeviceDesc();
 }
 
