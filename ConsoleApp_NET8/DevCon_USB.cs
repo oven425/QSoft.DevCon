@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
+using static QSoft.DevCon.DevConExtensiona;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace QSoft.DevCon
@@ -27,29 +29,105 @@ namespace QSoft.DevCon
             var err = Marshal.GetLastWin32Error();
             return str;
         }
+        static uint IOCTL_USB_GET_NODE_INFORMATION = 0x00220408;
+        static uint IOCTL_USB_GET_ROOT_HUB_NAME = 0x00220408;
+        public static string GetRootHubName(this SafeFileHandle src)
+        {
+            var myStruct = new USB_HCD_DRIVERKEY_NAME();
+            var structSpan = MemoryMarshal.CreateSpan(ref myStruct, 1);
+            var buffer = MemoryMarshal.AsBytes(structSpan);
+
+            var success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
+
+            buffer = stackalloc byte[(int)myStruct.ActualLength];
+            success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out nBytes, IntPtr.Zero);
+            var vvv = buffer[4..^2];
+            var ccs = MemoryMarshal.Cast<byte, char>(vvv);
+            var str = new string(ccs);
+
+
+
+            return str;
+        }
+
+        public static void  GetGET_NODE_INFORMATION(this SafeFileHandle src)
+        {
+
+
+            var sz = Marshal.SizeOf<USB_HUB_INFORMATION_EX>();
+            var myStruct = new USB_HCD_DRIVERKEY_NAME();
+            var structSpan = MemoryMarshal.CreateSpan(ref myStruct, 1);
+            var buffer = MemoryMarshal.AsBytes(structSpan);
+
+            var success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
+
+
+
+        }
+
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool DeviceIoControl(
-        SafeFileHandle hDevice,
-        uint dwIoControlCode,
-        // 因為是同一個 buffer，可以標記為 In/Out
-        // 為了簡單起見，我們在呼叫端傳入同一個 span 兩次
-        ReadOnlySpan<byte> lpInBuffer,
-        uint nInBufferSize,
-        Span<byte> lpOutBuffer,
-        uint nOutBufferSize,
-        out uint lpBytesReturned,
-        IntPtr lpOverlapped);
+        internal static partial bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, ReadOnlySpan<byte> lpInBuffer, uint nInBufferSize, Span<byte> lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+
+
+
+        [StructLayout(LayoutKind.Sequential, Pack =1, CharSet = CharSet.Unicode)]
         public struct USB_HCD_DRIVERKEY_NAME
         {
             public uint ActualLength;
             public char DriverKeyName;
         }
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public unsafe struct USB_HUB_DESCRIPTOR
+        {
+            public byte bDescriptorLength;
+            public byte bDescriptorType;
+            public byte bNumberOfPorts;
+            public ushort wHubCharacteristics;
+            public byte bPowerOnToPowerGood;
+            public byte bHubControlCurrent;
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+            //public byte[] DeviceRemovable;
+            public fixed byte DeviceRemovable[64];
+        };
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct USB_30_HUB_DESCRIPTOR
+        {
+            public byte bLength;
+            public byte bDescriptorType;
+            public byte bNumberOfPorts;
+            public ushort wHubCharacteristics;
+            public byte bPowerOnToPowerGood;
+            public byte bHubControlCurrent;
+            public byte bHubHdrDecLat;
+            public ushort wHubDelay;
+            public ushort DeviceRemovable;
+        };
 
-        enum WDMUSB_POWER_STATE
+        public enum USB_HUB_TYPE
+        {
+            UsbRootHub = 1,
+            Usb20Hub = 2,
+            Usb30Hub = 3
+        };
+        [StructLayout(LayoutKind.Explicit, Pack = 1)]
+        public struct USB_HUB_INFORMATION_EX
+        {
+            [FieldOffset(0)]
+            public USB_HUB_TYPE HubType;
+
+            [FieldOffset(4)]
+            public ushort HighestPortNumber;
+            [FieldOffset(6)]
+            public USB_HUB_DESCRIPTOR UsbHubDescriptor;
+            [FieldOffset(6)]
+            public USB_30_HUB_DESCRIPTOR Usb30HubDescriptor;
+
+        };
+
+    enum WDMUSB_POWER_STATE
         {
 
             WdmUsbPowerNotMapped = 0,

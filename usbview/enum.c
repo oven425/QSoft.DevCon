@@ -747,6 +747,8 @@ EnumerateHub (
     {
         goto EnumerateHubError;
     }
+    OutputDebugStringA(deviceName);
+	OutputDebugStringA("\r\n");
 
     // Try to hub the open device
     //
@@ -757,7 +759,6 @@ EnumerateHub (
                             OPEN_EXISTING,
                             0,
                             NULL);
-    OutputDebugStringA("deviceName");
     OutputDebugStringA(deviceName);
 	OutputDebugStringA("\r\n");
     // Done with temp buffer for full hub device name
@@ -776,6 +777,9 @@ EnumerateHub (
     // other things.
     //
 	OutputDebugStringA("EnumerateHub: IOCTL_USB_GET_NODE_INFORMATION\r\n");
+
+    auto iu = IOCTL_USB_GET_NODE_INFORMATION;
+    auto ssz = sizeof(USB_NODE_INFORMATION);
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_NODE_INFORMATION,
                               hubInfo,
@@ -1543,7 +1547,7 @@ PCHAR GetRootHubName (
     // Get the length of the name of the Root Hub attached to the
     // Host Controller
     //
-
+    auto aaaa = IOCTL_USB_GET_ROOT_HUB_NAME;
     OutputDebugStringA("GetRootHubName: IOCTL_USB_GET_ROOT_HUB_NAME\r\n");
     success = DeviceIoControl(HostController,
                               IOCTL_USB_GET_ROOT_HUB_NAME,
