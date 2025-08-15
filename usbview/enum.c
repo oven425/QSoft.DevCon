@@ -794,6 +794,8 @@ EnumerateHub (
         OOPS();
         goto EnumerateHubError;
     }
+    auto sss = IOCTL_USB_GET_HUB_INFORMATION_EX;
+    auto sz = sizeof(USB_HUB_INFORMATION_EX);
 	OutputDebugStringA("EnumerateHub: IOCTL_USB_GET_HUB_INFORMATION_EX\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_HUB_INFORMATION_EX,

@@ -8,7 +8,6 @@ using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.DevConExtensiona;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace QSoft.DevCon
 {
@@ -31,6 +30,7 @@ namespace QSoft.DevCon
         }
         static uint IOCTL_USB_GET_NODE_INFORMATION = 0x00220408;
         static uint IOCTL_USB_GET_ROOT_HUB_NAME = 0x00220408;
+        static uint IOCTL_USB_GET_HUB_INFORMATION_EX = 0x00220454;
         public static string GetRootHubName(this SafeFileHandle src)
         {
             var myStruct = new USB_HCD_DRIVERKEY_NAME();
@@ -50,19 +50,15 @@ namespace QSoft.DevCon
             return str;
         }
 
-        public static void  GetGET_NODE_INFORMATION(this SafeFileHandle src)
+        public static void  GET_NODE_INFORMATION(this SafeFileHandle src)
         {
+            var myStruct = new USB_HUB_INFORMATION_EX();
+            var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref myStruct, 1));
+
+            var success = DeviceIoControl(src, IOCTL_USB_GET_HUB_INFORMATION_EX, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
 
 
-            var sz = Marshal.SizeOf<USB_HUB_INFORMATION_EX>();
-            var myStruct = new USB_HCD_DRIVERKEY_NAME();
-            var structSpan = MemoryMarshal.CreateSpan(ref myStruct, 1);
-            var buffer = MemoryMarshal.AsBytes(structSpan);
-
-            var success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
-
-
-
+            var err = Marshal.GetLastWin32Error();
         }
 
 
@@ -70,10 +66,36 @@ namespace QSoft.DevCon
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, ReadOnlySpan<byte> lpInBuffer, uint nInBufferSize, Span<byte> lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
 
+        enum USB_HUB_NODE
+        {
+            UsbHub,
+            UsbMIParent
+        };
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct USB_HUB_INFORMATION
+        {
+
+            USB_HUB_DESCRIPTOR HubDescriptor;
+            bool HubIsBusPowered;
+        };
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct USB_MI_PARENT_INFORMATION
+        {
+            uint NumberOfInterfaces;
+        };
+        [StructLayout(LayoutKind.Explicit, Pack = 1)]
+        struct USB_NODE_INFORMATION
+        {
+            [FieldOffset(0)]
+            USB_HUB_NODE NodeType;        /* hub, mi parent */
+            [FieldOffset(4)]
+            USB_HUB_INFORMATION HubInformation;
+            [FieldOffset(4)]
+            USB_MI_PARENT_INFORMATION MiParentInformation;
+        };
 
 
-
-        [StructLayout(LayoutKind.Sequential, Pack =1, CharSet = CharSet.Unicode)]
+    [StructLayout(LayoutKind.Sequential, Pack =1, CharSet = CharSet.Unicode)]
         public struct USB_HCD_DRIVERKEY_NAME
         {
             public uint ActualLength;
