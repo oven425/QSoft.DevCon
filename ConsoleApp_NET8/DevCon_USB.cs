@@ -31,6 +31,7 @@ namespace QSoft.DevCon
         static uint IOCTL_USB_GET_NODE_INFORMATION = 0x00220408;
         static uint IOCTL_USB_GET_ROOT_HUB_NAME = 0x00220408;
         static uint IOCTL_USB_GET_HUB_INFORMATION_EX = 0x00220454;
+        static uint IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES = 0x00220458;
         public static string GetRootHubName(this SafeFileHandle src)
         {
             var myStruct = new USB_HCD_DRIVERKEY_NAME();
@@ -52,19 +53,84 @@ namespace QSoft.DevCon
 
         public static void  GET_NODE_INFORMATION(this SafeFileHandle src)
         {
-            var myStruct = new USB_HUB_INFORMATION_EX();
-            var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref myStruct, 1));
-
-            var success = DeviceIoControl(src, IOCTL_USB_GET_HUB_INFORMATION_EX, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
-
-
+            var nodeinfo = new USB_NODE_INFORMATION();
+            var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
+            var success1 = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, Span<byte>.Empty, 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes1, IntPtr.Zero);
             var err = Marshal.GetLastWin32Error();
+            var count = nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts;
+
+            var hubinfoex = new USB_HUB_INFORMATION_EX();
+            var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref hubinfoex, 1));
+            var success = DeviceIoControl(src, IOCTL_USB_GET_HUB_INFORMATION_EX, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
+            err = Marshal.GetLastWin32Error();
+
+
+            var portcoonectproperties = new USB_PORT_CONNECTOR_PROPERTIES();
+            var portcoonectproperties_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref hubinfoex, 1));
+
+
         }
 
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, ReadOnlySpan<byte> lpInBuffer, uint nInBufferSize, Span<byte> lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
+
+
+        [StructLayout(LayoutKind.Explicit)]
+        public struct USB_PORT_PROPERTIES
+        {
+
+            [FieldOffset(0)]
+            public uint ul;
+
+
+            public bool PortIsUserConnectable
+            {
+                get { return (ul & 0x01) != 0; }
+                set { ul = value ? (ul | 0x01u) : (ul & ~0x01u); }
+            }
+
+            public bool PortIsDebugCapable
+            {
+                get { return (ul & 0x02) != 0; }
+                set { ul = value ? (ul | 0x02u) : (ul & ~0x02u); }
+            }
+
+            public bool PortHasMultipleCompanions
+            {
+                get { return (ul & 0x04) != 0; }
+                set { ul = value ? (ul | 0x04u) : (ul & ~0x04u); }
+            }
+
+            public bool PortConnectorIsTypeC
+            {
+                get { return (ul & 0x08) != 0; }
+                set { ul = value ? (ul | 0x08u) : (ul & ~0x08u); }
+            }
+        }
+
+        public struct USB_PORT_CONNECTOR_PROPERTIES
+        {
+            // one based port number
+            public uint ConnectionIndex;
+
+            // The number of bytes required to hold the entire USB_PORT_CONNECTOR_PROPERTIES
+            // structure, including the full CompanionHubSymbolicLinkName string
+            public uint ActualLength;
+
+            // bitmask of flags indicating properties and capabilities of the port
+            USB_PORT_PROPERTIES UsbPortProperties;
+
+            // Zero based index number of the companion port being queried.
+            public ushort CompanionIndex;
+
+            // Port number of the companion port
+            public ushort CompanionPortNumber;
+
+            // Symbolic link name for the companion hub
+            char CompanionHubSymbolicLinkName;
+        };
 
         enum USB_HUB_NODE
         {
@@ -75,8 +141,8 @@ namespace QSoft.DevCon
         struct USB_HUB_INFORMATION
         {
 
-            USB_HUB_DESCRIPTOR HubDescriptor;
-            bool HubIsBusPowered;
+            public USB_HUB_DESCRIPTOR HubDescriptor;
+            public bool HubIsBusPowered;
         };
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct USB_MI_PARENT_INFORMATION
@@ -87,15 +153,15 @@ namespace QSoft.DevCon
         struct USB_NODE_INFORMATION
         {
             [FieldOffset(0)]
-            USB_HUB_NODE NodeType;        /* hub, mi parent */
+            public USB_HUB_NODE NodeType;        /* hub, mi parent */
             [FieldOffset(4)]
-            USB_HUB_INFORMATION HubInformation;
+            public USB_HUB_INFORMATION HubInformation;
             [FieldOffset(4)]
-            USB_MI_PARENT_INFORMATION MiParentInformation;
+            public USB_MI_PARENT_INFORMATION MiParentInformation;
         };
 
 
-    [StructLayout(LayoutKind.Sequential, Pack =1, CharSet = CharSet.Unicode)]
+        [StructLayout(LayoutKind.Sequential, Pack =1, CharSet = CharSet.Unicode)]
         public struct USB_HCD_DRIVERKEY_NAME
         {
             public uint ActualLength;

@@ -1087,7 +1087,7 @@ EnumerateHubPorts (
         // port, among other things.
         // The fault tolerate code is executed first.
         //
-
+        auto iotctl = IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES;
         portConnectorProps.ConnectionIndex = index;
 		OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES\r\n");
         success = DeviceIoControl(hHubDevice,
