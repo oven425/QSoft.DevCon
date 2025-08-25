@@ -4,11 +4,17 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Controls;
 
+var hids = DevConExtension.GUID_DEVINTERFACE_HID.DevicesFromInterface();
+foreach(var hid in hids)
+{
+    hid.VidPid();
+}
+
 var usbs = DevConExtension.GUID_DEVINTERFACE_USB_HOST_CONTROLLER.DevicesFromInterface();
 foreach(var usb in usbs)
 {
     var devicepath = usb.DevicePath();
-
+    usb.VidPid();
     using var ff = File.OpenHandle(devicepath, FileMode.Open);
     var dkn = ff.GetHCDDriverKeyName();
     var roothubname = ff.GetRootHubName();
@@ -21,11 +27,14 @@ foreach(var usb in usbs)
 var cameras = DevConExtension.KSCATEGORY_AUDIO.DevicesFromInterface()
                 .Select(x => new
                 {
+                    
                     devicepath = x.DevicePath(),
                     friendname = x.As().GetFriendName(),
                     classname = x.As().GetClass(),
                     panel = x.As().Panel(),
                 }).ToList();
+
+
 
 var aaa = "Camera".Devices().Select(x => new
 {
