@@ -5,30 +5,53 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace QSoft.DevCon
 {
     static public partial class DevConExtension
     {
-        //vid pid regrex
-        //var match = Regex.Match(deviceId, @"VID_([0-9A-F]{4})&PID_([0-9A-F]{4})", RegexOptions.IgnoreCase);
+        public static (int vid, int pid) VidPid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            var requiredSize = 0;
+            var id = src.DeviceInstanceId();
+            var match = Regex.Match(id, @"VID_(?<vid>[0-9A-F]{4})&PID_(?<pid>[0-9A-F]{4})", RegexOptions.IgnoreCase);
+            if(match.Success)
+            {
+                if(int.TryParse(match.Groups["vid"].Value, System.Globalization.NumberStyles.HexNumber, null, out var vid)
+                &&int.TryParse(match.Groups["pid"].Value, System.Globalization.NumberStyles.HexNumber, null, out var pid))
+                {
+                    return (vid, pid);
+                }
+            }
+            return (0, 0);
+        }
+
         public static (int vid, int pid) VidPid(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfacedata) src)
         {
             var devicepath = src.DevicePath();
             HidD_GetHidGuid(out var hidguid);
-            using FileStream fs = new(devicepath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-            //#if NET8_0_OR_GREATER
-            //            using var file = File.OpenHandle(devicepath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-            //#else
-            //            using var file = new SafeFileHandle(devicepath, FileAccess.ReadWrite, FileShare.ReadWrite);
-            //#endif
-            if (HidD_GetAttributes(fs.SafeFileHandle, out var attr))
+            try
             {
-                return (attr.VendorID, attr.ProductID);
+                using FileStream fs = new(devicepath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                //#if NET8_0_OR_GREATER
+                //            using var file = File.OpenHandle(devicepath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                //#else
+                //            using var file = new SafeFileHandle(devicepath, FileAccess.ReadWrite, FileShare.ReadWrite);
+                //#endif
+                if (HidD_GetAttributes(fs.SafeFileHandle, out var attr))
+                {
+                    return (attr.VendorID, attr.ProductID);
+                }
+                var err = Marshal.GetLastWin32Error();
             }
-            var err = Marshal.GetLastWin32Error();
-            return (0, 0);
+            catch(Exception ee)
+            {
+                System.Diagnostics.Debug.WriteLine(ee.ToString());
+            }
+            
+            return (0,0);
         }
 
 

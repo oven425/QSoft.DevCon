@@ -7,7 +7,8 @@ using System.Windows.Controls;
 var hids = DevConExtension.GUID_DEVINTERFACE_HID.DevicesFromInterface();
 foreach(var hid in hids)
 {
-    hid.VidPid();
+    var vp = hid.VidPid();
+    System.Diagnostics.Trace.WriteLine($"vid: {vp.vid:X4}, pid: {vp.pid:X4}");
 }
 
 var usbs = DevConExtension.GUID_DEVINTERFACE_USB_HOST_CONTROLLER.DevicesFromInterface();
@@ -38,6 +39,7 @@ var cameras = DevConExtension.KSCATEGORY_AUDIO.DevicesFromInterface()
 
 var aaa = "Camera".Devices().Select(x => new
 {
+    vp = x.VidPid(),
     name = x.GetFriendName(),
     isconnect = x.IsConnected(),
     preset = x.IsPresent(),
@@ -52,6 +54,7 @@ foreach(var oo in aaa)
 {
     System.Diagnostics.Trace.WriteLine($"panel: {oo.panel}");
     System.Diagnostics.Trace.WriteLine($"{oo.name}");
+    System.Diagnostics.Trace.WriteLine($"{oo.vp.vid} {oo.vp.pid}");
     System.Diagnostics.Trace.WriteLine(oo.powerdata?.ToString());
 }
 
