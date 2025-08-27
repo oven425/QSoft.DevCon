@@ -1088,6 +1088,7 @@ EnumerateHubPorts (
         // The fault tolerate code is executed first.
         //
         auto iotctl = IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES;
+		auto sz = sizeof(USB_PORT_CONNECTOR_PROPERTIES);
         portConnectorProps.ConnectionIndex = index;
 		OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES\r\n");
         success = DeviceIoControl(hHubDevice,
@@ -1116,7 +1117,7 @@ EnumerateHubPorts (
                                           portConnectorProps.ActualLength,
                                           &nBytes,
                                           NULL);
-
+				OutputDebugStringW(portConnectorProps.CompanionHubSymbolicLinkName);
                 if (!success || nBytes < portConnectorProps.ActualLength)
                 {
                     FREE(pPortConnectorProps);
@@ -1124,7 +1125,7 @@ EnumerateHubPorts (
                 }
             }
         }
-        
+        iotctl = IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2;
         connectionInfoExV2->ConnectionIndex = index;
         connectionInfoExV2->Length = sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2);
         connectionInfoExV2->SupportedUsbProtocols.Usb300 = 1;
@@ -1143,7 +1144,7 @@ EnumerateHubPorts (
             FREE(connectionInfoExV2);
             connectionInfoExV2 = NULL;
         }
-
+        iotctl = IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX;
         connectionInfoEx->ConnectionIndex = index;
         OutputDebugStringA("EnumerateHubPorts: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX\r\n");
         success = DeviceIoControl(hHubDevice,
