@@ -1138,7 +1138,7 @@ EnumerateHubPorts (
                                   sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2),
                                   &nBytes,
                                   NULL);
-
+        auto sssszzz = sizeof(USB_DEVICE_DESCRIPTOR);
         if (!success || nBytes < sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2)) 
         {
             FREE(connectionInfoExV2);

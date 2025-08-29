@@ -98,7 +98,10 @@ namespace QSoft.DevCon
                 if(connectionInfoEx.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected)
                 {
                     int aa = 0;
-
+                    if(connectionInfoEx.NumberOfOpenPipes > 1)
+                    {
+                        System.Diagnostics.Trace.WriteLine($"NumberOfOpenPipes:{connectionInfoEx.NumberOfOpenPipes}");
+                    }
                     aa = 1;
                 }
             }
@@ -188,7 +191,7 @@ namespace QSoft.DevCon
         }
 
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct USB_DEVICE_DESCRIPTOR
         {
             public byte bLength;
@@ -224,6 +227,14 @@ namespace QSoft.DevCon
             DeviceReset
         };
 
+        public enum USB_DEVICE_SPEED:byte
+        {
+            UsbLowSpeed,
+            UsbFullSpeed,
+            UsbHighSpeed,
+            UsbSuperSpeed
+        }
+
         struct USB_ENDPOINT_DESCRIPTOR
         {
             byte bLength;
@@ -240,7 +251,7 @@ namespace QSoft.DevCon
             uint ScheduleOffset;
         };
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct USB_NODE_CONNECTION_INFORMATION_EX
         {
             /// <summary>
@@ -249,7 +260,7 @@ namespace QSoft.DevCon
             public uint ConnectionIndex;
             public USB_DEVICE_DESCRIPTOR DeviceDescriptor;
             public byte CurrentConfigurationValue;
-            public byte Speed;
+            public USB_DEVICE_SPEED Speed;
             [MarshalAs(UnmanagedType.U1)]
             public bool DeviceIsHub;
             public ushort DeviceAddress;
