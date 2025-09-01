@@ -2002,7 +2002,7 @@ GetConfigDescriptor (
 
     // Now issue the get descriptor request.
     //
-
+    auto iotcl = IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION;
 	OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,

@@ -8,7 +8,7 @@ using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.DevConExtensiona;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace QSoft.DevCon
 {
@@ -25,7 +25,6 @@ namespace QSoft.DevCon
             var vvv = buffer[4..^4];
             var ccs = MemoryMarshal.Cast<byte, char>(vvv);
             var str = new string(ccs);
-            //{36fc9e60-c465-11cf-8056-444553540000}\0000
             var err = Marshal.GetLastWin32Error();
             return str;
         }
@@ -35,29 +34,33 @@ namespace QSoft.DevCon
         static uint IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES = 0x00220458;
         static uint IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2 = 0x0022045c;
         static uint IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX = 0x00220448;
+        static uint IOCTL_USB_GET_NODE_CONNECTION_NAME = 0x0022044c;
+        static uint IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION = 0x00220410;
 
 
         public static string GetRootHubName(this SafeFileHandle src)
         {
-            var myStruct = new USB_HCD_DRIVERKEY_NAME();
-            var structSpan = MemoryMarshal.CreateSpan(ref myStruct, 1);
-            var buffer = MemoryMarshal.AsBytes(structSpan);
+            return src.GetString(IOCTL_USB_GET_ROOT_HUB_NAME);
+            //var myStruct = new USB_HCD_DRIVERKEY_NAME();
+            //var structSpan = MemoryMarshal.CreateSpan(ref myStruct, 1);
+            //var buffer = MemoryMarshal.AsBytes(structSpan);
 
-            var success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
+            //var success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
 
-            buffer = stackalloc byte[(int)myStruct.ActualLength];
-            success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out nBytes, IntPtr.Zero);
-            var vvv = buffer[4..^2];
-            var ccs = MemoryMarshal.Cast<byte, char>(vvv);
-            var str = new string(ccs);
+            //buffer = stackalloc byte[(int)myStruct.ActualLength];
+            //success = DeviceIoControl(src, IOCTL_USB_GET_ROOT_HUB_NAME, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out nBytes, IntPtr.Zero);
+            //var vvv = buffer[4..^2];
+            //var ccs = MemoryMarshal.Cast<byte, char>(vvv);
+            //var str = new string(ccs);
 
 
 
-            return str;
+            //return str;
         }
 
         public static void  GET_NODE_INFORMATION(this SafeFileHandle src)
         {
+            var nodestr = src.GetString(IOCTL_USB_GET_NODE_CONNECTION_NAME);
             var nodeinfo = new USB_NODE_INFORMATION();
             var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
             var success1 = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, Span<byte>.Empty, 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes1, IntPtr.Zero);
@@ -89,8 +92,10 @@ namespace QSoft.DevCon
                 err = Marshal.GetLastWin32Error();
 
 
-                var connectionInfoEx = new USB_NODE_CONNECTION_INFORMATION_EX();
-                connectionInfoEx.ConnectionIndex = i;
+                var connectionInfoEx = new USB_NODE_CONNECTION_INFORMATION_EX
+                {
+                    ConnectionIndex = i
+                };
                 var connectionInfoEx_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref connectionInfoEx, 1));
                 success = DeviceIoControl(src, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX, connectionInfoEx_buffer, (uint)connectionInfoEx_buffer.Length, connectionInfoEx_buffer, (uint)connectionInfoEx_buffer.Length, out nBytes, IntPtr.Zero);
                 err = Marshal.GetLastWin32Error();
@@ -98,7 +103,12 @@ namespace QSoft.DevCon
                 if(connectionInfoEx.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected)
                 {
                     int aa = 0;
-                    if(connectionInfoEx.NumberOfOpenPipes > 1)
+                    if(connectionInfoEx.DeviceIsHub)
+                    {
+                        System.Diagnostics.Trace.WriteLine($"Port {i} is Hub");
+                    }
+                    
+                    if (connectionInfoEx.NumberOfOpenPipes > 1)
                     {
                         System.Diagnostics.Trace.WriteLine($"NumberOfOpenPipes:{connectionInfoEx.NumberOfOpenPipes}");
                     }
@@ -111,10 +121,46 @@ namespace QSoft.DevCon
         }
 
 
+        struct structstr
+        {
+            public int Length;
+            public char name;
+        }
+        static string GetString(this SafeFileHandle src, uint ioctl)
+        {
+            
+            int aa = 0;
+            structstr ss = new structstr();
+            var buf =MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref ss, 1));
+            var success = DeviceIoControl(src, ioctl, Span<byte>.Empty, 0, buf, (uint)buf.Length, out var sz, IntPtr.Zero);
+            buf = stackalloc byte[ss.Length];
+            success = DeviceIoControl(src, ioctl, Span<byte>.Empty, 0, buf, (uint)buf.Length, out  sz, IntPtr.Zero);
+            var str1 = MemoryMarshal.Cast<byte, char>(buf[4..^2]);
+            var str = new string(str1);
+            return str;
+        }
+
+
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, ReadOnlySpan<byte> lpInBuffer, uint nInBufferSize, Span<byte> lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct UsbSetupPacket
+        {
+            public byte bmRequest;
+            public byte bRequest;
+            public ushort wValue;
+            public ushort wIndex;
+            public ushort wLength;
+        }
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct UsbDescriptorRequest
+        {
+            public uint ConnectionIndex;
+            public UsbSetupPacket SetupPacket;
+            public char Data;
+        }
         [StructLayout(LayoutKind.Sequential)]
         public struct USB_PROTOCOLS
         {
