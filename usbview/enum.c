@@ -2002,6 +2002,9 @@ GetConfigDescriptor (
 
     // Now issue the get descriptor request.
     //
+    char msg[100] = { 0 };
+    sprintf(msg, "ConnectionIndex:%d\r\n", ConnectionIndex);
+    OutputDebugStringA(msg);
     auto iotcl = IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION;
 	OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
@@ -2171,7 +2174,9 @@ GetBOSDescriptor (
 
     // Now issue the get descriptor request.
     //
-
+    char msg[100] = { 0 };
+    sprintf(msg, "ConnectionIndex:%d\r\n", ConnectionIndex);
+    OutputDebugStringA(msg);
     OutputDebugStringA("GetConfigDescriptor: IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION\r\n");
     success = DeviceIoControl(hHubDevice,
                               IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,

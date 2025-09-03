@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
@@ -83,7 +84,7 @@ namespace QSoft.DevCon
 
                 if(connectionInfoEx.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected)
                 {
-                    src.GetConfigDescriptor((int)i, 0);
+                    src.GetConfigDescriptor(i, 0);
                     int aa = 0;
                     if(connectionInfoEx.DeviceIsHub)
                     {
@@ -102,17 +103,174 @@ namespace QSoft.DevCon
 
         }
 
-        public static void GetConfigDescriptor(this SafeFileHandle src, int connectindex, int descriptindex)
+        //public static void GetConfigDescriptor(this SafeFileHandle src, int connectindex, int descriptindex)
+        //{
+        //    //USB_DESCRIPTOR_REQUEST req = new();
+        //    //USB_CONFIGURATION_DESCRIPTOR configdescriptor = new();
+        //    //req.ConnectionIndex = (uint)connectindex;
+        //    //req.SetupPacket.wValue = (ushort)((USB_CONFIGURATION_DESCRIPTOR_TYPE << 8)| descriptindex);
+        //    //req.SetupPacket.wLength = (ushort)(200 - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>());
+        //    //var intsz = Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>();
+        //    //Span<byte> buf = stackalloc byte[intsz];
+        //    //MemoryMarshal.Write(buf, ref req);
+
+        //    ////var buf = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref req, 1));
+        //    //var success = DeviceIoControl(src, IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION, buf, (uint)buf.Length, buf, (uint)buf.Length, out var sz, IntPtr.Zero);
+        //    //var aa = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(buf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..]);
+        //    //var err = Marshal.GetLastWin32Error();
+
+        //}
+
+        static USB_DESCRIPTOR_REQUEST GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex)
         {
-            USB_DESCRIPTOR_REQUEST req = new USB_DESCRIPTOR_REQUEST();
-            USB_CONFIGURATION_DESCRIPTOR configdescriptor = new USB_CONFIGURATION_DESCRIPTOR();
-            req.ConnectionIndex = (uint)connectindex;
-            req.SetupPacket.wValue = (ushort)((USB_CONFIGURATION_DESCRIPTOR_TYPE << 8)| descriptindex);
-            req.SetupPacket.wLength = (ushort)(200 - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>());
-            var buf = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref req, 1));
-            var success = DeviceIoControl(src, IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION, buf, 200, buf, 200, out var sz, IntPtr.Zero);
-            var err = Marshal.GetLastWin32Error();
+            bool success = false;
+            uint nBytes = 0;
+            uint nBytesReturned = 0;
+
+            //UCHAR configDescReqBuf[sizeof(USB_DESCRIPTOR_REQUEST) +
+            //                         sizeof(USB_CONFIGURATION_DESCRIPTOR)];
+            Span<byte> configDescReqBuf = stackalloc byte[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()];
+
+            USB_DESCRIPTOR_REQUEST configDescReq = new USB_DESCRIPTOR_REQUEST();
+            USB_CONFIGURATION_DESCRIPTOR configDesc = new USB_CONFIGURATION_DESCRIPTOR();
+
+
+
+
+            // Request the Configuration Descriptor the first time using our
+            // local buffer, which is just big enough for the Cofiguration
+            // Descriptor itself.
+            //
+            nBytes = (uint)configDescReqBuf.Length;
+
+            //configDescReq = (PUSB_DESCRIPTOR_REQUEST)configDescReqBuf;
+            //configDesc = (PUSB_CONFIGURATION_DESCRIPTOR)(configDescReq + 1);
+
+
+            // Zero fill the entire request structure
+            //
+            //memset(configDescReq, 0, nBytes);
+
+            // Indicate the port from which the descriptor will be requested
+            //
+            configDescReq.ConnectionIndex = ConnectionIndex;
+
+            //
+            // USBHUB uses URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE to process this
+            // IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION request.
+            //
+            // USBD will automatically initialize these fields:
+            //     bmRequest = 0x80
+            //     bRequest  = 0x06
+            //
+            // We must inititialize these fields:
+            //     wValue    = Descriptor Type (high) and Descriptor Index (low byte)
+            //     wIndex    = Zero (or Language ID for String Descriptors)
+            //     wLength   = Length of descriptor buffer
+            //
+            configDescReq.SetupPacket.wValue = (ushort)((USB_CONFIGURATION_DESCRIPTOR_TYPE << 8) | DescriptorIndex);
+
+            configDescReq.SetupPacket.wLength = (ushort)(nBytes - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>());
+
+            MemoryMarshal.Write(configDescReqBuf, ref configDescReq);
+
+
+            // Now issue the get descriptor request.
+            //
+            success = DeviceIoControl(hHubDevice,
+                                      IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
+                                      configDescReqBuf,
+                                      nBytes,
+                                      configDescReqBuf,
+                                      nBytes,
+                                      out nBytesReturned,
+                                      IntPtr.Zero);
+            configDesc = MemoryMarshal.Read< USB_CONFIGURATION_DESCRIPTOR>(configDescReqBuf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..]);
+
+            if (!success)
+            {
+                return new USB_DESCRIPTOR_REQUEST();
+            }
+
+            if (nBytes != nBytesReturned)
+            {
+                return new USB_DESCRIPTOR_REQUEST();
+            }
+
+            if (configDesc.wTotalLength < Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>())
+            {
+                return new USB_DESCRIPTOR_REQUEST();
+            }
+
+            // Now request the entire Configuration Descriptor using a dynamically
+            // allocated buffer which is sized big enough to hold the entire descriptor
+            //
+            nBytes = (uint)(Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + configDesc.wTotalLength);
+
+            //configDescReq = (PUSB_DESCRIPTOR_REQUEST)ALLOC(nBytes);
+
+            //if (configDescReq == NULL)
+            //{
+            //    return NULL;
+            //}
+
+            configDescReqBuf = stackalloc byte[(int)nBytes];
+
+            //configDesc = (PUSB_CONFIGURATION_DESCRIPTOR)(configDescReq + 1);
+
+            // Indicate the port from which the descriptor will be requested
+            //
+            configDescReq.ConnectionIndex = ConnectionIndex;
+
+            //
+            // USBHUB uses URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE to process this
+            // IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION request.
+            //
+            // USBD will automatically initialize these fields:
+            //     bmRequest = 0x80
+            //     bRequest  = 0x06
+            //
+            // We must inititialize these fields:
+            //     wValue    = Descriptor Type (high) and Descriptor Index (low byte)
+            //     wIndex    = Zero (or Language ID for String Descriptors)
+            //     wLength   = Length of descriptor buffer
+            //
+            configDescReq.SetupPacket.wValue = (ushort)((USB_CONFIGURATION_DESCRIPTOR_TYPE << 8)| DescriptorIndex);
+
+            configDescReq.SetupPacket.wLength = (ushort)(nBytes - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>());
+
+            // Now issue the get descriptor request.
+            //
+            MemoryMarshal.Write(configDescReqBuf, ref configDescReq);
+
+            success = DeviceIoControl(hHubDevice,
+                                      IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
+                                      configDescReqBuf,
+                                      nBytes,
+                                      configDescReqBuf,
+                                      nBytes,
+                                      out nBytesReturned,
+                                      IntPtr.Zero);
+            configDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(configDescReqBuf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..]);
+
+            if (!success)
+            {
+                return new USB_DESCRIPTOR_REQUEST();
+            }
+
+            if (nBytes != nBytesReturned)
+            {
+                return new USB_DESCRIPTOR_REQUEST();
+            }
+
+            if (configDesc.wTotalLength != (nBytes - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()))
+            {
+                return new USB_DESCRIPTOR_REQUEST();
+            }
+
+            return configDescReq;
         }
+
         struct structstr
         {
             public int Length;
@@ -136,11 +294,12 @@ namespace QSoft.DevCon
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, ReadOnlySpan<byte> lpInBuffer, uint nInBufferSize, Span<byte> lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct USB_CONFIGURATION_DESCRIPTOR
         {
             byte bLength;
             byte bDescriptorType;
-            ushort wTotalLength;
+            public ushort wTotalLength;
             byte bNumInterfaces;
             byte bConfigurationValue;
             byte iConfiguration;
@@ -152,18 +311,21 @@ namespace QSoft.DevCon
         static byte USB_STRING_DESCRIPTOR_TYPE = 0x03;
         static byte USB_INTERFACE_DESCRIPTOR_TYPE = 0x04;
         static byte USB_ENDPOINT_DESCRIPTOR_TYPE = 0x05;
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct SetupPacket
+        {
+            byte bmRequest;
+            byte bRequest;
+            public ushort wValue;
+            ushort wIndex;
+            public ushort wLength;
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct USB_DESCRIPTOR_REQUEST
         {
             public uint ConnectionIndex;
-            public struct SetupPacket1
-            {
-                byte bmRequest;
-                byte bRequest;
-                public ushort wValue;
-                ushort wIndex;
-                public ushort wLength;
-            };
-            public SetupPacket1 SetupPacket;
+            public SetupPacket SetupPacket;
             char Data;
         };
 
