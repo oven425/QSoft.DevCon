@@ -1957,7 +1957,10 @@ GetConfigDescriptor (
     BOOL    success = 0;
     ULONG   nBytes = 0;
     ULONG   nBytesReturned = 0;
-
+    USB_DESCRIPTOR_REQUEST aaa;
+	auto sz1 = sizeof(aaa.SetupPacket);
+    auto reqsz = sizeof(USB_DESCRIPTOR_REQUEST);
+	auto descsz = sizeof(USB_CONFIGURATION_DESCRIPTOR);
     UCHAR   configDescReqBuf[sizeof(USB_DESCRIPTOR_REQUEST) +
                              sizeof(USB_CONFIGURATION_DESCRIPTOR)];
 
@@ -2037,6 +2040,7 @@ GetConfigDescriptor (
     // Now request the entire Configuration Descriptor using a dynamically
     // allocated buffer which is sized big enough to hold the entire descriptor
     //
+    nBytes = sizeof(USB_DESCRIPTOR_REQUEST);
     nBytes = sizeof(USB_DESCRIPTOR_REQUEST) + configDesc->wTotalLength;
 
     configDescReq = (PUSB_DESCRIPTOR_REQUEST)ALLOC(nBytes);

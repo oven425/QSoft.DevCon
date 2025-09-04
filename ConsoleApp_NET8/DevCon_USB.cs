@@ -129,6 +129,9 @@ namespace QSoft.DevCon
 
             //UCHAR configDescReqBuf[sizeof(USB_DESCRIPTOR_REQUEST) +
             //                         sizeof(USB_CONFIGURATION_DESCRIPTOR)];
+            var sz1 = Marshal.SizeOf<SetupPacket>();
+            var reqsz = Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>();
+            var configdescsz = Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>();
             Span<byte> configDescReqBuf = stackalloc byte[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()];
 
             USB_DESCRIPTOR_REQUEST configDescReq = new USB_DESCRIPTOR_REQUEST();
@@ -185,7 +188,8 @@ namespace QSoft.DevCon
                                       nBytes,
                                       out nBytesReturned,
                                       IntPtr.Zero);
-            configDesc = MemoryMarshal.Read< USB_CONFIGURATION_DESCRIPTOR>(configDescReqBuf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..]);
+            var offset = Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() ;
+            configDesc = MemoryMarshal.Read< USB_CONFIGURATION_DESCRIPTOR>(configDescReqBuf[offset..]);
 
             if (!success)
             {
@@ -205,6 +209,7 @@ namespace QSoft.DevCon
             // Now request the entire Configuration Descriptor using a dynamically
             // allocated buffer which is sized big enough to hold the entire descriptor
             //
+            nBytes = (uint)Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>();
             nBytes = (uint)(Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + configDesc.wTotalLength);
 
             //configDescReq = (PUSB_DESCRIPTOR_REQUEST)ALLOC(nBytes);
@@ -294,18 +299,53 @@ namespace QSoft.DevCon
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, ReadOnlySpan<byte> lpInBuffer, uint nInBufferSize, Span<byte> lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
+
+        /// <summary>
+        /// 對應 C 語言中的 USB_CONFIGURATION_DESCRIPTOR
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct USB_CONFIGURATION_DESCRIPTOR
+        public struct USB_CONFIGURATION_DESCRIPTOR
         {
-            byte bLength;
-            byte bDescriptorType;
+            /// <summary>
+            /// 描述符的大小，單位為 byte (固定為 9)
+            /// </summary>
+            public byte bLength;
+
+            /// <summary>
+            /// 描述符類型 (USB_CONFIGURATION_DESCRIPTOR_TYPE，值為 0x02)
+            /// </summary>
+            public byte bDescriptorType;
+
+            /// <summary>
+            /// 此配置回傳的總長度 (包含所有接口、端點描述符)
+            /// </summary>
             public ushort wTotalLength;
-            byte bNumInterfaces;
-            byte bConfigurationValue;
-            byte iConfiguration;
-            byte bmAttributes;
-            byte MaxPower;
-        };
+
+            /// <summary>
+            /// 此配置支援的接口數量
+            /// </summary>
+            public byte bNumInterfaces;
+
+            /// <summary>
+            /// SetConfiguration() 請求所使用的配置值
+            /// </summary>
+            public byte bConfigurationValue;
+
+            /// <summary>
+            /// 描述此配置的字串描述符索引 (iConfiguration)
+            /// </summary>
+            public byte iConfiguration;
+
+            /// <summary>
+            /// 設備屬性 (例如：匯流排供電、遠端喚醒)
+            /// </summary>
+            public byte bmAttributes;
+
+            /// <summary>
+            /// 設備在此配置下從匯流排獲取最大電流，單位為 2mA
+            /// </summary>
+            public byte MaxPower;
+        }
         static byte USB_DEVICE_DESCRIPTOR_TYPE = 0x01;
         static byte USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
         static byte USB_STRING_DESCRIPTOR_TYPE = 0x03;
@@ -326,7 +366,7 @@ namespace QSoft.DevCon
         {
             public uint ConnectionIndex;
             public SetupPacket SetupPacket;
-            char Data;
+            //byte Data;
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
