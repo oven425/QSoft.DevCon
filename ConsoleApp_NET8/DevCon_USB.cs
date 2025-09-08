@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
@@ -9,6 +10,7 @@ using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.DevConExtensiona;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace QSoft.DevCon
@@ -84,7 +86,12 @@ namespace QSoft.DevCon
 
                 if(connectionInfoEx.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected)
                 {
-                    src.GetConfigDescriptor(i, 0);
+                    if(i==8)
+                    {
+                        var span = src.GetConfigDescriptor(i, 0);
+                        DisplayConfigDesc(span);
+                    }
+                    
                     int aa = 0;
                     if(connectionInfoEx.DeviceIsHub)
                     {
@@ -95,47 +102,23 @@ namespace QSoft.DevCon
                     {
                         System.Diagnostics.Trace.WriteLine($"NumberOfOpenPipes:{connectionInfoEx.NumberOfOpenPipes}");
                     }
-                    aa = 1;
                 }
             }
-
-
-
         }
 
-        //public static void GetConfigDescriptor(this SafeFileHandle src, int connectindex, int descriptindex)
-        //{
-        //    //USB_DESCRIPTOR_REQUEST req = new();
-        //    //USB_CONFIGURATION_DESCRIPTOR configdescriptor = new();
-        //    //req.ConnectionIndex = (uint)connectindex;
-        //    //req.SetupPacket.wValue = (ushort)((USB_CONFIGURATION_DESCRIPTOR_TYPE << 8)| descriptindex);
-        //    //req.SetupPacket.wLength = (ushort)(200 - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>());
-        //    //var intsz = Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>();
-        //    //Span<byte> buf = stackalloc byte[intsz];
-        //    //MemoryMarshal.Write(buf, ref req);
-
-        //    ////var buf = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref req, 1));
-        //    //var success = DeviceIoControl(src, IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION, buf, (uint)buf.Length, buf, (uint)buf.Length, out var sz, IntPtr.Zero);
-        //    //var aa = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(buf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..]);
-        //    //var err = Marshal.GetLastWin32Error();
-
-        //}
-
-        static USB_DESCRIPTOR_REQUEST GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex)
+        static Span<byte> GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex)
         {
             bool success = false;
             uint nBytes = 0;
             uint nBytesReturned = 0;
 
-            //UCHAR configDescReqBuf[sizeof(USB_DESCRIPTOR_REQUEST) +
-            //                         sizeof(USB_CONFIGURATION_DESCRIPTOR)];
             var sz1 = Marshal.SizeOf<SetupPacket>();
             var reqsz = Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>();
             var configdescsz = Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>();
             Span<byte> configDescReqBuf = stackalloc byte[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()];
 
-            USB_DESCRIPTOR_REQUEST configDescReq = new USB_DESCRIPTOR_REQUEST();
-            USB_CONFIGURATION_DESCRIPTOR configDesc = new USB_CONFIGURATION_DESCRIPTOR();
+            USB_DESCRIPTOR_REQUEST configDescReq = new();
+            USB_CONFIGURATION_DESCRIPTOR configDesc = new();
 
 
 
@@ -193,17 +176,17 @@ namespace QSoft.DevCon
 
             if (!success)
             {
-                return new USB_DESCRIPTOR_REQUEST();
+                return Span<byte>.Empty;
             }
 
             if (nBytes != nBytesReturned)
             {
-                return new USB_DESCRIPTOR_REQUEST();
+                return Span<byte>.Empty;
             }
 
             if (configDesc.wTotalLength < Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>())
             {
-                return new USB_DESCRIPTOR_REQUEST();
+                return Span<byte>.Empty;
             }
 
             // Now request the entire Configuration Descriptor using a dynamically
@@ -257,24 +240,610 @@ namespace QSoft.DevCon
                                       out nBytesReturned,
                                       IntPtr.Zero);
             configDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(configDescReqBuf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..]);
-
+            configDescReqBuf = configDescReqBuf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..];
             if (!success)
             {
-                return new USB_DESCRIPTOR_REQUEST();
+                return Span<byte>.Empty;
             }
 
             if (nBytes != nBytesReturned)
             {
-                return new USB_DESCRIPTOR_REQUEST();
+                return Span<byte>.Empty;
             }
 
             if (configDesc.wTotalLength != (nBytes - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()))
             {
-                return new USB_DESCRIPTOR_REQUEST();
+                return Span<byte>.Empty;
             }
 
-            return configDescReq;
+
+            var ty = configDesc.bDescriptorType;
+
+            return configDescReqBuf.ToArray();
         }
+        //static uint USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
+        public static void DisplayConfigDesc(/*PUSBDEVICEINFO info, */ Span<byte> ConfigDesc/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
+        {
+            //USB_COMMON_DESCRIPTOR commonDesc = NULL;
+            byte bInterfaceClass = 0;
+            byte bInterfaceSubClass = 0;
+            byte bInterfaceProtocol = 0;
+            bool displayUnknown = false;
+
+            //bool isSS;
+
+            //isSS = info->ConnectionInfoV2
+            //    && info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedOrHigher
+            //   ? true
+            //   : false;
+
+            //commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
+
+            //// initialize global Configuration start/end address and string desc address
+            //g_pConfigDesc = ConfigDesc;
+            //g_pStringDescs = StringDescs;
+            //g_descEnd = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
+
+            //AppendTextBuffer("\r\n       ---===>Full Configuration Descriptor<===---\r\n");
+            
+            var commonDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc);
+            do
+            {
+                //displayUnknown = FALSE;
+
+                switch (commonDesc.bDescriptorType)
+                {
+                    case USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE:
+                        ////@@DisplayConfigDesc - Device Qualifier Descriptor
+                        //if (commonDesc.bLength != Marshal.SizeOf<USB_DEVICE_QUALIFIER_DESCRIPTOR>())
+                        //{
+                        //    ////@@TestCase A2.1
+                        //    ////@@ERROR
+                        //    ////@@Descriptor Field - bLength
+                        //    ////@@The declared length in the device descriptor is not equal to the
+                        //    ////@@  required length in the USB Device Specification
+                        //    //AppendTextBuffer("*!*ERROR:  bLength of %d for Device Qualifier incorrect, "\
+
+                        //    //    "should be %d\r\n",
+                        //    //    commonDesc->bLength,
+                        //    //    (UCHAR)sizeof(USB_DEVICE_QUALIFIER_DESCRIPTOR));
+                        //    //OOPS();
+                        //    //displayUnknown = TRUE;
+                        //    break;
+                        //}
+                        //DisplayDeviceQualifierDescriptor((PUSB_DEVICE_QUALIFIER_DESCRIPTOR)commonDesc);
+                        break;
+
+                    case USB_OTHER_SPEED_CONFIGURATION_DESCRIPTOR_TYPE:
+                        ////@@DisplayConfigDesc - Other Speed Configuration Descriptor
+                        //if (commonDesc->bLength != sizeof(USB_CONFIGURATION_DESCRIPTOR))
+                        //{
+                        //    //@@TestCase A2.2
+                        //    //@@ERROR
+                        //    //@@Descriptor Field - bLength
+                        //    //@@The declared length in the device descriptor is not equal to the
+                        //    //@@  required length in the USB Device Specification
+                        //    AppendTextBuffer("*!*ERROR:  bLength of %d for Other Speed Configuration "\
+
+                        //        "incorrect, should be %d\r\n",
+                        //        commonDesc->bLength,
+                        //        (UCHAR)sizeof(USB_CONFIGURATION_DESCRIPTOR));
+                        //    OOPS();
+                        //    displayUnknown = TRUE;
+                        //}
+                        //DisplayConfigurationDescriptor(
+                        //    (PUSBDEVICEINFO)info,
+                        //    (PUSB_CONFIGURATION_DESCRIPTOR)commonDesc,
+                        //    StringDescs);
+                        break;
+
+                    case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+                        //@@DisplayConfigDesc - Configuration Descriptor
+                        if (commonDesc.bLength != Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>())
+                        {
+                            ////@@TestCase A2.3
+                            ////@@ERROR
+                            ////@@Descriptor Field - bLength
+                            ////@@The declared length in the device descriptor is not equal to the
+                            ////@@required length in the USB Device Specification
+                            //AppendTextBuffer("*!*ERROR:  bLength of %d for Configuration incorrect, "\
+
+                            //    "should be %d\r\n",
+                            //    commonDesc->bLength,
+                            //    (UCHAR)sizeof(USB_CONFIGURATION_DESCRIPTOR));
+                            //OOPS();
+                            //displayUnknown = TRUE;
+                            break;
+                        }
+                        //DisplayConfigurationDescriptor((PUSBDEVICEINFO)info,
+                        //    (PUSB_CONFIGURATION_DESCRIPTOR)commonDesc,
+                        //    StringDescs);
+                        break;
+
+                    case USB_INTERFACE_DESCRIPTOR_TYPE:
+                        ////@@DisplayConfigDesc - Interface Descriptor
+                        //if ((commonDesc->bLength != sizeof(USB_INTERFACE_DESCRIPTOR)) &&
+                        //    (commonDesc->bLength != sizeof(USB_INTERFACE_DESCRIPTOR2)))
+                        //{
+                        //    //@@TestCase A2.4
+                        //    //@@ERROR
+                        //    //@@Descriptor Field - bLength
+                        //    //@@The declared length in the device descriptor is not equal to the
+                        //    //@@required length in the USB Device Specification
+                        //    AppendTextBuffer("*!*ERROR:  bLength of %d for Interface incorrect, "\
+
+                        //        "should be %d or %d\r\n",
+                        //        commonDesc->bLength,
+                        //        (UCHAR)sizeof(USB_INTERFACE_DESCRIPTOR),
+                        //        (UCHAR)sizeof(USB_INTERFACE_DESCRIPTOR2));
+                        //    OOPS();
+                        //    displayUnknown = TRUE;
+                        //    break;
+                        //}
+                        //bInterfaceClass = ((PUSB_INTERFACE_DESCRIPTOR)commonDesc)->bInterfaceClass;
+                        //bInterfaceSubClass = ((PUSB_INTERFACE_DESCRIPTOR)commonDesc)->bInterfaceSubClass;
+                        //bInterfaceProtocol = ((PUSB_INTERFACE_DESCRIPTOR)commonDesc)->bInterfaceProtocol;
+
+                        //DisplayInterfaceDescriptor(
+                        //        (PUSB_INTERFACE_DESCRIPTOR)commonDesc,
+                        //        StringDescs,
+                        //        info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
+
+                        break;
+
+                    case USB_ENDPOINT_DESCRIPTOR_TYPE:
+                        {
+                            //PUSB_SUPERSPEED_ENDPOINT_COMPANION_DESCRIPTOR epCompDesc = NULL;
+                            //PUSB_SUPERSPEEDPLUS_ISOCH_ENDPOINT_COMPANION_DESCRIPTOR
+                            //                                              sspIsochCompDesc = NULL;
+
+
+                            ////@@DisplayConfigDesc - Endpoint Descriptor
+                            //if ((commonDesc->bLength != sizeof(USB_ENDPOINT_DESCRIPTOR)) &&
+                            //    (commonDesc->bLength != sizeof(USB_ENDPOINT_DESCRIPTOR2)))
+                            //{
+                            //    //@@TestCase A2.5
+                            //    //@@ERROR
+                            //    //@@Descriptor Field - bLength
+                            //    //@@The declared length in the device descriptor is not equal to
+                            //    //@@  the required length in the USB Device Specification
+                            //    AppendTextBuffer("*!*ERROR:  bLength of %d for Endpoint incorrect, "\
+
+                            //        "should be %d or %d\r\n",
+                            //        commonDesc->bLength,
+                            //        (UCHAR)sizeof(USB_ENDPOINT_DESCRIPTOR),
+                            //        (UCHAR)sizeof(USB_ENDPOINT_DESCRIPTOR2));
+                            //    OOPS();
+                            //    displayUnknown = TRUE;
+                            //    break;
+                            //}
+
+                            //if (isSS)
+                            //{
+                            //    epCompDesc = (PUSB_SUPERSPEED_ENDPOINT_COMPANION_DESCRIPTOR)
+                            //       GetNextDescriptor((PUSB_COMMON_DESCRIPTOR)ConfigDesc, ConfigDesc->wTotalLength, commonDesc, -1);
+                            //}
+
+                            //if (epCompDesc != NULL &&
+                            //    epCompDesc->bmAttributes.Isochronous.SspCompanion == 1)
+                            //{
+                            //    sspIsochCompDesc = (PUSB_SUPERSPEEDPLUS_ISOCH_ENDPOINT_COMPANION_DESCRIPTOR)
+                            //        GetNextDescriptor((PUSB_COMMON_DESCRIPTOR)ConfigDesc,
+                            //            ConfigDesc->wTotalLength,
+                            //            (PUSB_COMMON_DESCRIPTOR)epCompDesc,
+                            //            -1);
+                            //}
+
+                            //DisplayEndpointDescriptor((PUSB_ENDPOINT_DESCRIPTOR)commonDesc,
+                            //    epCompDesc,
+                            //    sspIsochCompDesc,
+                            //    bInterfaceClass,
+                            //    TRUE);
+
+                            //if (sspIsochCompDesc != NULL)
+                            //{
+                            //    commonDesc = (PUSB_COMMON_DESCRIPTOR)sspIsochCompDesc;
+                            //}
+                            //else if (epCompDesc != NULL)
+                            //{
+                            //    commonDesc = (PUSB_COMMON_DESCRIPTOR)epCompDesc;
+                            //}
+                        }
+
+                        break;
+
+                    case USB_HID_DESCRIPTOR_TYPE:
+                        //if (commonDesc->bLength < sizeof(USB_HID_DESCRIPTOR))
+                        //{
+                        //    OOPS();
+                        //    displayUnknown = TRUE;
+                        //    break;
+                        //}
+                        //DisplayHidDescriptor((PUSB_HID_DESCRIPTOR)commonDesc);
+                        break;
+
+                    case USB_OTG_DESCRIPTOR_TYPE:
+                        //if (commonDesc->bLength < sizeof(USB_OTG_DESCRIPTOR))
+                        //{
+                        //    OOPS();
+                        //    displayUnknown = TRUE;
+                        //    break;
+                        //}
+                        //DisplayOTGDescriptor((PUSB_OTG_DESCRIPTOR)commonDesc);
+                        break;
+
+                    case USB_IAD_DESCRIPTOR_TYPE:
+                        //if (commonDesc->bLength < sizeof(USB_IAD_DESCRIPTOR))
+                        //{
+                        //    OOPS();
+                        //    displayUnknown = TRUE;
+                        //    break;
+                        //}
+                        //DisplayIADDescriptor((PUSB_IAD_DESCRIPTOR)commonDesc, StringDescs,
+                        //        ConfigDesc->bNumInterfaces,
+                        //        info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
+                        break;
+
+                    default:
+                        //@@DisplayConfigDesc - Interface Class Device
+                        // TODO: BUG: bInterfaceClass is initialized before this code
+
+                        //switch (bInterfaceClass)
+                        //{
+                        //    case USB_DEVICE_CLASS_AUDIO:
+                        //        displayUnknown = !DisplayAudioDescriptor(
+                        //            (PUSB_AUDIO_COMMON_DESCRIPTOR)commonDesc,
+                        //            bInterfaceSubClass);
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_VIDEO:
+                        //        displayUnknown = !DisplayVideoDescriptor(
+                        //            (PVIDEO_SPECIFIC)commonDesc,
+                        //            bInterfaceSubClass,
+                        //            StringDescs,
+                        //            info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_RESERVED:
+                        //        //@@TestCase A2.6
+                        //        //@@ERROR
+                        //        //@@Descriptor Field - bInterfaceClass
+                        //        //@@An unknown interface class has been defined
+                        //        AppendTextBuffer("*!*ERROR:  %d is a Reserved USB Device Interface Class\r\n",
+                        //            USB_DEVICE_CLASS_RESERVED);
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_COMMUNICATIONS:
+                        //        AppendTextBuffer("  -> This is a Communications (CDC Control) USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_HUMAN_INTERFACE:
+                        //        AppendTextBuffer("  -> This is a HID USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_MONITOR:
+                        //        AppendTextBuffer("  -> This is a Monitor USB Device Interface Class (This may be obsolete)\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_PHYSICAL_INTERFACE:
+                        //        AppendTextBuffer("  -> This is a Physical Interface USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_POWER:
+                        //        if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
+                        //        {
+                        //            AppendTextBuffer("  -> This is an Image USB Device Interface Class\r\n");
+                        //        }
+                        //        else
+                        //        {
+                        //            AppendTextBuffer("  -> This is a Power USB Device Interface Class (This may be obsolete)\r\n");
+                        //        }
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_PRINTER:
+                        //        AppendTextBuffer("  -> This is a Printer USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_STORAGE:
+                        //        AppendTextBuffer("  -> This is a Mass Storage USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DEVICE_CLASS_HUB:
+                        //        AppendTextBuffer("  -> This is a HUB USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_CDC_DATA_INTERFACE:
+                        //        AppendTextBuffer("  -> This is a CDC Data USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_CHIP_SMART_CARD_INTERFACE:
+                        //        AppendTextBuffer("  -> This is a Chip/Smart Card USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_CONTENT_SECURITY_INTERFACE:
+                        //        AppendTextBuffer("  -> This is a Content Security USB Device Interface Class\r\n");
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_DIAGNOSTIC_DEVICE_INTERFACE:
+                        //        if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
+                        //        {
+                        //            AppendTextBuffer("  -> This is a Reprogrammable USB2 Compliance Diagnostic Device USB Device\r\n");
+                        //        }
+                        //        else
+                        //        {
+                        //            //@@TestCase A2.7
+                        //            //@@CAUTION
+                        //            //@@Descriptor Field - bInterfaceClass
+                        //            //@@An unknown diagnostic interface class device has been defined
+                        //            AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                        //            OOPS();
+                        //        }
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_WIRELESS_CONTROLLER_INTERFACE:
+                        //        if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
+                        //        {
+                        //            AppendTextBuffer("  -> This is a Wireless RF Controller USB Device Interface Class with Bluetooth Programming Interface\r\n");
+                        //        }
+                        //        else
+                        //        {
+                        //            //@@TestCase A2.8
+                        //            //@@CAUTION
+                        //            //@@Descriptor Field - bInterfaceClass
+                        //            //@@An unknown wireless controller interface class device has been defined
+                        //            AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                        //            OOPS();
+                        //        }
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    case USB_APPLICATION_SPECIFIC_INTERFACE:
+                        //        AppendTextBuffer("  -> This is an Application Specific USB Device Interface Class\r\n");
+
+                        //        switch (bInterfaceSubClass)
+                        //        {
+                        //            case 1:
+                        //                AppendTextBuffer("  -> This is a Device Firmware Application Specific USB Device Interface Class\r\n");
+                        //                break;
+                        //            case 2:
+                        //                AppendTextBuffer("  -> This is an IrDA Bridge Application Specific USB Device Interface Class\r\n");
+                        //                break;
+                        //            case 3:
+                        //                AppendTextBuffer("  -> This is a Test & Measurement Class (USBTMC) Application Specific USB Device Interface Class\r\n");
+                        //                break;
+                        //            default:
+                        //                //@@TestCase A2.9
+                        //                //@@CAUTION
+                        //                //@@Descriptor Field - bInterfaceClass
+                        //                //@@A possibly invalid interface class has been defined
+                        //                AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                        //                OOPS();
+                        //        }
+                        //        displayUnknown = TRUE;
+                        //        break;
+
+                        //    default:
+                        //        if (bInterfaceClass == USB_DEVICE_CLASS_VENDOR_SPECIFIC)
+                        //        {
+                        //            AppendTextBuffer("  -> This is a Vendor Specific USB Device Interface Class\r\n");
+                        //        }
+                        //        else
+                        //        {
+                        //            //@@TestCase A2.10
+                        //            //@@CAUTION
+                        //            //@@Descriptor Field - bInterfaceClass
+                        //            //@@An unknown interface class has been defined
+                        //            AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                        //            OOPS();
+                        //        }
+                        //        displayUnknown = TRUE;
+                        //        break;
+                        //}
+                        break;
+                }
+
+                if (displayUnknown)
+                {
+                    //DisplayUnknownDescriptor(commonDesc);
+                }
+            } while (true);
+            //while ((commonDesc = GetNextDescriptor((PUSB_COMMON_DESCRIPTOR)ConfigDesc,
+            //                                         ConfigDesc->wTotalLength,
+            //                                         commonDesc,
+            //                                         -1)) != NULL);
+
+//# ifdef H264_SUPPORT
+//            DoAdditionalErrorChecks();
+//#endif
+        }
+
+        static void DisplayConfigurationDescriptor(USB_CONFIGURATION_DESCRIPTOR ConfigDesc)
+        {
+            uint uCount = 0;
+            bool isSS;
+
+
+            isSS = info->ConnectionInfoV2
+                   && (info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedOrHigher ||
+                       info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedPlusOrHigher)
+                   ? true
+                   : false;
+
+            AppendTextBuffer("\r\n          ===>Configuration Descriptor<===\r\n");
+            //@@DisplayConfigurationDescriptor - Configuration Descriptor
+
+            //length checked in DisplayConfigDesc()
+
+            AppendTextBuffer("bLength:                           0x%02X\r\n",
+                ConfigDesc.bLength);
+
+            AppendTextBuffer("bDescriptorType:                   0x%02X\r\n",
+                ConfigDesc.bDescriptorType);
+
+            //@@TestCase A4.1
+            //@@Priority 1
+            //@@Descriptor Field - wTotalLength
+            //@@Verify Configuration length is valid
+            AppendTextBuffer("wTotalLength:                    0x%04X",
+                ConfigDesc.wTotalLength);
+            uCount = GetConfigurationSize(info);
+            if (uCount != ConfigDesc.wTotalLength)
+            {
+                AppendTextBuffer("\r\n*!*ERROR: Invalid total configuration size 0x%02X, should be 0x%02X\r\n",
+                    ConfigDesc.wTotalLength, uCount);
+            }
+            else
+            {
+                AppendTextBuffer("  -> Validated\r\n");
+            }
+
+            //@@TestCase A4.2
+            //@@Priority 1
+            //@@Descriptor Field - bNumInterfaces
+            //@@Verify the number of interfaces is valid
+            AppendTextBuffer("bNumInterfaces:                    0x%02X\r\n",
+                ConfigDesc.bNumInterfaces);
+
+            /* Need to check spec vs composite devices
+                uCount = GetInterfaceCount(info);
+                if (uCount != ConfigDesc->bNumInterfaces) {
+                    AppendTextBuffer("\r\n*!*ERROR: Invalid total Interfaces %d, should be %d\r\n",
+                        ConfigDesc->bNumInterfaces, uCount);
+                } else {
+                    AppendTextBuffer("  -> Validated\r\n");
+                }
+            */
+
+            AppendTextBuffer("bConfigurationValue:               0x%02X\r\n",
+                ConfigDesc.bConfigurationValue);
+
+            if (ConfigDesc.bConfigurationValue != 1)
+            {
+                //@@TestCase A4.3
+                //@@CAUTION
+                //@@Descriptor Field - bConfigurationValue
+                //@@Most host controllers do not handle more than one configuration
+                AppendTextBuffer("*!*CAUTION:    Most host controllers will only work with one configuration per speed\r\n");
+                OOPS();
+            }
+
+            AppendTextBuffer("iConfiguration:                    0x%02X\r\n",
+                ConfigDesc.iConfiguration);
+
+            if (ConfigDesc.iConfiguration && gDoAnnotation)
+            {
+                DisplayStringDescriptor(ConfigDesc.iConfiguration,
+                    StringDescs,
+                    info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
+            }
+
+            AppendTextBuffer("bmAttributes:                      0x%02X",
+                ConfigDesc.bmAttributes);
+
+            if (info->ConnectionInfo->DeviceDescriptor.bcdUSB == 0x0100)
+            {
+                if (ConfigDesc.bmAttributes & USB_CONFIG_SELF_POWERED)
+                {
+                    if (gDoAnnotation)
+                    {
+                        AppendTextBuffer("  -> Self Powered\r\n");
+                    }
+                }
+                if (ConfigDesc.bmAttributes & USB_CONFIG_BUS_POWERED)
+                {
+                    if (gDoAnnotation)
+                    {
+                        AppendTextBuffer("  -> Bus Powered\r\n");
+                    }
+                }
+            }
+            else
+            {
+                if (ConfigDesc.bmAttributes & USB_CONFIG_SELF_POWERED)
+                {
+                    if (gDoAnnotation)
+                    {
+                        AppendTextBuffer("  -> Self Powered\r\n");
+                    }
+                }
+                else
+                {
+                    if (gDoAnnotation)
+                    {
+                        AppendTextBuffer("  -> Bus Powered\r\n");
+                    }
+                }
+                if ((ConfigDesc.bmAttributes & USB_CONFIG_BUS_POWERED) == 0)
+                {
+                    AppendTextBuffer("\r\n*!*ERROR:    Bit 7 is reserved and must be set\r\n");
+                    OOPS();
+                }
+            }
+
+            if (ConfigDesc.bmAttributes & USB_CONFIG_REMOTE_WAKEUP)
+            {
+                if (gDoAnnotation)
+                {
+                    AppendTextBuffer("  -> Remote Wakeup\r\n");
+                }
+            }
+
+            if (ConfigDesc.bmAttributes & USB_CONFIG_RESERVED)
+            {
+                //@@TestCase A4.4
+                //@@WARNING
+                //@@Descriptor Field - bmAttributes
+                //@@A bit has been set in reserved space
+                AppendTextBuffer("\r\n*!*ERROR:    Bits 4...0 are reserved\r\n");
+                OOPS();
+            }
+
+            AppendTextBuffer("MaxPower:                          0x%02X",
+                ConfigDesc.MaxPower);
+
+            if (gDoAnnotation)
+            {
+                AppendTextBuffer(" = %3d mA\r\n",
+                    isSS ? ConfigDesc.MaxPower * 8 : ConfigDesc.MaxPower * 2);
+            }
+            else { AppendTextBuffer("\r\n"); }
+
+        }
+
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct USB_DEVICE_QUALIFIER_DESCRIPTOR
+        {
+            byte bLength;
+            byte bDescriptorType;
+            ushort bcdUSB;
+            byte bDeviceClass;
+            byte bDeviceSubClass;
+            byte bDeviceProtocol;
+            byte bMaxPacketSize0;
+            byte bNumConfigurations;
+            byte bReserved;
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct USB_COMMON_DESCRIPTOR
+        {
+            public byte bLength;
+            public byte bDescriptorType;
+        };
 
         struct structstr
         {
@@ -346,11 +915,54 @@ namespace QSoft.DevCon
             /// </summary>
             public byte MaxPower;
         }
-        static byte USB_DEVICE_DESCRIPTOR_TYPE = 0x01;
-        static byte USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
-        static byte USB_STRING_DESCRIPTOR_TYPE = 0x03;
-        static byte USB_INTERFACE_DESCRIPTOR_TYPE = 0x04;
-        static byte USB_ENDPOINT_DESCRIPTOR_TYPE = 0x05;
+        const byte USB_DEVICE_DESCRIPTOR_TYPE = 0x01;
+        const byte USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
+        const byte USB_STRING_DESCRIPTOR_TYPE = 0x03;
+        const byte USB_INTERFACE_DESCRIPTOR_TYPE = 0x04;
+        const byte USB_ENDPOINT_DESCRIPTOR_TYPE = 0x05;
+
+        const byte USB_OTHER_SPEED_CONFIGURATION_DESCRIPTOR_TYPE = 0x07;
+        const byte USB_INTERFACE_POWER_DESCRIPTOR_TYPE  =          0x08;
+        const byte USB_OTG_DESCRIPTOR_TYPE = 0x09;
+        const byte USB_DEBUG_DESCRIPTOR_TYPE = 0x0A;
+        const byte USB_IAD_DESCRIPTOR_TYPE = 0x0B;
+
+        const byte USB_CDC_DATA_INTERFACE = 0x0A;
+        const byte USB_CHIP_SMART_CARD_INTERFACE = 0x0B;
+        const byte USB_CONTENT_SECURITY_INTERFACE = 0x0D;
+        const byte USB_DIAGNOSTIC_DEVICE_INTERFACE = 0xDC;
+        const byte USB_WIRELESS_CONTROLLER_INTERFACE = 0xE0;
+        const byte USB_APPLICATION_SPECIFIC_INTERFACE = 0xFE;
+
+        const byte USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE = 0x06;
+        const byte EUSB2_ISOCH_ENDPOINT_COMPANION_DESCRIPTOR_TYPE = 0x12;
+        const byte USB_HID_DESCRIPTOR_TYPE = 0x21;
+
+
+        const byte USB_DEVICE_CLASS_RESERVED = 0x00;
+        const byte USB_DEVICE_CLASS_AUDIO = 0x01;
+        const byte USB_DEVICE_CLASS_COMMUNICATIONS = 0x02;
+        const byte USB_DEVICE_CLASS_HUMAN_INTERFACE = 0x03;
+        const byte USB_DEVICE_CLASS_MONITOR = 0x04;
+        const byte USB_DEVICE_CLASS_PHYSICAL_INTERFACE = 0x05;
+        const byte USB_DEVICE_CLASS_POWER = 0x06;
+        const byte USB_DEVICE_CLASS_IMAGE = 0x06;
+        const byte USB_DEVICE_CLASS_PRINTER = 0x07;
+        const byte USB_DEVICE_CLASS_STORAGE = 0x08;
+        const byte USB_DEVICE_CLASS_HUB = 0x09;
+        const byte USB_DEVICE_CLASS_CDC_DATA = 0x0A;
+        const byte USB_DEVICE_CLASS_SMART_CARD = 0x0B;
+        const byte USB_DEVICE_CLASS_CONTENT_SECURITY = 0x0D;
+        const byte USB_DEVICE_CLASS_VIDEO = 0x0E;
+        const byte USB_DEVICE_CLASS_PERSONAL_HEALTHCARE = 0x0F;
+        const byte USB_DEVICE_CLASS_AUDIO_VIDEO = 0x10;
+        const byte USB_DEVICE_CLASS_BILLBOARD = 0x11;
+        const byte USB_DEVICE_CLASS_DIAGNOSTIC_DEVICE = 0xDC;
+        const byte USB_DEVICE_CLASS_WIRELESS_CONTROLLER = 0xE0;
+        const byte USB_DEVICE_CLASS_MISCELLANEOUS = 0xEF;
+        const byte USB_DEVICE_CLASS_APPLICATION_SPECIFIC = 0xFE;
+        const byte USB_DEVICE_CLASS_VENDOR_SPECIFIC = 0xFF;
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct SetupPacket
         {
