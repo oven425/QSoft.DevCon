@@ -670,52 +670,55 @@ namespace QSoft.DevCon
 //#endif
         }
 
-        static void DisplayConfigurationDescriptor(USB_CONFIGURATION_DESCRIPTOR ConfigDesc)
+        static void DisplayConfigurationDescriptor(Span<byte> ConfigDesc_buf)
         {
             uint uCount = 0;
             bool isSS;
+            var ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
 
+            //isSS = info->ConnectionInfoV2
+            //       && (info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedOrHigher ||
+            //           info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedPlusOrHigher)
+            //       ? true
+            //       : false;
 
-            isSS = info->ConnectionInfoV2
-                   && (info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedOrHigher ||
-                       info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedPlusOrHigher)
-                   ? true
-                   : false;
-
-            AppendTextBuffer("\r\n          ===>Configuration Descriptor<===\r\n");
+            //AppendTextBuffer("\r\n          ===>Configuration Descriptor<===\r\n");
             //@@DisplayConfigurationDescriptor - Configuration Descriptor
 
             //length checked in DisplayConfigDesc()
+            StringBuilder strb = new();
+            strb.AppendLine($"bLength:0x{ConfigDesc.bLength:XX}");
+            //AppendTextBuffer("bLength:                           0x%02X\r\n", ConfigDesc.bLength);
 
-            AppendTextBuffer("bLength:                           0x%02X\r\n",
-                ConfigDesc.bLength);
 
-            AppendTextBuffer("bDescriptorType:                   0x%02X\r\n",
-                ConfigDesc.bDescriptorType);
+            strb.AppendLine($"bDescriptorType:0x{ConfigDesc.bDescriptorType:XX}");
+            //AppendTextBuffer("bDescriptorType:                   0x%02X\r\n",
+            //    ConfigDesc.bDescriptorType);
 
             //@@TestCase A4.1
             //@@Priority 1
             //@@Descriptor Field - wTotalLength
             //@@Verify Configuration length is valid
-            AppendTextBuffer("wTotalLength:                    0x%04X",
-                ConfigDesc.wTotalLength);
-            uCount = GetConfigurationSize(info);
+            //AppendTextBuffer("wTotalLength:                    0x%04X", ConfigDesc.wTotalLength);
+            strb.AppendLine($"wTotalLength:0x{ConfigDesc.bDescriptorType:XXXX}");
+
+            uCount = GetConfigurationSize(ConfigDesc_buf);
             if (uCount != ConfigDesc.wTotalLength)
             {
-                AppendTextBuffer("\r\n*!*ERROR: Invalid total configuration size 0x%02X, should be 0x%02X\r\n",
-                    ConfigDesc.wTotalLength, uCount);
+                //AppendTextBuffer("\r\n*!*ERROR: Invalid total configuration size 0x%02X, should be 0x%02X\r\n",
+                //    ConfigDesc.wTotalLength, uCount);
             }
             else
             {
-                AppendTextBuffer("  -> Validated\r\n");
+                //AppendTextBuffer("  -> Validated\r\n");
             }
 
             //@@TestCase A4.2
             //@@Priority 1
             //@@Descriptor Field - bNumInterfaces
             //@@Verify the number of interfaces is valid
-            AppendTextBuffer("bNumInterfaces:                    0x%02X\r\n",
-                ConfigDesc.bNumInterfaces);
+            //AppendTextBuffer("bNumInterfaces:                    0x%02X\r\n",
+            //    ConfigDesc.bNumInterfaces);
 
             /* Need to check spec vs composite devices
                 uCount = GetInterfaceCount(info);
@@ -727,8 +730,8 @@ namespace QSoft.DevCon
                 }
             */
 
-            AppendTextBuffer("bConfigurationValue:               0x%02X\r\n",
-                ConfigDesc.bConfigurationValue);
+            //AppendTextBuffer("bConfigurationValue:               0x%02X\r\n",
+            //    ConfigDesc.bConfigurationValue);
 
             if (ConfigDesc.bConfigurationValue != 1)
             {
@@ -736,92 +739,112 @@ namespace QSoft.DevCon
                 //@@CAUTION
                 //@@Descriptor Field - bConfigurationValue
                 //@@Most host controllers do not handle more than one configuration
-                AppendTextBuffer("*!*CAUTION:    Most host controllers will only work with one configuration per speed\r\n");
-                OOPS();
+                //AppendTextBuffer("*!*CAUTION:    Most host controllers will only work with one configuration per speed\r\n");
+                //OOPS();
             }
 
-            AppendTextBuffer("iConfiguration:                    0x%02X\r\n",
-                ConfigDesc.iConfiguration);
+            //AppendTextBuffer("iConfiguration:                    0x%02X\r\n",
+            //    ConfigDesc.iConfiguration);
 
-            if (ConfigDesc.iConfiguration && gDoAnnotation)
-            {
-                DisplayStringDescriptor(ConfigDesc.iConfiguration,
-                    StringDescs,
-                    info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
-            }
+            //if (ConfigDesc.iConfiguration && gDoAnnotation)
+            //{
+            //    DisplayStringDescriptor(ConfigDesc.iConfiguration,
+            //        StringDescs,
+            //        info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
+            //}
 
-            AppendTextBuffer("bmAttributes:                      0x%02X",
-                ConfigDesc.bmAttributes);
+            //AppendTextBuffer("bmAttributes:                      0x%02X",
+            //    ConfigDesc.bmAttributes);
 
-            if (info->ConnectionInfo->DeviceDescriptor.bcdUSB == 0x0100)
-            {
-                if (ConfigDesc.bmAttributes & USB_CONFIG_SELF_POWERED)
-                {
-                    if (gDoAnnotation)
-                    {
-                        AppendTextBuffer("  -> Self Powered\r\n");
-                    }
-                }
-                if (ConfigDesc.bmAttributes & USB_CONFIG_BUS_POWERED)
-                {
-                    if (gDoAnnotation)
-                    {
-                        AppendTextBuffer("  -> Bus Powered\r\n");
-                    }
-                }
-            }
-            else
-            {
-                if (ConfigDesc.bmAttributes & USB_CONFIG_SELF_POWERED)
-                {
-                    if (gDoAnnotation)
-                    {
-                        AppendTextBuffer("  -> Self Powered\r\n");
-                    }
-                }
-                else
-                {
-                    if (gDoAnnotation)
-                    {
-                        AppendTextBuffer("  -> Bus Powered\r\n");
-                    }
-                }
-                if ((ConfigDesc.bmAttributes & USB_CONFIG_BUS_POWERED) == 0)
-                {
-                    AppendTextBuffer("\r\n*!*ERROR:    Bit 7 is reserved and must be set\r\n");
-                    OOPS();
-                }
-            }
+            //if (info->ConnectionInfo->DeviceDescriptor.bcdUSB == 0x0100)
+            //{
+            //    if (ConfigDesc.bmAttributes & USB_CONFIG_SELF_POWERED)
+            //    {
+            //        if (gDoAnnotation)
+            //        {
+            //            AppendTextBuffer("  -> Self Powered\r\n");
+            //        }
+            //    }
+            //    if (ConfigDesc.bmAttributes & USB_CONFIG_BUS_POWERED)
+            //    {
+            //        if (gDoAnnotation)
+            //        {
+            //            AppendTextBuffer("  -> Bus Powered\r\n");
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    if (ConfigDesc.bmAttributes & USB_CONFIG_SELF_POWERED)
+            //    {
+            //        if (gDoAnnotation)
+            //        {
+            //            AppendTextBuffer("  -> Self Powered\r\n");
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (gDoAnnotation)
+            //        {
+            //            AppendTextBuffer("  -> Bus Powered\r\n");
+            //        }
+            //    }
+            //    if ((ConfigDesc.bmAttributes & USB_CONFIG_BUS_POWERED) == 0)
+            //    {
+            //        AppendTextBuffer("\r\n*!*ERROR:    Bit 7 is reserved and must be set\r\n");
+            //        OOPS();
+            //    }
+            //}
 
-            if (ConfigDesc.bmAttributes & USB_CONFIG_REMOTE_WAKEUP)
-            {
-                if (gDoAnnotation)
-                {
-                    AppendTextBuffer("  -> Remote Wakeup\r\n");
-                }
-            }
+            //if (ConfigDesc.bmAttributes & USB_CONFIG_REMOTE_WAKEUP)
+            //{
+            //    if (gDoAnnotation)
+            //    {
+            //        AppendTextBuffer("  -> Remote Wakeup\r\n");
+            //    }
+            //}
 
-            if (ConfigDesc.bmAttributes & USB_CONFIG_RESERVED)
-            {
-                //@@TestCase A4.4
-                //@@WARNING
-                //@@Descriptor Field - bmAttributes
-                //@@A bit has been set in reserved space
-                AppendTextBuffer("\r\n*!*ERROR:    Bits 4...0 are reserved\r\n");
-                OOPS();
-            }
+            //if (ConfigDesc.bmAttributes & USB_CONFIG_RESERVED)
+            //{
+            //    //@@TestCase A4.4
+            //    //@@WARNING
+            //    //@@Descriptor Field - bmAttributes
+            //    //@@A bit has been set in reserved space
+            //    AppendTextBuffer("\r\n*!*ERROR:    Bits 4...0 are reserved\r\n");
+            //    OOPS();
+            //}
 
-            AppendTextBuffer("MaxPower:                          0x%02X",
-                ConfigDesc.MaxPower);
+            //AppendTextBuffer("MaxPower:                          0x%02X",
+            //    ConfigDesc.MaxPower);
 
-            if (gDoAnnotation)
-            {
-                AppendTextBuffer(" = %3d mA\r\n",
-                    isSS ? ConfigDesc.MaxPower * 8 : ConfigDesc.MaxPower * 2);
-            }
-            else { AppendTextBuffer("\r\n"); }
+            //if (gDoAnnotation)
+            //{
+            //    AppendTextBuffer(" = %3d mA\r\n",
+            //        isSS ? ConfigDesc.MaxPower * 8 : ConfigDesc.MaxPower * 2);
+            //}
+            //else { AppendTextBuffer("\r\n"); }
 
         }
+
+        uint GetConfigurationSize(Span<byte> ConfigDesc_buf)
+        {
+            USB_CONFIGURATION_DESCRIPTOR
+                ConfigDesc = (PUSB_CONFIGURATION_DESCRIPTOR)(info->ConfigDesc + 1);
+            USB_COMMON_DESCRIPTOR
+                commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
+            PUCHAR descEnd = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
+            uint uCount = 0;
+
+            // return this device configuration's total sum of descriptor lengths
+            while ((PUCHAR)commonDesc + sizeof(USB_COMMON_DESCRIPTOR) < descEnd &&
+                (PUCHAR)commonDesc + commonDesc.bLength <= descEnd)
+            {
+                uCount += commonDesc.bLength;
+                commonDesc = (USB_COMMON_DESCRIPTOR)((PUCHAR)commonDesc + commonDesc.bLength);
+            }
+            return (uCount);
+        }
+
 
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
