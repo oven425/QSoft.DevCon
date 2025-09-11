@@ -6,11 +6,9 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.DevConExtensiona;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace QSoft.DevCon
@@ -287,6 +285,15 @@ namespace QSoft.DevCon
             //AppendTextBuffer("\r\n       ---===>Full Configuration Descriptor<===---\r\n");
             
             var commonDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc);
+            Span<byte> b1 = ConfigDesc[Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()..];
+            while (b1.Length > 0)
+            {
+                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(b1);
+                if (commonDesc1.bLength == 0 || b1.Length < commonDesc1.bLength)
+                    break;
+                System.Diagnostics.Trace.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
+                b1 = b1[commonDesc1.bLength..];
+            }
             do
             {
                 //displayUnknown = FALSE;
@@ -358,6 +365,8 @@ namespace QSoft.DevCon
                         //DisplayConfigurationDescriptor((PUSBDEVICEINFO)info,
                         //    (PUSB_CONFIGURATION_DESCRIPTOR)commonDesc,
                         //    StringDescs);
+
+                        DisplayConfigurationDescriptor(ConfigDesc);
                         break;
 
                     case USB_INTERFACE_DESCRIPTOR_TYPE:
@@ -826,22 +835,36 @@ namespace QSoft.DevCon
 
         }
 
-        uint GetConfigurationSize(Span<byte> ConfigDesc_buf)
+        static uint GetConfigurationSize(Span<byte> ConfigDesc_buf)
         {
             USB_CONFIGURATION_DESCRIPTOR
-                ConfigDesc = (PUSB_CONFIGURATION_DESCRIPTOR)(info->ConfigDesc + 1);
-            USB_COMMON_DESCRIPTOR
-                commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
-            PUCHAR descEnd = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
+                ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
+            //USB_COMMON_DESCRIPTOR
+            //    commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
+            //PUCHAR descEnd = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
             uint uCount = 0;
+            var span = ConfigDesc_buf[Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()..];
+            //USB_COMMON_DESCRIPTOR
+            //    commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
 
-            // return this device configuration's total sum of descriptor lengths
-            while ((PUCHAR)commonDesc + sizeof(USB_COMMON_DESCRIPTOR) < descEnd &&
-                (PUCHAR)commonDesc + commonDesc.bLength <= descEnd)
+
+            USB_COMMON_DESCRIPTOR commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(span);
+            while (span.Length > 0)
             {
+                commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(span);
+                
                 uCount += commonDesc.bLength;
-                commonDesc = (USB_COMMON_DESCRIPTOR)((PUCHAR)commonDesc + commonDesc.bLength);
+                var offset = Marshal.SizeOf<USB_COMMON_DESCRIPTOR>() + commonDesc.bLength;
+                span = span[offset..];
             }
+
+            //// return this device configuration's total sum of descriptor lengths
+            //while ((PUCHAR)commonDesc + sizeof(USB_COMMON_DESCRIPTOR) < descEnd &&
+            //    (PUCHAR)commonDesc + commonDesc.bLength <= descEnd)
+            //{
+            //    uCount += commonDesc.bLength;
+            //    commonDesc = (USB_COMMON_DESCRIPTOR)((PUCHAR)commonDesc + commonDesc.bLength);
+            //}
             return (uCount);
         }
 

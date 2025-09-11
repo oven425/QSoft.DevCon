@@ -1956,9 +1956,10 @@ DisplayConfigDesc (
     g_pConfigDesc  = ConfigDesc;
     g_pStringDescs = StringDescs;
     g_descEnd      = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
-
+    unsigned char vv[1024] = { 0 };
+	memcpy_s(vv, sizeof(vv), ConfigDesc, ConfigDesc->wTotalLength);
     AppendTextBuffer("\r\n       ---===>Full Configuration Descriptor<===---\r\n");
-
+    
     do
     {
         displayUnknown = FALSE;
