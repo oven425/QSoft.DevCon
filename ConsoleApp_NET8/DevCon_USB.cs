@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.DevConExtensiona;
@@ -260,7 +262,7 @@ namespace QSoft.DevCon
             return configDescReqBuf.ToArray();
         }
         //static uint USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
-        public static void DisplayConfigDesc(/*PUSBDEVICEINFO info, */ Span<byte> ConfigDesc/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
+        public static void DisplayConfigDesc(/*PUSBDEVICEINFO info, */ Span<byte> ConfigDesc_buf/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
         {
             //USB_COMMON_DESCRIPTOR commonDesc = NULL;
             byte bInterfaceClass = 0;
@@ -284,16 +286,18 @@ namespace QSoft.DevCon
 
             //AppendTextBuffer("\r\n       ---===>Full Configuration Descriptor<===---\r\n");
             
-            var commonDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc);
-            Span<byte> b1 = ConfigDesc[Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()..];
-            while (b1.Length > 0)
+            //var ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
+            var commonDesc_buf = ConfigDesc_buf;
+            var commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
+            while (commonDesc_buf.Length > 0)
             {
-                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(b1);
-                if (commonDesc1.bLength == 0 || b1.Length < commonDesc1.bLength)
+                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
+                if (commonDesc1.bLength == 0 || commonDesc_buf.Length < commonDesc1.bLength)
                     break;
                 System.Diagnostics.Trace.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
-                b1 = b1[commonDesc1.bLength..];
+                commonDesc_buf = commonDesc_buf[commonDesc1.bLength..];
             }
+            commonDesc_buf = ConfigDesc_buf;
             do
             {
                 //displayUnknown = FALSE;
@@ -366,32 +370,33 @@ namespace QSoft.DevCon
                         //    (PUSB_CONFIGURATION_DESCRIPTOR)commonDesc,
                         //    StringDescs);
 
-                        DisplayConfigurationDescriptor(ConfigDesc);
+                        //DisplayConfigurationDescriptor(ConfigDesc_buf);
                         break;
 
                     case USB_INTERFACE_DESCRIPTOR_TYPE:
-                        ////@@DisplayConfigDesc - Interface Descriptor
-                        //if ((commonDesc->bLength != sizeof(USB_INTERFACE_DESCRIPTOR)) &&
-                        //    (commonDesc->bLength != sizeof(USB_INTERFACE_DESCRIPTOR2)))
-                        //{
-                        //    //@@TestCase A2.4
-                        //    //@@ERROR
-                        //    //@@Descriptor Field - bLength
-                        //    //@@The declared length in the device descriptor is not equal to the
-                        //    //@@required length in the USB Device Specification
-                        //    AppendTextBuffer("*!*ERROR:  bLength of %d for Interface incorrect, "\
+                        //@@DisplayConfigDesc - Interface Descriptor
+                        if ((commonDesc.bLength != Marshal.SizeOf<USB_INTERFACE_DESCRIPTOR>()) &&
+                            (commonDesc.bLength != Marshal.SizeOf<USB_INTERFACE_DESCRIPTOR2>()))
+                        {
+                            ////@@TestCase A2.4
+                            ////@@ERROR
+                            ////@@Descriptor Field - bLength
+                            ////@@The declared length in the device descriptor is not equal to the
+                            ////@@required length in the USB Device Specification
+                            //AppendTextBuffer("*!*ERROR:  bLength of %d for Interface incorrect, "\
 
-                        //        "should be %d or %d\r\n",
-                        //        commonDesc->bLength,
-                        //        (UCHAR)sizeof(USB_INTERFACE_DESCRIPTOR),
-                        //        (UCHAR)sizeof(USB_INTERFACE_DESCRIPTOR2));
-                        //    OOPS();
-                        //    displayUnknown = TRUE;
-                        //    break;
-                        //}
-                        //bInterfaceClass = ((PUSB_INTERFACE_DESCRIPTOR)commonDesc)->bInterfaceClass;
-                        //bInterfaceSubClass = ((PUSB_INTERFACE_DESCRIPTOR)commonDesc)->bInterfaceSubClass;
-                        //bInterfaceProtocol = ((PUSB_INTERFACE_DESCRIPTOR)commonDesc)->bInterfaceProtocol;
+                            //    "should be %d or %d\r\n",
+                            //    commonDesc->bLength,
+                            //    (UCHAR)sizeof(USB_INTERFACE_DESCRIPTOR),
+                            //    (UCHAR)sizeof(USB_INTERFACE_DESCRIPTOR2));
+                            //OOPS();
+                            //displayUnknown = TRUE;
+                            break;
+                        }
+                        var cc = MemoryMarshal.Read<USB_INTERFACE_DESCRIPTOR>(commonDesc_buf);
+                        bInterfaceClass = cc.bInterfaceClass;
+                        bInterfaceSubClass = cc.bInterfaceSubClass;
+                        bInterfaceProtocol = cc.bInterfaceProtocol;
 
                         //DisplayInterfaceDescriptor(
                         //        (PUSB_INTERFACE_DESCRIPTOR)commonDesc,
@@ -497,170 +502,171 @@ namespace QSoft.DevCon
                         //@@DisplayConfigDesc - Interface Class Device
                         // TODO: BUG: bInterfaceClass is initialized before this code
 
-                        //switch (bInterfaceClass)
-                        //{
-                        //    case USB_DEVICE_CLASS_AUDIO:
-                        //        displayUnknown = !DisplayAudioDescriptor(
-                        //            (PUSB_AUDIO_COMMON_DESCRIPTOR)commonDesc,
-                        //            bInterfaceSubClass);
-                        //        break;
+                        switch (bInterfaceClass)
+                        {
+                            case USB_DEVICE_CLASS_AUDIO:
+                                //displayUnknown = !DisplayAudioDescriptor(
+                                //    (PUSB_AUDIO_COMMON_DESCRIPTOR)commonDesc,
+                                //    bInterfaceSubClass);
+                                break;
 
-                        //    case USB_DEVICE_CLASS_VIDEO:
-                        //        displayUnknown = !DisplayVideoDescriptor(
-                        //            (PVIDEO_SPECIFIC)commonDesc,
-                        //            bInterfaceSubClass,
-                        //            StringDescs,
-                        //            info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
-                        //        break;
+                            case USB_DEVICE_CLASS_VIDEO:
+                                var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(commonDesc_buf);
+                                //displayUnknown = !DisplayVideoDescriptor(
+                                //    (PVIDEO_SPECIFIC)commonDesc,
+                                //    bInterfaceSubClass,
+                                //    StringDescs,
+                                //    info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
+                                break;
 
-                        //    case USB_DEVICE_CLASS_RESERVED:
-                        //        //@@TestCase A2.6
-                        //        //@@ERROR
-                        //        //@@Descriptor Field - bInterfaceClass
-                        //        //@@An unknown interface class has been defined
-                        //        AppendTextBuffer("*!*ERROR:  %d is a Reserved USB Device Interface Class\r\n",
-                        //            USB_DEVICE_CLASS_RESERVED);
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_RESERVED:
+                            //    //@@TestCase A2.6
+                            //    //@@ERROR
+                            //    //@@Descriptor Field - bInterfaceClass
+                            //    //@@An unknown interface class has been defined
+                            //    AppendTextBuffer("*!*ERROR:  %d is a Reserved USB Device Interface Class\r\n",
+                            //        USB_DEVICE_CLASS_RESERVED);
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_COMMUNICATIONS:
-                        //        AppendTextBuffer("  -> This is a Communications (CDC Control) USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_COMMUNICATIONS:
+                            //    AppendTextBuffer("  -> This is a Communications (CDC Control) USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_HUMAN_INTERFACE:
-                        //        AppendTextBuffer("  -> This is a HID USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_HUMAN_INTERFACE:
+                            //    AppendTextBuffer("  -> This is a HID USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_MONITOR:
-                        //        AppendTextBuffer("  -> This is a Monitor USB Device Interface Class (This may be obsolete)\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_MONITOR:
+                            //    AppendTextBuffer("  -> This is a Monitor USB Device Interface Class (This may be obsolete)\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_PHYSICAL_INTERFACE:
-                        //        AppendTextBuffer("  -> This is a Physical Interface USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_PHYSICAL_INTERFACE:
+                            //    AppendTextBuffer("  -> This is a Physical Interface USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_POWER:
-                        //        if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
-                        //        {
-                        //            AppendTextBuffer("  -> This is an Image USB Device Interface Class\r\n");
-                        //        }
-                        //        else
-                        //        {
-                        //            AppendTextBuffer("  -> This is a Power USB Device Interface Class (This may be obsolete)\r\n");
-                        //        }
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_POWER:
+                            //    if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
+                            //    {
+                            //        AppendTextBuffer("  -> This is an Image USB Device Interface Class\r\n");
+                            //    }
+                            //    else
+                            //    {
+                            //        AppendTextBuffer("  -> This is a Power USB Device Interface Class (This may be obsolete)\r\n");
+                            //    }
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_PRINTER:
-                        //        AppendTextBuffer("  -> This is a Printer USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_PRINTER:
+                            //    AppendTextBuffer("  -> This is a Printer USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_STORAGE:
-                        //        AppendTextBuffer("  -> This is a Mass Storage USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_STORAGE:
+                            //    AppendTextBuffer("  -> This is a Mass Storage USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DEVICE_CLASS_HUB:
-                        //        AppendTextBuffer("  -> This is a HUB USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DEVICE_CLASS_HUB:
+                            //    AppendTextBuffer("  -> This is a HUB USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_CDC_DATA_INTERFACE:
-                        //        AppendTextBuffer("  -> This is a CDC Data USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_CDC_DATA_INTERFACE:
+                            //    AppendTextBuffer("  -> This is a CDC Data USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_CHIP_SMART_CARD_INTERFACE:
-                        //        AppendTextBuffer("  -> This is a Chip/Smart Card USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_CHIP_SMART_CARD_INTERFACE:
+                            //    AppendTextBuffer("  -> This is a Chip/Smart Card USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_CONTENT_SECURITY_INTERFACE:
-                        //        AppendTextBuffer("  -> This is a Content Security USB Device Interface Class\r\n");
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_CONTENT_SECURITY_INTERFACE:
+                            //    AppendTextBuffer("  -> This is a Content Security USB Device Interface Class\r\n");
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_DIAGNOSTIC_DEVICE_INTERFACE:
-                        //        if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
-                        //        {
-                        //            AppendTextBuffer("  -> This is a Reprogrammable USB2 Compliance Diagnostic Device USB Device\r\n");
-                        //        }
-                        //        else
-                        //        {
-                        //            //@@TestCase A2.7
-                        //            //@@CAUTION
-                        //            //@@Descriptor Field - bInterfaceClass
-                        //            //@@An unknown diagnostic interface class device has been defined
-                        //            AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
-                        //            OOPS();
-                        //        }
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_DIAGNOSTIC_DEVICE_INTERFACE:
+                            //    if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
+                            //    {
+                            //        AppendTextBuffer("  -> This is a Reprogrammable USB2 Compliance Diagnostic Device USB Device\r\n");
+                            //    }
+                            //    else
+                            //    {
+                            //        //@@TestCase A2.7
+                            //        //@@CAUTION
+                            //        //@@Descriptor Field - bInterfaceClass
+                            //        //@@An unknown diagnostic interface class device has been defined
+                            //        AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                            //        OOPS();
+                            //    }
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_WIRELESS_CONTROLLER_INTERFACE:
-                        //        if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
-                        //        {
-                        //            AppendTextBuffer("  -> This is a Wireless RF Controller USB Device Interface Class with Bluetooth Programming Interface\r\n");
-                        //        }
-                        //        else
-                        //        {
-                        //            //@@TestCase A2.8
-                        //            //@@CAUTION
-                        //            //@@Descriptor Field - bInterfaceClass
-                        //            //@@An unknown wireless controller interface class device has been defined
-                        //            AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
-                        //            OOPS();
-                        //        }
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //case USB_WIRELESS_CONTROLLER_INTERFACE:
+                            //    if (bInterfaceSubClass == 1 && bInterfaceProtocol == 1)
+                            //    {
+                            //        AppendTextBuffer("  -> This is a Wireless RF Controller USB Device Interface Class with Bluetooth Programming Interface\r\n");
+                            //    }
+                            //    else
+                            //    {
+                            //        //@@TestCase A2.8
+                            //        //@@CAUTION
+                            //        //@@Descriptor Field - bInterfaceClass
+                            //        //@@An unknown wireless controller interface class device has been defined
+                            //        AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                            //        OOPS();
+                            //    }
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    case USB_APPLICATION_SPECIFIC_INTERFACE:
-                        //        AppendTextBuffer("  -> This is an Application Specific USB Device Interface Class\r\n");
+                            //case USB_APPLICATION_SPECIFIC_INTERFACE:
+                            //    AppendTextBuffer("  -> This is an Application Specific USB Device Interface Class\r\n");
 
-                        //        switch (bInterfaceSubClass)
-                        //        {
-                        //            case 1:
-                        //                AppendTextBuffer("  -> This is a Device Firmware Application Specific USB Device Interface Class\r\n");
-                        //                break;
-                        //            case 2:
-                        //                AppendTextBuffer("  -> This is an IrDA Bridge Application Specific USB Device Interface Class\r\n");
-                        //                break;
-                        //            case 3:
-                        //                AppendTextBuffer("  -> This is a Test & Measurement Class (USBTMC) Application Specific USB Device Interface Class\r\n");
-                        //                break;
-                        //            default:
-                        //                //@@TestCase A2.9
-                        //                //@@CAUTION
-                        //                //@@Descriptor Field - bInterfaceClass
-                        //                //@@A possibly invalid interface class has been defined
-                        //                AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
-                        //                OOPS();
-                        //        }
-                        //        displayUnknown = TRUE;
-                        //        break;
+                            //    switch (bInterfaceSubClass)
+                            //    {
+                            //        case 1:
+                            //            AppendTextBuffer("  -> This is a Device Firmware Application Specific USB Device Interface Class\r\n");
+                            //            break;
+                            //        case 2:
+                            //            AppendTextBuffer("  -> This is an IrDA Bridge Application Specific USB Device Interface Class\r\n");
+                            //            break;
+                            //        case 3:
+                            //            AppendTextBuffer("  -> This is a Test & Measurement Class (USBTMC) Application Specific USB Device Interface Class\r\n");
+                            //            break;
+                            //        default:
+                            //            //@@TestCase A2.9
+                            //            //@@CAUTION
+                            //            //@@Descriptor Field - bInterfaceClass
+                            //            //@@A possibly invalid interface class has been defined
+                            //            AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                            //            OOPS();
+                            //    }
+                            //    displayUnknown = TRUE;
+                            //    break;
 
-                        //    default:
-                        //        if (bInterfaceClass == USB_DEVICE_CLASS_VENDOR_SPECIFIC)
-                        //        {
-                        //            AppendTextBuffer("  -> This is a Vendor Specific USB Device Interface Class\r\n");
-                        //        }
-                        //        else
-                        //        {
-                        //            //@@TestCase A2.10
-                        //            //@@CAUTION
-                        //            //@@Descriptor Field - bInterfaceClass
-                        //            //@@An unknown interface class has been defined
-                        //            AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
-                        //            OOPS();
-                        //        }
-                        //        displayUnknown = TRUE;
-                        //        break;
-                        //}
+                            //default:
+                            //    if (bInterfaceClass == USB_DEVICE_CLASS_VENDOR_SPECIFIC)
+                            //    {
+                            //        AppendTextBuffer("  -> This is a Vendor Specific USB Device Interface Class\r\n");
+                            //    }
+                            //    else
+                            //    {
+                            //        //@@TestCase A2.10
+                            //        //@@CAUTION
+                            //        //@@Descriptor Field - bInterfaceClass
+                            //        //@@An unknown interface class has been defined
+                            //        AppendTextBuffer("*!*CAUTION:    This appears to be an invalid Interface Class\r\n");
+                            //        OOPS();
+                            //    }
+                            //    displayUnknown = TRUE;
+                            //    break;
+                        }
                         break;
                 }
 
@@ -668,6 +674,8 @@ namespace QSoft.DevCon
                 {
                     //DisplayUnknownDescriptor(commonDesc);
                 }
+                commonDesc_buf = commonDesc_buf[commonDesc.bLength ..];
+                commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
             } while (true);
             //while ((commonDesc = GetNextDescriptor((PUSB_COMMON_DESCRIPTOR)ConfigDesc,
             //                                         ConfigDesc->wTotalLength,
@@ -677,6 +685,409 @@ namespace QSoft.DevCon
 //# ifdef H264_SUPPORT
 //            DoAdditionalErrorChecks();
 //#endif
+        }
+
+        static bool DisplayVideoDescriptor(Span<byte> VidCommonDesc_buf, byte bInterfaceSubClass, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
+        {
+            var VidCommonDesc = MemoryMarshal.Read<VIDEO_SPECIFIC>(VidCommonDesc_buf);
+            //@@DisplayVideoDescriptor -Class-Specific Video Descriptor
+            switch (VidCommonDesc.bDescriptorType)
+            {
+                case CS_INTERFACE:
+                    //@@DisplayVideoDescriptor -Class-Specific Video Interface Descriptor
+                    switch (bInterfaceSubClass)
+                    {
+                        case VIDEO_SUBCLASS_CONTROL:
+                            //@@DisplayVideoDescriptor -Class-Specific Video Control Interface Descriptor
+                            switch (VidCommonDesc.bDescriptorSubtype)
+                            {
+                                case VC_HEADER:
+                                    return DisplayVCHeader(
+                                        (PVIDEO_CONTROL_HEADER_UNIT)VidCommonDesc);
+
+                                case INPUT_TERMINAL:
+                                    return DisplayVCInputTerminal(
+                                        (PVIDEO_INPUT_TERMINAL)VidCommonDesc,
+                                        StringDescs,
+                                        LatestDevicePowerState);
+
+                                case OUTPUT_TERMINAL:
+                                    return DisplayVCOutputTerminal(
+                                        (PVIDEO_OUTPUT_TERMINAL)VidCommonDesc,
+                                        StringDescs,
+                                        LatestDevicePowerState);
+
+                                case SELECTOR_UNIT:
+                                    return DisplayVCSelectorUnit(
+                                        (PVIDEO_SELECTOR_UNIT)VidCommonDesc,
+                                        StringDescs,
+                                        LatestDevicePowerState);
+
+                                case PROCESSING_UNIT:
+                                    return DisplayVCProcessingUnit(
+                                        (PVIDEO_PROCESSING_UNIT)VidCommonDesc,
+                                        StringDescs,
+                                        LatestDevicePowerState);
+
+                                case EXTENSION_UNIT:
+                                    return DisplayVCExtensionUnit(
+                                        (PVIDEO_EXTENSION_UNIT)VidCommonDesc,
+                                        StringDescs,
+                                        LatestDevicePowerState);
+
+# if H264_SUPPORT
+                                case H264_ENCODING_UNIT:
+                                    return DisplayVCH264EncodingUnit(
+                                        (PVIDEO_ENCODING_UNIT)VidCommonDesc
+                                        );
+
+#endif
+
+# if H264_SUPPORT
+                                case MAX_TYPE_UNIT + 1:
+                                // for H.264, the bDescriptorSubtype = 7, which is equal to MAX_TYPE_UNIT
+                                // so now MAX_TYPE_UNIT needs to be set to 8
+                                //(TODO: need to change nt\sdpublic\internal\drivers\inc\uvcdesc.h's define
+                                // of MAX_TYPE_UNIT from7 to 8, and ad the type for H.264 = 8)
+#else
+                                case MAX_TYPE_UNIT:
+#endif
+                                    //@@TestCase B1.1
+                                    //@@CAUTION
+                                    //@@Descriptor Field - bDescriptorSubtype
+                                    //@@An undefined descriptor subtype has been defined
+                                    AppendTextBuffer("*!*CAUTION:  This is an undefined class specific "\
+
+                                        "Video Control bDescriptorSubtype\r\n");
+                                    break;
+
+                                default:
+                                    //@@TestCase B1.2
+                                    //@@ERROR
+                                    //@@Descriptor Field - bDescriptorSubtype
+                                    //@@An unknown descriptor subtype has been defined
+                                    AppendTextBuffer("*!*ERROR:  unknown bDescriptorSubtype\r\n");
+                                    OOPS();
+                                    break;
+                            }
+                            break;
+
+                        case VIDEO_SUBCLASS_STREAMING:
+                            //@@DisplayVideoDescriptor -Class-Specific Video Streaming Interface Descriptor
+                            switch (VidCommonDesc.bDescriptorSubtype)
+                            {
+                                case VS_INPUT_HEADER:
+                                    return DisplayVidInHeader(
+                                        (PVIDEO_STREAMING_INPUT_HEADER)VidCommonDesc);
+
+                                case VS_OUTPUT_HEADER:
+                                    return DisplayVidOutHeader(
+                                        (PVIDEO_STREAMING_OUTPUT_HEADER)VidCommonDesc);
+
+                                case VS_STILL_IMAGE_FRAME:
+                                    return DisplayStillImageFrame(
+                                        (PVIDEO_STILL_IMAGE_FRAME)VidCommonDesc);
+
+                                case VS_FORMAT_UNCOMPRESSED:
+# if H264_SUPPORT
+                                    {
+                                        BOOL retCode = DisplayUncompressedFormat((PVIDEO_FORMAT_UNCOMPRESSED)VidCommonDesc);
+                                        g_expectedNumberOfUncompressedFrameFrameDescriptors += ((PVIDEO_FORMAT_UNCOMPRESSED)VidCommonDesc)->bNumFrameDescriptors;
+                                        return retCode;
+                                    }
+#else
+                                    return DisplayUncompressedFormat(
+                                        (PVIDEO_FORMAT_UNCOMPRESSED)VidCommonDesc);
+#endif
+
+                                case VS_FRAME_UNCOMPRESSED:
+# if H264_SUPPORT
+                                    {
+                                        BOOL retCode = DisplayUncompressedFrameType((PVIDEO_FRAME_UNCOMPRESSED)VidCommonDesc);
+                                        g_numberOfUncompressedFrameFrameDescriptors++;
+                                        return retCode;
+                                    }
+#else
+                                    return DisplayUncompressedFrameType(
+                                        (PVIDEO_FRAME_UNCOMPRESSED)VidCommonDesc);
+#endif
+
+# if H264_SUPPORT
+                                case VS_FORMAT_H264:
+                                    {
+                                        BOOL retCode = DisplayVCH264Format((PVIDEO_FORMAT_H264)VidCommonDesc);
+                                        g_expectedNumberOfH264FrameDescriptors += ((PVIDEO_FORMAT_H264)VidCommonDesc)->bNumFrameDescriptors;
+                                        return retCode;
+                                    }
+
+                                case VS_FRAME_H264:
+                                    {
+                                        BOOL retCode = DisplayVCH264FrameType((PVIDEO_FRAME_H264)VidCommonDesc);
+                                        g_numberOfH264FrameDescriptors++;
+                                        return retCode;
+                                    }
+#endif
+
+                                case VS_FORMAT_MJPEG:
+# if H264_SUPPORT // additional checks
+                                    {
+                                        BOOL retCode = DisplayMJPEGFormat((PVIDEO_FORMAT_MJPEG)VidCommonDesc);
+                                        g_expectedNumberOfMJPEGFrameDescriptors += ((PVIDEO_FORMAT_MJPEG)VidCommonDesc)->bNumFrameDescriptors;
+                                        return retCode;
+                                    }
+#else
+                                    return DisplayMJPEGFormat(
+                                        (PVIDEO_FORMAT_MJPEG)VidCommonDesc);
+#endif
+
+                                case VS_FRAME_MJPEG:
+# if H264_SUPPORT
+                                    {
+                                        BOOL retCode = DisplayMJPEGFrameType((PVIDEO_FRAME_MJPEG)VidCommonDesc);
+                                        g_numberOfMJPEGFrameDescriptors++;
+                                        return retCode;
+                                    }
+
+#else
+                                    return DisplayMJPEGFrameType(
+                                        (PVIDEO_FRAME_MJPEG)VidCommonDesc);
+#endif
+
+
+
+                                case VS_FORMAT_MPEG1:
+                                    {
+                                        if (UVC10 == g_chUVCversion)
+                                        {
+                                            return DisplayMPEG1SSFormat(
+                                                (PVIDEO_FORMAT_MPEG1SS)VidCommonDesc);
+                                        }
+                                        else // this format is obsoleted in UVC version >= 1.1
+                                        {
+                                            AppendTextBuffer("*!*ERROR:  obsoleted bDescriptorSubtype\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_FORMAT_MPEG2PS:
+                                    {
+                                        if (UVC10 == g_chUVCversion)
+                                        {
+                                            return DisplayMPEG2PSFormat(
+                                                (PVIDEO_FORMAT_MPEG2PS)VidCommonDesc);
+                                        }
+                                        else // this format is obsoleted in UVC version >= 1.1
+                                        {
+                                            AppendTextBuffer("*!*ERROR:  obsoleted bDescriptorSubtype\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_FORMAT_MPEG2TS:
+                                    return DisplayMPEG2TSFormat(
+                                        (PVIDEO_FORMAT_MPEG2TS)VidCommonDesc);
+
+                                case VS_FORMAT_MPEG4SL:
+                                    {
+                                        if (UVC10 == g_chUVCversion)
+                                        {
+                                            return DisplayMPEG4SLFormat(
+                                                (PVIDEO_FORMAT_MPEG4SL)VidCommonDesc);
+                                        }
+                                        else // this format is obsoleted in UVC version >= 1.1
+                                        {
+                                            AppendTextBuffer("*!*ERROR:  obsoleted bDescriptorSubtype\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_FORMAT_DV:
+                                    return DisplayDVFormat(
+                                        (PVIDEO_FORMAT_DV)VidCommonDesc);
+
+                                case VS_COLORFORMAT:
+                                    return DisplayColorMatching(
+                                        (PVIDEO_COLORFORMAT)VidCommonDesc);
+
+                                case VS_FORMAT_VENDOR:
+                                    {
+                                        if (UVC10 == g_chUVCversion)
+                                        {
+                                            return DisplayVendorVidFormat(
+                                               (PVIDEO_FORMAT_VENDOR)VidCommonDesc);
+                                        }
+                                        else // this format is obsoleted in UVC version >= 1.1
+                                        {
+                                            AppendTextBuffer("*!*ERROR:  obsoleted bDescriptorSubtype\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_FRAME_VENDOR:
+                                    {
+                                        if (UVC10 == g_chUVCversion)
+                                        {
+                                            return DisplayVendorVidFrameType(
+                                                (PVIDEO_FRAME_VENDOR)VidCommonDesc);
+                                        }
+                                        else // this format is obsoleted in UVC version >= 1.1
+                                        {
+                                            AppendTextBuffer("*!*ERROR:  obsoleted bDescriptorSubtype\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_FORMAT_FRAME_BASED:
+                                    {
+                                        if (UVC10 != g_chUVCversion)
+                                        {
+                                            return DisplayFramePayloadFormat(
+                                                (PVIDEO_FORMAT_FRAME)VidCommonDesc);
+                                        }
+                                        else // this format did not exist in UVC 1.0
+                                        {
+                                            AppendTextBuffer("*!*ERROR: bDescriptorSubtype did not exist in UVC 1.0\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_FRAME_FRAME_BASED:
+                                    {
+                                        if (UVC10 != g_chUVCversion)
+                                        {
+                                            return DisplayFramePayloadFrame(
+                                                (PVIDEO_FRAME_FRAME)VidCommonDesc);
+                                        }
+                                        else // this format did not exist in UVC 1.0
+                                        {
+                                            AppendTextBuffer("*!*ERROR: bDescriptorSubtype did not exist in UVC 1.0\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_FORMAT_STREAM_BASED:
+                                    {
+                                        if (UVC10 != g_chUVCversion)
+                                        {
+                                            return DisplayStreamPayload(
+                                                (PVIDEO_FORMAT_STREAM)VidCommonDesc);
+                                        }
+                                        else // this format did not exist in UVC 1.0
+                                        {
+                                            AppendTextBuffer("*!*ERROR: bDescriptorSubtype did not exist in UVC 1.0\r\n");
+                                            OOPS();
+                                            break;
+                                        }
+                                    }
+
+                                case VS_DESCRIPTOR_UNDEFINED:
+                                    //@@TestCase B1.3
+                                    //@@CAUTION
+                                    //@@Descriptor Field - bDescriptorSubtype
+                                    //@@An undefined descriptor subtype has been defined
+                                    AppendTextBuffer("*!*CAUTION:  This is an undefined class specific Video "\
+
+                                        "Streaming bDescriptorSubtype\r\n");
+                                    break;
+
+                                default:
+                                    //@@TestCase B1.4
+                                    //@@ERROR
+                                    //@@Descriptor Field - bDescriptorSubtype
+                                    //@@An unknown descriptor subtype has been defined
+                                    AppendTextBuffer("*!*ERROR:  unknown bDescriptorSubtype\r\n");
+                                    OOPS();
+                                    break;
+                            }
+                            break;
+
+                        default:
+                            //@@TestCase B1.6
+                            //@@ERROR
+                            //@@Descriptor Field - bInterfaceSubClass
+                            //@@An unknown interface sub-class has been defined
+                            AppendTextBuffer("*!*ERROR:  unknown bInterfaceSubClass\r\n");
+                            OOPS();
+                            break;
+                    }
+                    break;
+
+                case CS_ENDPOINT:
+                    //@@DisplayVideoDescriptor -Class-Specific Video Endpoint Descriptor
+                    switch (VidCommonDesc->bDescriptorSubtype)
+                    {
+                        //@@TestCase B1.7
+                        //@@CAUTION
+                        //@@Descriptor Field - bInterfaceSubtype
+                        //@@An undefined descriptor subtype has been defined
+                        case EP_UNDEFINED:
+                            AppendTextBuffer("*!*CAUTION:  This is an undefined bDescriptorSubtype\r\n");
+                            break;
+                        //@@TestCase B1.8
+                        //@@Not yet implemented - Priority 3
+                        //@@Descriptor Field - bDescriptorSubtype
+                        //@@Question:  How valid are VIDEO_EP_GENERAL and VIDEO_EP_ENDPOINT?  Should we test?
+                        case EP_GENERAL:
+                            break;
+                        case EP_ENDPOINT:
+                            break;
+                        case EP_INTERRUPT:
+                            return DisplayVSEndpoint(
+                                (PVIDEO_CS_INTERRUPT)VidCommonDesc);
+                            break;
+                        default:
+                            //@@TestCase B1.9
+                            //@@ERROR
+                            //@@Descriptor Field - bDescriptorSubtype
+                            //@@An unknown descriptor subtype has been defined
+                            AppendTextBuffer("*!*CAUTION:  Unknown bDescriptorSubtype");
+                            break;
+                    }
+                    break;
+                //@@DisplayVideoDescriptor -Class-Specific Video Device Descriptor
+                //@@DisplayVideoDescriptor -Class-Specific Video Configuration Descriptor
+                //@@DisplayVideoDescriptor -Class-Specific Video String Descriptor
+                //@@DisplayVideoDescriptor -Class-Specific Video Undefined Descriptor
+                //@@TestCase B1.10
+                //@@Not yet implemented - Priority 3
+                //@@Descriptor -Class-Specific Device, Configuration, String, Undefined
+                //@@Descriptor Field - bDescriptorType
+                //@@Question:  How valid are these Descriptor Types?  Should we test?
+
+                /*        case USB_VIDEO_CS_DEVICE:
+                AppendTextBuffer("USB_VIDEO_CS_DEVICE bDescriptorType\r\n");
+                break;
+
+                case USB_VIDEO_CS_CONFIGURATION:
+                AppendTextBuffer("USB_VIDEO_CS_CONFIGURATION bDescriptorType\r\n");
+                break;
+
+                case USB_VIDEO_CS_STRING:
+                AppendTextBuffer("USB_VIDEO_CS_STRING bDescriptorType\r\n");
+                break;
+
+                case USB_VIDEO_CS_UNDEFINED:
+                AppendTextBuffer("USB_VIDEO_CS_UNDEFINED bDescriptorType\r\n");
+                break;
+                */
+                default:
+                    ////@@TestCase B1.11
+                    ////@@ERROR
+                    ////@@Descriptor Field - bDescriptorType
+                    ////@@An unknown descriptor type has been defined
+                    //AppendTextBuffer("*!*CAUTION:  Unknown bDescriptorSubtype");
+                    //OOPS();
+                    break;
+            }
+
+            return false;
         }
 
         static void DisplayConfigurationDescriptor(Span<byte> ConfigDesc_buf)
@@ -711,7 +1122,7 @@ namespace QSoft.DevCon
             //AppendTextBuffer("wTotalLength:                    0x%04X", ConfigDesc.wTotalLength);
             strb.AppendLine($"wTotalLength:0x{ConfigDesc.bDescriptorType:XXXX}");
 
-            uCount = GetConfigurationSize(ConfigDesc_buf);
+            //uCount = GetConfigurationSize(ConfigDesc_buf);
             if (uCount != ConfigDesc.wTotalLength)
             {
                 //AppendTextBuffer("\r\n*!*ERROR: Invalid total configuration size 0x%02X, should be 0x%02X\r\n",
@@ -755,6 +1166,8 @@ namespace QSoft.DevCon
             //AppendTextBuffer("iConfiguration:                    0x%02X\r\n",
             //    ConfigDesc.iConfiguration);
 
+            strb.AppendLine($"iConfiguration:0x{ConfigDesc.iConfiguration:XX}");
+
             //if (ConfigDesc.iConfiguration && gDoAnnotation)
             //{
             //    DisplayStringDescriptor(ConfigDesc.iConfiguration,
@@ -764,7 +1177,7 @@ namespace QSoft.DevCon
 
             //AppendTextBuffer("bmAttributes:                      0x%02X",
             //    ConfigDesc.bmAttributes);
-
+            strb.AppendLine($"bmAttributes:0x{ConfigDesc.bmAttributes:XX}");
             //if (info->ConnectionInfo->DeviceDescriptor.bcdUSB == 0x0100)
             //{
             //    if (ConfigDesc.bmAttributes & USB_CONFIG_SELF_POWERED)
@@ -825,7 +1238,8 @@ namespace QSoft.DevCon
 
             //AppendTextBuffer("MaxPower:                          0x%02X",
             //    ConfigDesc.MaxPower);
-
+            strb.AppendLine($"MaxPower:0x{ConfigDesc.MaxPower:XX}");
+            strb.AppendLine($"MaxPower:0x{ConfigDesc.MaxPower*2}mA");
             //if (gDoAnnotation)
             //{
             //    AppendTextBuffer(" = %3d mA\r\n",
@@ -837,8 +1251,7 @@ namespace QSoft.DevCon
 
         static uint GetConfigurationSize(Span<byte> ConfigDesc_buf)
         {
-            USB_CONFIGURATION_DESCRIPTOR
-                ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
+            var ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
             //USB_COMMON_DESCRIPTOR
             //    commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
             //PUCHAR descEnd = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
@@ -868,6 +1281,83 @@ namespace QSoft.DevCon
             return (uCount);
         }
 
+        // Video sub-classes
+        const byte SUBCLASS_UNDEFINED = 0x00;
+        const byte VIDEO_SUBCLASS_CONTROL = 0x01;
+        const byte VIDEO_SUBCLASS_STREAMING = 0x02;
+
+        // Video Class-Specific Descriptor Types
+        const byte CS_UNDEFINED = 0x20;
+        const byte CS_DEVICE = 0x21;
+        const byte CS_CONFIGURATION = 0x22;
+        const byte CS_STRING = 0x23;
+        const byte CS_INTERFACE = 0x24;
+        const byte CS_ENDPOINT = 0x25;
+
+        // Video Class-Specific VC Interface Descriptor Subtypes
+        const byte VC_HEADER = 0x01;
+        const byte INPUT_TERMINAL = 0x02;
+        const byte OUTPUT_TERMINAL = 0x03;
+        const byte SELECTOR_UNIT = 0x04;
+        const byte PROCESSING_UNIT = 0x05;
+        const byte EXTENSION_UNIT = 0x06;
+        const byte MAX_TYPE_UNIT = 0x07;
+
+        // Video Class-Specific VS Interface Descriptor Subtypes
+        const byte VS_DESCRIPTOR_UNDEFINED = 0x00;
+        const byte VS_INPUT_HEADER = 0x01;
+        const byte VS_OUTPUT_HEADER = 0x02;
+        const byte VS_STILL_IMAGE_FRAME = 0x03;
+        const byte VS_FORMAT_UNCOMPRESSED = 0x04;
+        const byte VS_FRAME_UNCOMPRESSED = 0x05;
+        const byte VS_FORMAT_MJPEG = 0x06;
+        const byte VS_FRAME_MJPEG = 0x07;
+        const byte VS_FORMAT_MPEG1 = 0x08;
+        const byte VS_FORMAT_MPEG2PS = 0x09;
+        const byte VS_FORMAT_MPEG2TS = 0x0A;
+        const byte VS_FORMAT_MPEG4SL = 0x0B;
+        const byte VS_FORMAT_DV = 0x0C;
+        const byte VS_COLORFORMAT = 0x0D;
+        const byte VS_FORMAT_VENDOR = 0x0E;
+        const byte VS_FRAME_VENDOR = 0x0F;
+
+        // Video Specific Descriptor
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct VIDEO_SPECIFIC
+        {
+            byte bLength;              // Size of this descriptor in bytes
+            public byte bDescriptorType;      // CS_INTERFACE descriptor type
+            public byte bDescriptorSubtype;   // descriptor subtype
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct USB_INTERFACE_DESCRIPTOR2
+        {
+            byte bLength;             // offset 0, size 1
+            byte bDescriptorType;     // offset 1, size 1
+            byte bInterfaceNumber;    // offset 2, size 1
+            byte bAlternateSetting;   // offset 3, size 1
+            byte bNumEndpoints;       // offset 4, size 1
+            byte bInterfaceClass;     // offset 5, size 1
+            byte bInterfaceSubClass;  // offset 6, size 1
+            byte bInterfaceProtocol;  // offset 7, size 1
+            byte iInterface;          // offset 8, size 1
+            ushort wNumClasses;         // offset 9, size 2
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct USB_INTERFACE_DESCRIPTOR
+        {
+            byte bLength;
+            byte bDescriptorType;
+            byte bInterfaceNumber;
+            byte bAlternateSetting;
+            byte bNumEndpoints;
+            public byte bInterfaceClass;
+            public byte bInterfaceSubClass;
+            public byte bInterfaceProtocol;
+            byte iInterface;
+        };
 
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -1108,6 +1598,16 @@ namespace QSoft.DevCon
                 set => ul = value ? (ul | 0x8u) : (ul & ~0x8u);
             }
         }
+
+        enum DEVICE_POWER_STATE
+        {
+            PowerDeviceUnspecified = 0,
+            PowerDeviceD0,
+            PowerDeviceD1,
+            PowerDeviceD2,
+            PowerDeviceD3,
+            PowerDeviceMaximum
+        };
 
         [StructLayout(LayoutKind.Sequential)]
         public struct USB_NODE_CONNECTION_INFORMATION_EX_V2
