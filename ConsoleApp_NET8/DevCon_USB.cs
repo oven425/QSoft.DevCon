@@ -512,6 +512,7 @@ namespace QSoft.DevCon
 
                             case USB_DEVICE_CLASS_VIDEO:
                                 var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(commonDesc_buf);
+                                DisplayVideoDescriptor(commonDesc_buf, bInterfaceSubClass, new StringBuilder(), DEVICE_POWER_STATE.PowerDeviceD0);
                                 //displayUnknown = !DisplayVideoDescriptor(
                                 //    (PVIDEO_SPECIFIC)commonDesc,
                                 //    bInterfaceSubClass,

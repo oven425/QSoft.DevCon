@@ -4,12 +4,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace QSoft.DevCon
 {
     static public partial class DevConExtensiona
     {
-        bool DisplayVCHeader(Span<byte> VCInterfaceDesc)
+        static bool DisplayVCHeader(Span<byte> VCInterfaceDesc)
         {
             //@@DisplayVCHeader -Video Control Interface Header
             uint i = 0;
@@ -129,6 +130,158 @@ namespace QSoft.DevCon
             return true;
         }
 
+        struct VIDEO_EXTENSION_UNIT
+        {
+            byte bLength;              // Size of this descriptor in bytes
+            byte bDescriptorType;      // CS_INTERFACE descriptor type
+            byte bDescriptorSubtype;   // EXTENSION_UNIT descriptor subtype
+            byte bUnitID;              // Constant uniquely identifying the Unit
+            Guid guidExtensionCode;     // Vendor-specific code identifying extension unit
+            byte bNumControls;         // Number of controls in Extension Unit
+            byte bNrInPins;            // Number of input pins
+            //UCHAR baSourceID[];         // IDs of connected units/terminals
+        };
+
+        static bool DisplayVCExtensionUnit(VIDEO_EXTENSION_UNIT VidExtensionDesc, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
+        {
+            ////@@DisplayVCExtensionUnit -Video Control Extension Unit
+            //int i = 0;
+            //UCHAR p = 0;
+            //UCHAR bControlSize = 0;
+            //PUCHAR pData = NULL;
+            //OLECHAR szGUID[256];
+            //size_t bLength = 0;
+
+            //bLength = SizeOfVideoExtensionUnit(VidExtensionDesc);
+
+            //memset((LPOLESTR)szGUID, 0, sizeof(OLECHAR) * 256);
+            //i = StringFromGUID2((REFGUID) & VidExtensionDesc->guidExtensionCode, (LPOLESTR)szGUID, 255);
+            //i++;
+
+            //AppendTextBuffer("\r\n          ===>Video Control Extension Unit Descriptor<===\r\n");
+            //AppendTextBuffer("bLength:                           0x%02X\r\n", VidExtensionDesc->bLength);
+            //AppendTextBuffer("bDescriptorType:                   0x%02X\r\n", VidExtensionDesc->bDescriptorType);
+            //AppendTextBuffer("bDescriptorSubtype:                0x%02X\r\n", VidExtensionDesc->bDescriptorSubtype);
+            //AppendTextBuffer("bUnitID:                           0x%02X\r\n", VidExtensionDesc->bUnitID);
+            //AppendTextBuffer("guidExtensionCode:                 %S\r\n", szGUID);
+            //AppendTextBuffer("bNumControls:                      0x%02X\r\n", VidExtensionDesc->bNumControls);
+            //AppendTextBuffer("bNrInPins:                         0x%02X\r\n", VidExtensionDesc->bNrInPins);
+            //if (gDoAnnotation)
+            //{
+            //    AppendTextBuffer("===>List of Connected Units and Terminal ID's\r\n");
+            //}
+            //// baSourceID is a variable length field
+            //// Size is in bNrInPins, must be at least 1 (so index starts at 1)
+            //for (i = 1, pData = (PUCHAR) & VidExtensionDesc->baSourceID;
+            //    i <= VidExtensionDesc->bNrInPins; i++, pData++)
+            //{
+            //    AppendTextBuffer("baSourceID[%d]:                     0x%02X\r\n",
+            //        i, *pData);
+            //}
+            //// point to bControlSize (address of bNrInPins plus number of fields in bNrInPins
+            ////   plus 1 for next field)
+            //pData = &VidExtensionDesc->bNrInPins + VidExtensionDesc->bNrInPins + 1;
+            //bControlSize = *pData;
+            //AppendTextBuffer("bControlSize:                      0x%02X\r\n", bControlSize);
+
+            //// Are there any controls?
+            //if (bControlSize > 0)
+            //{
+            //    AppendTextBuffer("bmControls : ");
+            //    VDisplayBytes(pData + 1, *pData);
+
+            //    // Map one byte at a time of the bmControls field in the Video Control Extension Unit Descriptor
+            //    for (i = 1; i <= bControlSize; i++)
+            //    {
+            //        UINT uBitIndex = 0;
+            //        BYTE cCheckBit = 0;
+            //        BYTE cMask = 1;
+
+            //        // map byte
+            //        for (; uBitIndex < 8; uBitIndex++)
+            //        {
+            //            cCheckBit = cMask & *(pData + i);
+
+            //            AppendTextBuffer("     D%02d = %d  %s %s\r\n",
+            //                uBitIndex + 8 * (i - 1),
+            //                cCheckBit ? 1 : 0,
+            //                cCheckBit ? "yes - " : " no - ",
+            //                "Vendor-Specific (Optional)");
+
+            //            cMask = cMask << 1;
+            //        }
+            //    }
+            //}
+
+            //// get address of iExtension
+            //pData = &VidExtensionDesc->bNrInPins + VidExtensionDesc->bNrInPins + bControlSize + 2;
+            ////  pData = (PUCHAR) VidExtensionDesc + (VidExtensionDesc->bLength - 1);
+            //AppendTextBuffer("iExtension:                        0x%02X\r\n", *pData);
+            //if (gDoAnnotation)
+            //{
+            //    if (*pData)
+            //    {
+            //        DisplayStringDescriptor(*pData, StringDescs, LatestDevicePowerState);
+            //    }
+            //}
+
+            //// size of descriptor struct size (23) + bNrInPins + bControlSize + iExtension size
+            ////
+            ////  p = (sizeof(VIDEO_EXTENSION_UNIT)
+            ////      + VidExtensionDesc->bNrInPins + bControlSize + 1);
+            //if (VidExtensionDesc->bLength != bLength)
+            //{
+            //    //@@TestCase B10.1 (also in Descript.c)
+            //    //@@ERROR
+            //    //@@Descriptor Field - bLength
+            //    //@@The declared length in the device descriptor is not equal to the
+            //    //@@  required length in the USB Video Device Specification
+            //    AppendTextBuffer("*!*ERROR:  bLength of 0x%02X incorrect, should be 0x%02X\r\n",
+            //        VidExtensionDesc->bLength, p);
+            //    OOPS();
+            //}
+
+            //if (VidExtensionDesc->bUnitID < 1)
+            //{
+            //    //@@TestCase B10.2 (Descript.c  Line 517)
+            //    //@@ERROR
+            //    //@@Descriptor Field - bUnitID
+            //    //@@bUnitID must be non-zero
+            //    //@@Question: Should we test to verify bUnitID is valid
+            //    AppendTextBuffer("*!*ERROR:  bUnitID must be non-zero\r\n");
+            //    OOPS();
+            //}
+
+            ////bugbug do we need two
+            //if (VidExtensionDesc->bNrInPins < 1)
+            //{
+            //    //@@TestCase B10.3 (Descript.c  Line 522)
+            //    //@@ERROR
+            //    //@@Descriptor Field - bNrInPins
+            //    //@@bNrInPins must be non-zero
+            //    //@@Question: Should we test to verify bNrInPins is valid
+            //    AppendTextBuffer("*!*ERROR:  bNrInPins must be non-zero\r\n");
+            //    OOPS();
+            //}
+
+            //for (i = 1, pData = (PUCHAR) & VidExtensionDesc->baSourceID;
+            //    i <= VidExtensionDesc->bNrInPins; i++, pData++)
+            //{
+            //    if (*pData == 0)
+            //    {
+            //        //@@TestCase B10.4  (Descript.c  Line 527)
+            //        //@@ERROR
+            //        //@@Descriptor Field - baSourceID[]
+            //        //@@baSourceID[] must be non-zero
+            //        //@@Question: Should we test to verify baSourceID is valid
+            //        AppendTextBuffer("*!*ERROR:  baSourceID[%d] must be non-zero\r\n", *pData);
+            //        OOPS();
+            //    }
+            //}
+            return true;
+        }
+
+
 
         static bool DisplayVideoDescriptor(Span<byte> VidCommonDesc_buf, byte bInterfaceSubClass, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
         {
@@ -147,36 +300,43 @@ namespace QSoft.DevCon
                                 case VC_HEADER:
                                     //return DisplayVCHeader(
                                     //    (PVIDEO_CONTROL_HEADER_UNIT)VidCommonDesc);
+                                    break;
 
                                 case INPUT_TERMINAL:
-                                //return DisplayVCInputTerminal(
-                                //    (PVIDEO_INPUT_TERMINAL)VidCommonDesc,
-                                //    StringDescs,
-                                //    LatestDevicePowerState);
+                                    //return DisplayVCInputTerminal(
+                                    //    (PVIDEO_INPUT_TERMINAL)VidCommonDesc,
+                                    //    StringDescs,
+                                    //    LatestDevicePowerState);
+                                    break;
 
                                 case OUTPUT_TERMINAL:
-                                //return DisplayVCOutputTerminal(
-                                //    (PVIDEO_OUTPUT_TERMINAL)VidCommonDesc,
-                                //    StringDescs,
-                                //    LatestDevicePowerState);
+                                    //return DisplayVCOutputTerminal(
+                                    //    (PVIDEO_OUTPUT_TERMINAL)VidCommonDesc,
+                                    //    StringDescs,
+                                    //    LatestDevicePowerState);
+                                    break;
 
                                 case SELECTOR_UNIT:
-                                //return DisplayVCSelectorUnit(
-                                //    (PVIDEO_SELECTOR_UNIT)VidCommonDesc,
-                                //    StringDescs,
-                                //    LatestDevicePowerState);
+                                    //return DisplayVCSelectorUnit(
+                                    //    (PVIDEO_SELECTOR_UNIT)VidCommonDesc,
+                                    //    StringDescs,
+                                    //    LatestDevicePowerState);
+                                    break;
 
                                 case PROCESSING_UNIT:
-                                //return DisplayVCProcessingUnit(
-                                //    (PVIDEO_PROCESSING_UNIT)VidCommonDesc,
-                                //    StringDescs,
-                                //    LatestDevicePowerState);
+                                    //return DisplayVCProcessingUnit(
+                                    //    (PVIDEO_PROCESSING_UNIT)VidCommonDesc,
+                                    //    StringDescs,
+                                    //    LatestDevicePowerState);
+                                    break;
 
                                 case EXTENSION_UNIT:
-                                //return DisplayVCExtensionUnit(
-                                //    (PVIDEO_EXTENSION_UNIT)VidCommonDesc,
-                                //    StringDescs,
-                                //    LatestDevicePowerState);
+                                    var extunit = MemoryMarshal.Read<VIDEO_EXTENSION_UNIT>(VidCommonDesc_buf);
+                                    //return DisplayVCExtensionUnit(
+                                    //    (PVIDEO_EXTENSION_UNIT)VidCommonDesc,
+                                    //    StringDescs,
+                                    //    LatestDevicePowerState);
+                                    break;
 
 #if H264_SUPPORT
                                 case H264_ENCODING_UNIT:
