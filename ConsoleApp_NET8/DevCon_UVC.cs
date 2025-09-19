@@ -129,21 +129,32 @@ namespace QSoft.DevCon
 //            }
             return true;
         }
-
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct VIDEO_EXTENSION_UNIT
         {
-            byte bLength;              // Size of this descriptor in bytes
-            byte bDescriptorType;      // CS_INTERFACE descriptor type
-            byte bDescriptorSubtype;   // EXTENSION_UNIT descriptor subtype
-            byte bUnitID;              // Constant uniquely identifying the Unit
-            Guid guidExtensionCode;     // Vendor-specific code identifying extension unit
-            byte bNumControls;         // Number of controls in Extension Unit
-            byte bNrInPins;            // Number of input pins
+            public byte bLength;              // Size of this descriptor in bytes
+            public byte bDescriptorType;      // CS_INTERFACE descriptor type
+            public byte bDescriptorSubtype;   // EXTENSION_UNIT descriptor subtype
+            public byte bUnitID;              // Constant uniquely identifying the Unit
+            public Guid guidExtensionCode;     // Vendor-specific code identifying extension unit
+            public byte bNumControls;         // Number of controls in Extension Unit
+            public byte bNrInPins;            // Number of input pins
             //UCHAR baSourceID[];         // IDs of connected units/terminals
         };
 
-        static bool DisplayVCExtensionUnit(VIDEO_EXTENSION_UNIT VidExtensionDesc, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
+        static bool DisplayVCExtensionUnit(Span<byte> VidExtensionDesc_buf, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
         {
+            //https://www.usbzh.com/article/detail-36.html
+            var VidExtensionDesc = MemoryMarshal.Read<VIDEO_EXTENSION_UNIT>(VidExtensionDesc_buf);
+            byte[] baSourceID = new byte[VidExtensionDesc.bNrInPins];
+            var sz = Marshal.SizeOf<VIDEO_EXTENSION_UNIT>();
+            if (VidExtensionDesc.bNrInPins > 0)
+            {
+                
+                VidExtensionDesc_buf.Slice(sz, VidExtensionDesc.bNrInPins).CopyTo(baSourceID);
+            }
+            sz = sz + VidExtensionDesc.bNrInPins;
+            var aaa = VidExtensionDesc_buf.Slice(sz, VidExtensionDesc.bNumControls);
             ////@@DisplayVCExtensionUnit -Video Control Extension Unit
             //int i = 0;
             //UCHAR p = 0;
@@ -166,6 +177,9 @@ namespace QSoft.DevCon
             //AppendTextBuffer("guidExtensionCode:                 %S\r\n", szGUID);
             //AppendTextBuffer("bNumControls:                      0x%02X\r\n", VidExtensionDesc->bNumControls);
             //AppendTextBuffer("bNrInPins:                         0x%02X\r\n", VidExtensionDesc->bNrInPins);
+
+            StringDescs.AppendLine($"          ===>Video Control Extension Unit Descriptor<===");
+            StringDescs.AppendLine($"bLength:0x{VidExtensionDesc}");
             //if (gDoAnnotation)
             //{
             //    AppendTextBuffer("===>List of Connected Units and Terminal ID's\r\n");
@@ -331,11 +345,8 @@ namespace QSoft.DevCon
                                     break;
 
                                 case EXTENSION_UNIT:
-                                    var extunit = MemoryMarshal.Read<VIDEO_EXTENSION_UNIT>(VidCommonDesc_buf);
-                                    //return DisplayVCExtensionUnit(
-                                    //    (PVIDEO_EXTENSION_UNIT)VidCommonDesc,
-                                    //    StringDescs,
-                                    //    LatestDevicePowerState);
+                                    //var extunit = MemoryMarshal.Read<VIDEO_EXTENSION_UNIT>(VidCommonDesc_buf);
+                                    return DisplayVCExtensionUnit(VidCommonDesc_buf, StringDescs, LatestDevicePowerState);
                                     break;
 
 #if H264_SUPPORT
