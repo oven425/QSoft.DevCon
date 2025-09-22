@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -153,8 +154,12 @@ namespace QSoft.DevCon
                 
                 VidExtensionDesc_buf.Slice(sz, VidExtensionDesc.bNrInPins).CopyTo(baSourceID);
             }
-            sz = sz + VidExtensionDesc.bNrInPins;
-            var aaa = VidExtensionDesc_buf.Slice(sz, VidExtensionDesc.bNumControls);
+            sz = sz + baSourceID.Length;
+            var bControlSize = VidExtensionDesc_buf[sz];
+            sz = sz + 1;
+            var aaa = VidExtensionDesc_buf.Slice(sz, bControlSize);
+            var bits = new BitArray(aaa.ToArray());
+
             ////@@DisplayVCExtensionUnit -Video Control Extension Unit
             //int i = 0;
             //UCHAR p = 0;
