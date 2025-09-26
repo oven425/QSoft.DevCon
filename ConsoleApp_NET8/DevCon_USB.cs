@@ -47,13 +47,13 @@ namespace QSoft.DevCon
         {
             var nodeinfo = new USB_NODE_INFORMATION();
             var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
-            var success1 = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, Span<byte>.Empty, 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes1, IntPtr.Zero);
+            var success1 = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes1, IntPtr.Zero);
             var err = Marshal.GetLastWin32Error();
             var count = nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts;
 
             var hubinfoex = new USB_HUB_INFORMATION_EX();
             var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref hubinfoex, 1));
-            var success = DeviceIoControl(src, IOCTL_USB_GET_HUB_INFORMATION_EX, Span<byte>.Empty, 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
+            var success = DeviceIoControl(src, IOCTL_USB_GET_HUB_INFORMATION_EX, [], 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
             err = Marshal.GetLastWin32Error();
             for(uint i=1; i<= nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts;i++)
             {
@@ -176,17 +176,17 @@ namespace QSoft.DevCon
 
             if (!success)
             {
-                return Span<byte>.Empty;
+                return [];
             }
 
             if (nBytes != nBytesReturned)
             {
-                return Span<byte>.Empty;
+                return [];
             }
 
             if (configDesc.wTotalLength < Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>())
             {
-                return Span<byte>.Empty;
+                return [];
             }
 
             // Now request the entire Configuration Descriptor using a dynamically
@@ -243,7 +243,7 @@ namespace QSoft.DevCon
             configDescReqBuf = configDescReqBuf[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()..];
             if (!success)
             {
-                return Span<byte>.Empty;
+                return [];
             }
 
             if (nBytes != nBytesReturned)

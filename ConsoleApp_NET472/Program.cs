@@ -23,6 +23,7 @@ namespace ConsoleApp_NET472
             {
                 name = x.Service(),
                 power = x.PowerData(),
+                mac = x.Manufacturer(),
             });
             aaa.ToArray();
 
