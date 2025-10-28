@@ -19,7 +19,6 @@ foreach(var usb in usbs)
     var devicepath = usb.DevicePath();
 
     using var ff = File.OpenHandle(devicepath, FileMode.Open);
-    var dkn = ff.GetHCDDriverKeyName();
     var roothubname = ff.GetRootHubName();
     devicepath = $"\\\\.\\{roothubname}";
     using var ff1 = File.OpenHandle(devicepath, FileMode.Open);
