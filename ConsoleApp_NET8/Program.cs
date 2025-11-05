@@ -11,18 +11,19 @@ using System.Windows.Controls;
 //    System.Diagnostics.Trace.WriteLine($"vid: {vp.vid:X4}, pid: {vp.pid:X4}");
 //}
 
-var usbs = DevConExtension.GUID_DEVINTERFACE_USB_HOST_CONTROLLER.DevicesFromInterface();
+var usbs = DevConExtension.GUID_DEVINTERFACE_USB_HUB.DevicesFromInterface();
 foreach(var usb in usbs)
 {
     var desc = usb.As().GetDeviceDesc();
     var firendname = usb.As().GetFriendName();
+    System.Diagnostics.Trace.WriteLine($"desc: {desc}, friendname: {firendname}");
     var devicepath = usb.DevicePath();
 
-    using var ff = File.OpenHandle(devicepath, FileMode.Open);
-    var roothubname = ff.GetRootHubName();
-    devicepath = $"\\\\.\\{roothubname}";
-    using var ff1 = File.OpenHandle(devicepath, FileMode.Open);
-    ff1.GET_NODE_INFORMATION();
+    //using var ff = File.OpenHandle(devicepath, FileMode.Open);
+    //var roothubname = ff.GetRootHubName();
+    //devicepath = $"\\\\.\\{roothubname}";
+    //using var ff1 = File.OpenHandle(devicepath, FileMode.Open);
+    //ff1.GET_NODE_INFORMATION();
 }
 
 var cameras = DevConExtension.KSCATEGORY_AUDIO.DevicesFromInterface()
