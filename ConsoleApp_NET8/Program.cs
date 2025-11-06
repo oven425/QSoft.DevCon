@@ -2,16 +2,62 @@
 using QSoft.DevCon;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Controls;
+//USB xHCI 相容的主機控制器
+//USB 根集線器 (USB 3.0)
 
-//var hids = DevConExtension.GUID_DEVINTERFACE_HID.DevicesFromInterface();
-//foreach(var hid in hids)
-//{
-//    var vp = hid.VidPid();
-//    System.Diagnostics.Trace.WriteLine($"vid: {vp.vid:X4}, pid: {vp.pid:X4}");
-//}
+var subs = "Usb".Devices().Select(x => new
+{
+    childs = x.Childrens(),
+    enumerator = x.EnumeratorName(),
+    desc = x.GetDeviceDesc(),
+    instanceid = x.DeviceInstanceId(),
+});
+var allChildIds = subs.SelectMany(device => device.childs, (x, y) => new {parent = x, child = y });
+foreach(var oo in allChildIds)
+{
+    System.Diagnostics.Trace.WriteLine($"parent: {oo.parent}, child: {oo.child}");
+}
+var jj = subs.Join(allChildIds, x => x.instanceid.ToUpperInvariant(), y => y.child.ToUpperInvariant(), (x,y)=>new { c = x, p = y.parent});
+var ccc = jj.Where(x => x.p.enumerator == "PCI");
+var usb32 = ccc.Where(x => x.c.enumerator != "USB4");
+foreach(var oo in usb32)
+{
 
-var usbs = DevConExtension.GUID_DEVINTERFACE_USB_HUB.DevicesFromInterface();
+}
+
+var usbcontroller = DevConExtension.GUID_DEVINTERFACE_USB_HOST_CONTROLLER.DevicesFromInterface()
+    .Select(x => new
+    {
+        devicepath = x.DevicePath(),
+        friendname = x.As().GetFriendName(),
+        instanceid = x.As().DeviceInstanceId(),
+        childs = x.As().Childrens(),
+    });
+
+var usbhub = DevConExtension.GUID_DEVINTERFACE_USB_HUB.DevicesFromInterface()
+    .Select(x => new
+    {
+        devicepath = x.DevicePath(),
+        friendname = x.As().GetFriendName(),
+        desc = x.As().GetDeviceDesc(),
+        instanceid = x.As().DeviceInstanceId(),
+        childs = x.As().Childrens(),
+    });
+var controlers = usbcontroller.SelectMany(x=>x.childs, (parent, child) => new { parent = parent, child = child });
+var pc = controlers.Join(usbhub, x => x.child.ToUpperInvariant(), y => y.instanceid.ToUpperInvariant(), (x, y) => new { controller = x.parent, hub = y });
+foreach(var oo in pc)
+{
+    using var ff = File.OpenHandle(oo.controller.devicepath, FileMode.Open);
+    //var roothubname = ff.GetRootHubName();
+    //var devicepath = $"\\\\.\\{roothubname}";
+    using var ff1 = File.OpenHandle(oo.hub.devicepath, FileMode.Open);
+    ff1.GET_NODE_INFORMATION();
+    System.Diagnostics.Trace.WriteLine($"controller: {oo.controller.friendname}, hub: {oo.hub.desc}");
+}
+
+
+
+var usbs = DevConExtension.GUID_DEVINTERFACE_USB_DEVICE.DevicesFromInterface();
 foreach(var usb in usbs)
 {
     var desc = usb.As().GetDeviceDesc();
