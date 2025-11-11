@@ -42,22 +42,32 @@ namespace QSoft.DevCon
 
         public static string GetRootHubName(this SafeFileHandle src) => src.GetString(IOCTL_USB_GET_ROOT_HUB_NAME);
 
+        public static void NODE_INFORMATION(this SafeFileHandle src)
+        {
+            var nodeinfo = new USB_NODE_INFORMATION();
+            var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
+            var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes, IntPtr.Zero);
+            var err = Marshal.GetLastWin32Error();
+        }
+
         public static void  GET_NODE_INFORMATION(this SafeFileHandle src)
         {
             var nodeinfo = new USB_NODE_INFORMATION();
             var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
-            var success1 = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes1, IntPtr.Zero);
+            var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes, IntPtr.Zero);
             var err = Marshal.GetLastWin32Error();
             var count = nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts;
 
-            var hubinfoex = new USB_HUB_INFORMATION_EX();
-            var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref hubinfoex, 1));
-            var success = DeviceIoControl(src, IOCTL_USB_GET_HUB_INFORMATION_EX, [], 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
-            err = Marshal.GetLastWin32Error();
+            //var hubinfoex = new USB_HUB_INFORMATION_EX();
+            //var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref hubinfoex, 1));
+            //var success = DeviceIoControl(src, IOCTL_USB_GET_HUB_INFORMATION_EX, [], 0, buffer, (uint)buffer.Length, out var nBytes, IntPtr.Zero);
+            //err = Marshal.GetLastWin32Error();
             for(uint i=1; i<= nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts;i++)
             {
-                var portcoonectproperties = new USB_PORT_CONNECTOR_PROPERTIES();
-                portcoonectproperties.ConnectionIndex = i;
+                var portcoonectproperties = new USB_PORT_CONNECTOR_PROPERTIES
+                {
+                    ConnectionIndex = i
+                };
                 var portcoonectproperties_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref portcoonectproperties, 1));
                 
                 success = DeviceIoControl(src, IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, out nBytes, IntPtr.Zero);
@@ -115,7 +125,7 @@ namespace QSoft.DevCon
             var reqsz = Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>();
             var configdescsz = Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>();
             Span<byte> configDescReqBuf = stackalloc byte[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()];
-
+            
             USB_DESCRIPTOR_REQUEST configDescReq = new();
             USB_CONFIGURATION_DESCRIPTOR configDesc = new();
 
