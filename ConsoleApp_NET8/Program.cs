@@ -49,6 +49,7 @@ var aaa = "Camera".Devices().Select(x => new
     powerdata = x.PowerData(),
     ids = x.HardwaeeIDs(),
     panel = x.Panel(),
+    x.DeviceDesc,
     aa = x.CompatibleIDs()
 });
 foreach(var oo in aaa)

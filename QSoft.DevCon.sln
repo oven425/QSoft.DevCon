@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.5.33516.290
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleApplication1", "ConsoleApplication1\ConsoleApplication1.vcxproj", "{7759C6F5-CD8A-452C-B371-F456D51D22A9}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QSoft.DevCon.Benchmark", "QSoft.DevCon.Benchmark\QSoft.DevCon.Benchmark.csproj", "{06FAE524-F144-4F63-AC91-0627A64B1325}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usbview", "usbview\usbview.vcxproj", "{287B60C4-636F-4CE7-91C2-04E03A01B9C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp_NET10", "ConsoleApp_NET10\ConsoleApp_NET10.csproj", "{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -139,6 +141,18 @@ Global
 		{287B60C4-636F-4CE7-91C2-04E03A01B9C5}.Release|x64.Build.0 = Release|x64
 		{287B60C4-636F-4CE7-91C2-04E03A01B9C5}.Release|x86.ActiveCfg = Release|x64
 		{287B60C4-636F-4CE7-91C2-04E03A01B9C5}.Release|x86.Build.0 = Release|x64
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Debug|x64.Build.0 = Debug|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Debug|x86.Build.0 = Debug|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Release|x64.ActiveCfg = Release|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Release|x64.Build.0 = Release|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{8A423F56-2603-4C35-B0EF-ED5DC2CF6D9B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
