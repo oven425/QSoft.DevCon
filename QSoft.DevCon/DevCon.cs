@@ -269,7 +269,8 @@ namespace QSoft.DevCon
         public static string DeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_InstanceId);
 
-
+        public static string EnumeratorName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString(SPDRP_ENUMERATOR_NAME);
 
         public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
