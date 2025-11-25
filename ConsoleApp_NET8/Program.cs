@@ -10,6 +10,7 @@ var subs = "Usb".Devices().Select(x => new
     childs = x.Childrens(),
     enumerator = x.EnumeratorName(),
     desc = x.GetDeviceDesc(),
+    x.DeviceDesc,
     instanceid = x.DeviceInstanceId(),
 });
 var allChildIds = subs.SelectMany(device => device.childs, (x, y) => new {parent = x, child = y });
@@ -82,7 +83,7 @@ var cameras = DevConExtension.KSCATEGORY_AUDIO.DevicesFromInterface()
                     panel = x.As().Panel(),
                 }).ToList();
 
-
+var bb = new List<string>().IsEmpty;
 
 var aaa = "Camera".Devices().Select(x => new
 {

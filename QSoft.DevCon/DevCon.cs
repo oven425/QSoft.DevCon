@@ -180,7 +180,7 @@ namespace QSoft.DevCon
             return guids;
 
         }
-
+        
         extension((IntPtr dev, SP_DEVINFO_DATA a) src)
         {
             public string DeviceDesc=>src.GetString(SPDRP_DEVICEDESC);
@@ -188,11 +188,9 @@ namespace QSoft.DevCon
 
 
 
-        extension<TSource>(IEnumerable<TSource> source) // extension members for IEnumerable<TSource>
+        extension<TSource>(IEnumerable<TSource> source)
         {
-            // Extension property:
             public bool IsEmpty => !source.Any();
-
         }
 
         extension<TSource>(IEnumerable<TSource> source) // extension members for IEnumerable<TSource>
