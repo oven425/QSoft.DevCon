@@ -42,13 +42,43 @@ namespace QSoft.DevCon
 
         public static string GetRootHubName(this SafeFileHandle src) => src.GetString(IOCTL_USB_GET_ROOT_HUB_NAME);
 
-        public static void NODE_INFORMATION(this SafeFileHandle src)
+        public static USB_NODE_INFORMATION GetNodeInfomation(this SafeFileHandle src)
         {
             var nodeinfo = new USB_NODE_INFORMATION();
             var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
             var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes, IntPtr.Zero);
             var err = Marshal.GetLastWin32Error();
+            return nodeinfo;
         }
+
+        public static USB_PORT_CONNECTOR_PROPERTIES GetPortConntorProperties(this SafeFileHandle src, uint index)
+        {
+            var portcoonectproperties = new USB_PORT_CONNECTOR_PROPERTIES
+            {
+                ConnectionIndex = index
+            };
+            var portcoonectproperties_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref portcoonectproperties, 1));
+
+            var success = DeviceIoControl(src, IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, out var nBytes, IntPtr.Zero);
+
+
+            var err = Marshal.GetLastWin32Error();
+            return portcoonectproperties;
+        }
+
+        public static USB_NODE_CONNECTION_INFORMATION_EX GetNodeConnectionInformationEX(this SafeFileHandle src, uint index)
+        {
+            var connectionInfoEx = new USB_NODE_CONNECTION_INFORMATION_EX
+            {
+                ConnectionIndex = index
+            };
+            var connectionInfoEx_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref connectionInfoEx, 1));
+            var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX, connectionInfoEx_buffer, (uint)connectionInfoEx_buffer.Length, connectionInfoEx_buffer, (uint)connectionInfoEx_buffer.Length, out var nBytes, IntPtr.Zero);
+            var err = Marshal.GetLastWin32Error();
+            return connectionInfoEx;
+
+        }
+
 
         public static void  GET_NODE_INFORMATION(this SafeFileHandle src)
         {
@@ -64,24 +94,24 @@ namespace QSoft.DevCon
             //err = Marshal.GetLastWin32Error();
             for(uint i=1; i<= nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts;i++)
             {
-                var portcoonectproperties = new USB_PORT_CONNECTOR_PROPERTIES
-                {
-                    ConnectionIndex = i
-                };
-                var portcoonectproperties_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref portcoonectproperties, 1));
+                //var portcoonectproperties = new USB_PORT_CONNECTOR_PROPERTIES
+                //{
+                //    ConnectionIndex = i
+                //};
+                //var portcoonectproperties_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref portcoonectproperties, 1));
                 
-                success = DeviceIoControl(src, IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, out nBytes, IntPtr.Zero);
+                //success = DeviceIoControl(src, IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, portcoonectproperties_buffer, (uint)portcoonectproperties_buffer.Length, out nBytes, IntPtr.Zero);
 
 
                 err = Marshal.GetLastWin32Error();
 
 
-                var usb_node_connection_info_v2 = new USB_NODE_CONNECTION_INFORMATION_EX_V2();
-                usb_node_connection_info_v2.ConnectionIndex = i;
-                usb_node_connection_info_v2.Length = (uint)Marshal.SizeOf<USB_NODE_CONNECTION_INFORMATION_EX_V2>();
-                usb_node_connection_info_v2.SupportedUsbProtocols.Usb300 = true;
-                var usb_node_connection_info_v2_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref usb_node_connection_info_v2, 1));
-                success = DeviceIoControl(src, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, out nBytes, IntPtr.Zero);
+                //var usb_node_connection_info_v2 = new USB_NODE_CONNECTION_INFORMATION_EX_V2();
+                //usb_node_connection_info_v2.ConnectionIndex = i;
+                //usb_node_connection_info_v2.Length = (uint)Marshal.SizeOf<USB_NODE_CONNECTION_INFORMATION_EX_V2>();
+                //usb_node_connection_info_v2.SupportedUsbProtocols.Usb300 = true;
+                //var usb_node_connection_info_v2_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref usb_node_connection_info_v2, 1));
+                //success = DeviceIoControl(src, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, out nBytes, IntPtr.Zero);
                 err = Marshal.GetLastWin32Error();
 
 
@@ -95,10 +125,10 @@ namespace QSoft.DevCon
 
                 if(connectionInfoEx.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected)
                 {
-                    if(i==8)
+                    if(i==6)
                     {
-                        var span = src.GetConfigDescriptor(i, 0);
-                        DisplayConfigDesc(span);
+                        var buf = src.GetConfigDescriptor(i, 0);
+                        DisplayConfigDesc(buf);
                     }
                     
                     int aa = 0;
@@ -115,7 +145,7 @@ namespace QSoft.DevCon
             }
         }
 
-        static Span<byte> GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex)
+        static byte[] GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex)
         {
             bool success = false;
             uint nBytes = 0;
@@ -124,8 +154,10 @@ namespace QSoft.DevCon
             var sz1 = Marshal.SizeOf<SetupPacket>();
             var reqsz = Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>();
             var configdescsz = Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>();
-            Span<byte> configDescReqBuf = stackalloc byte[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()];
-            
+            var configDescReqBuf = new byte[Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>() + Marshal.SizeOf<USB_CONFIGURATION_DESCRIPTOR>()];
+            Span<byte> configDescReqSpan = configDescReqBuf.AsSpan();
+
+
             USB_DESCRIPTOR_REQUEST configDescReq = new();
             USB_CONFIGURATION_DESCRIPTOR configDesc = new();
 
@@ -211,8 +243,8 @@ namespace QSoft.DevCon
             //    return NULL;
             //}
 
-            configDescReqBuf = stackalloc byte[(int)nBytes];
-
+            configDescReqBuf = new byte[(int)nBytes];
+            configDescReqSpan = configDescReqBuf.AsSpan();
             //configDesc = (PUSB_CONFIGURATION_DESCRIPTOR)(configDescReq + 1);
 
             // Indicate the port from which the descriptor will be requested
@@ -257,22 +289,22 @@ namespace QSoft.DevCon
 
             if (nBytes != nBytesReturned)
             {
-                return Span<byte>.Empty;
+                return [];
             }
 
             if (configDesc.wTotalLength != (nBytes - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>()))
             {
-                return Span<byte>.Empty;
+                return [];
             }
-
 
             var ty = configDesc.bDescriptorType;
 
-            return configDescReqBuf.ToArray();
+            return configDescReqBuf;
         }
         //static uint USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
-        public static void DisplayConfigDesc(/*PUSBDEVICEINFO info, */ Span<byte> ConfigDesc_buf/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
+        public static void DisplayConfigDesc(/*PUSBDEVICEINFO info, */ byte[] ConfigDesc/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
         {
+            var ConfigDesc_buf = ConfigDesc.AsSpan();
             //USB_COMMON_DESCRIPTOR commonDesc = NULL;
             byte bInterfaceClass = 0;
             byte bInterfaceSubClass = 0;
@@ -1344,25 +1376,25 @@ namespace QSoft.DevCon
             public char CompanionHubSymbolicLinkName;
         };
 
-        enum USB_HUB_NODE
+        public enum USB_HUB_NODE
         {
             UsbHub,
             UsbMIParent
         };
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct USB_HUB_INFORMATION
+        public struct USB_HUB_INFORMATION
         {
 
             public USB_HUB_DESCRIPTOR HubDescriptor;
             public bool HubIsBusPowered;
         };
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct USB_MI_PARENT_INFORMATION
+        public struct USB_MI_PARENT_INFORMATION
         {
             uint NumberOfInterfaces;
         };
         [StructLayout(LayoutKind.Explicit, Pack = 1)]
-        struct USB_NODE_INFORMATION
+        public struct USB_NODE_INFORMATION
         {
             [FieldOffset(0)]
             public USB_HUB_NODE NodeType;        /* hub, mi parent */

@@ -176,31 +176,18 @@ namespace QSoft.DevCon
                 var gg = new Guid(guid);
                 guids.Add(gg);
             }
-            var eeee = guids.IsEmpty;
             return guids;
 
         }
         
-        extension((IntPtr dev, SP_DEVINFO_DATA a) src)
-        {
-            public string DeviceDesc=>src.GetString(SPDRP_DEVICEDESC);
-        }
+        //extension((IntPtr dev, SP_DEVINFO_DATA a) src)
+        //{
+        //    public string DeviceDesc=>src.GetString(SPDRP_DEVICEDESC);
+        //}
 
 
 
-        extension<TSource>(IEnumerable<TSource> source)
-        {
-            public bool IsEmpty => !source.Any();
-        }
 
-        extension<TSource>(IEnumerable<TSource> source) // extension members for IEnumerable<TSource>
-        {
-            // Extension method:
-            public List<TSource> ToListSafe()
-            {
-                return source?.ToList() ?? new List<TSource>();
-            }
-        }
 
         public static string? GetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => GetStringNull(src, SPDRP_FRIENDLYNAME);

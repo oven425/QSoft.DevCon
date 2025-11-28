@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
+using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Text;
 //USB xHCI 相容的主機控制器
@@ -10,7 +11,7 @@ var subs = "Usb".Devices().Select(x => new
     childs = x.Childrens(),
     enumerator = x.EnumeratorName(),
     desc = x.GetDeviceDesc(),
-    x.DeviceDesc,
+    //x.DeviceDesc,
     instanceid = x.DeviceInstanceId(),
 });
 var allChildIds = subs.SelectMany(device => device.childs, (x, y) => new {parent = x, child = y });
@@ -52,7 +53,13 @@ foreach(var oo in pc)
     //var roothubname = ff.GetRootHubName();
     //var devicepath = $"\\\\.\\{roothubname}";
     using var ff1 = File.OpenHandle(oo.hub.devicepath, FileMode.Open);
-    ff1.GET_NODE_INFORMATION();
+    //ff1.GET_NODE_INFORMATION();
+    var nodeinfo = ff1.GetNodeInfomation();
+    for(uint i= 1; i < nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts; i++)
+    {
+        var pcps = ff1.GetPortConntorProperties(i);
+        var nodeEX = ff1.GetNodeConnectionInformationEX(i);
+    }
     System.Diagnostics.Trace.WriteLine($"controller: {oo.controller.friendname}, hub: {oo.hub.desc}");
 }
 
@@ -83,7 +90,6 @@ var cameras = DevConExtension.KSCATEGORY_AUDIO.DevicesFromInterface()
                     panel = x.As().Panel(),
                 }).ToList();
 
-var bb = new List<string>().IsEmpty;
 
 var aaa = "Camera".Devices().Select(x => new
 {
@@ -96,7 +102,7 @@ var aaa = "Camera".Devices().Select(x => new
     powerdata = x.PowerData(),
     ids = x.HardwaeeIDs(),
     panel = x.Panel(),
-    x.DeviceDesc,
+    //x.DeviceDesc,
     aa = x.CompatibleIDs()
 });
 foreach(var oo in aaa)

@@ -3,8 +3,8 @@
     <UseWPF>true</UseWPF>
     <Title>DevCon.NET</Title>
     <VersionPrefix>2.0.0.5</VersionPrefix>
-    <TargetFrameworks>net10.0-windows;net8.0-windows;net6.0-windows;net472;net481;net462;net460</TargetFrameworks>
-    <LangVersion>14.0</LangVersion>
+    <TargetFrameworks>net8.0-windows;net6.0-windows;net472;net481;net462;net460</TargetFrameworks>
+    <LangVersion>13.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageIcon>48607350112_057637c3b5_o.jpg</PackageIcon>
