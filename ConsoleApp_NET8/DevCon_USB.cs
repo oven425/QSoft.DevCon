@@ -106,12 +106,14 @@ namespace QSoft.DevCon
                 err = Marshal.GetLastWin32Error();
 
 
-                //var usb_node_connection_info_v2 = new USB_NODE_CONNECTION_INFORMATION_EX_V2();
-                //usb_node_connection_info_v2.ConnectionIndex = i;
-                //usb_node_connection_info_v2.Length = (uint)Marshal.SizeOf<USB_NODE_CONNECTION_INFORMATION_EX_V2>();
-                //usb_node_connection_info_v2.SupportedUsbProtocols.Usb300 = true;
-                //var usb_node_connection_info_v2_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref usb_node_connection_info_v2, 1));
-                //success = DeviceIoControl(src, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, out nBytes, IntPtr.Zero);
+                var usb_node_connection_info_v2 = new USB_NODE_CONNECTION_INFORMATION_EX_V2
+                {
+                    ConnectionIndex = i,
+                    Length = (uint)Marshal.SizeOf<USB_NODE_CONNECTION_INFORMATION_EX_V2>()
+                };
+                usb_node_connection_info_v2.SupportedUsbProtocols.Usb300 = true;
+                var usb_node_connection_info_v2_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref usb_node_connection_info_v2, 1));
+                success = DeviceIoControl(src, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, usb_node_connection_info_v2_buffer, (uint)usb_node_connection_info_v2_buffer.Length, out nBytes, IntPtr.Zero);
                 err = Marshal.GetLastWin32Error();
 
 
@@ -128,7 +130,7 @@ namespace QSoft.DevCon
                     if(i==6)
                     {
                         var buf = src.GetConfigDescriptor(i, 0);
-                        DisplayConfigDesc(buf);
+                        DisplayConfigDesc(usb_node_connection_info_v2, buf);
                     }
                     
                     int aa = 0;
@@ -302,7 +304,7 @@ namespace QSoft.DevCon
             return configDescReqBuf;
         }
         //static uint USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
-        public static void DisplayConfigDesc(/*PUSBDEVICEINFO info, */ byte[] ConfigDesc/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
+        public static void DisplayConfigDesc(USB_NODE_CONNECTION_INFORMATION_EX_V2 ConnectionInfoV2, byte[] ConfigDesc/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
         {
             var ConfigDesc_buf = ConfigDesc.AsSpan();
             //USB_COMMON_DESCRIPTOR commonDesc = NULL;
@@ -318,6 +320,8 @@ namespace QSoft.DevCon
             //   ? true
             //   : false;
 
+            var isSS = ConnectionInfoV2.Flags.DeviceIsOperatingAtSuperSpeedOrHigher;
+
             //commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
 
             //// initialize global Configuration start/end address and string desc address
@@ -326,7 +330,7 @@ namespace QSoft.DevCon
             //g_descEnd = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
 
             //AppendTextBuffer("\r\n       ---===>Full Configuration Descriptor<===---\r\n");
-            
+
             //var ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
             var commonDesc_buf = ConfigDesc_buf;
             var commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
@@ -411,7 +415,7 @@ namespace QSoft.DevCon
                         //    (PUSB_CONFIGURATION_DESCRIPTOR)commonDesc,
                         //    StringDescs);
 
-                        //DisplayConfigurationDescriptor(ConfigDesc_buf);
+                        DisplayConfigurationDescriptor(ConfigDesc_buf);
                         break;
 
                     case USB_INTERFACE_DESCRIPTOR_TYPE:
@@ -534,6 +538,9 @@ namespace QSoft.DevCon
                         //    displayUnknown = TRUE;
                         //    break;
                         //}
+                        //USB_IAD_DESCRIPTOR
+                        var idadespc = MemoryMarshal.Read<USB_IAD_DESCRIPTOR>(commonDesc_buf);
+                        
                         //DisplayIADDescriptor((PUSB_IAD_DESCRIPTOR)commonDesc, StringDescs,
                         //        ConfigDesc->bNumInterfaces,
                         //        info->DeviceInfoNode != NULL ? info->DeviceInfoNode->LatestDevicePowerState : PowerDeviceUnspecified);
@@ -735,7 +742,12 @@ namespace QSoft.DevCon
             uint uCount = 0;
             bool isSS;
             var ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
-
+            
+            //isSS = info->ConnectionInfoV2
+            //       && (info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedOrHigher ||
+            //           info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedPlusOrHigher)
+            //       ? true
+            //       : false;
             //isSS = info->ConnectionInfoV2
             //       && (info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedOrHigher ||
             //           info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedPlusOrHigher)

@@ -53,7 +53,7 @@ foreach(var oo in pc)
     //var roothubname = ff.GetRootHubName();
     //var devicepath = $"\\\\.\\{roothubname}";
     using var ff1 = File.OpenHandle(oo.hub.devicepath, FileMode.Open);
-    //ff1.GET_NODE_INFORMATION();
+    ff1.GET_NODE_INFORMATION();
     var nodeinfo = ff1.GetNodeInfomation();
     for(uint i= 1; i < nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts; i++)
     {

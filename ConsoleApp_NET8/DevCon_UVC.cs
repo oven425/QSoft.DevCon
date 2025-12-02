@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text;
@@ -951,4 +952,28 @@ const ushort UVC15 =  0x150;
         const byte EP_ENDPOINT = 0x02;
         const byte EP_INTERRUPT = 0x03;
     }
+
+    public struct USB_IAD_DESCRIPTOR
+    {
+        byte bLength;
+        byte bDescriptorType;
+        byte bFirstInterface;
+        byte bInterfaceCount;
+        byte bFunctionClass;
+        byte bFunctionSubClass;
+        byte bFunctionProtocol;
+        byte iFunction;
+    };
+
+    public struct VIDEO_CONTROL_HEADER_UNIT
+    {
+        byte bLength;              // Size of this descriptor in bytes
+        byte bDescriptorType;      // CS_INTERFACE descriptor type
+        byte bDescriptorSubtype;   // VC_HEADER descriptor subtype
+        byte bcdVideoSpec;        // USB video class spec revision number
+        byte wTotalLength;        // Total length, including all units and terminals
+        byte dwClockFreq;          // Device clock frequency in Hz
+        byte bInCollection;        // number of video streaming interfaces
+        byte baInterfaceNr[];      // interface number array
+    };
 }
