@@ -13,8 +13,20 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtensiona
     {
+        public struct VIDEO_CONTROL_HEADER_UNIT
+        {
+            byte bLength;              // Size of this descriptor in bytes
+            byte bDescriptorType;      // CS_INTERFACE descriptor type
+            byte bDescriptorSubtype;   // VC_HEADER descriptor subtype
+            byte bcdVideoSpec;        // USB video class spec revision number
+            byte wTotalLength;        // Total length, including all units and terminals
+            byte dwClockFreq;          // Device clock frequency in Hz
+            byte bInCollection;        // number of video streaming interfaces
+            //byte baInterfaceNr[];      // interface number array
+        };
         static bool DisplayVCHeader(Span<byte> VCInterfaceDesc)
         {
+            var unit = MemoryMarshal.Read<VIDEO_CONTROL_HEADER_UNIT>(VCInterfaceDesc);
             //@@DisplayVCHeader -Video Control Interface Header
             uint i = 0;
             uint uSize = 0;
@@ -506,6 +518,7 @@ namespace QSoft.DevCon
 
         static bool DisplayVideoDescriptor(Span<byte> VidCommonDesc_buf, byte bInterfaceSubClass, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
         {
+            var aa = MemoryMarshal.Cast<byte, VIDEO_SPECIFIC>(VidCommonDesc_buf)[0];
             var VidCommonDesc = MemoryMarshal.Read<VIDEO_SPECIFIC>(VidCommonDesc_buf);
             //@@DisplayVideoDescriptor -Class-Specific Video Descriptor
             switch (VidCommonDesc.bDescriptorType)
@@ -519,8 +532,7 @@ namespace QSoft.DevCon
                             switch (VidCommonDesc.bDescriptorSubtype)
                             {
                                 case VC_HEADER:
-                                    //return DisplayVCHeader(
-                                    //    (PVIDEO_CONTROL_HEADER_UNIT)VidCommonDesc);
+                                    //return DisplayVCHeader(VidCommonDesc_buf);
                                     break;
 
                                 case INPUT_TERMINAL:
@@ -965,15 +977,5 @@ const ushort UVC15 =  0x150;
         byte iFunction;
     };
 
-    public struct VIDEO_CONTROL_HEADER_UNIT
-    {
-        byte bLength;              // Size of this descriptor in bytes
-        byte bDescriptorType;      // CS_INTERFACE descriptor type
-        byte bDescriptorSubtype;   // VC_HEADER descriptor subtype
-        byte bcdVideoSpec;        // USB video class spec revision number
-        byte wTotalLength;        // Total length, including all units and terminals
-        byte dwClockFreq;          // Device clock frequency in Hz
-        byte bInCollection;        // number of video streaming interfaces
-        byte baInterfaceNr[];      // interface number array
-    };
+    
 }

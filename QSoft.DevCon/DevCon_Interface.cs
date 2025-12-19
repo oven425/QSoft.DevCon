@@ -49,17 +49,6 @@ namespace QSoft.DevCon
                         SP_DEVINFO_DATA devinfo = new();
                         devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
                         var bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo, IntPtr.Zero, 0, out var reqsize, ref devinfo);
-                        //var err = Marshal.GetLastWin32Error();
-                        //var ptr = Marshal.AllocHGlobal((int)reqsize);
-                        //Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
-                        //uint nBytes = reqsize;
-                        //bb = SetupDiGetDeviceInterfaceDetail(hDevInfo, interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
-
-                        //byte[] bb1 = new byte[nBytes];
-                        //Marshal.Copy(ptr, bb1, 0, bb1.Length);
-                        //var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
-                        //Marshal.FreeHGlobal(ptr);
-
                         yield return (hDevInfo, devinfo, interfaceinfo);
                     }
                     index++;
@@ -75,9 +64,7 @@ namespace QSoft.DevCon
             => src.Select(x => (x.dev, x.devdata));
 
         public static (IntPtr dev, SP_DEVINFO_DATA devdata) As(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo) src)
-        {
-            return (src.dev, src.devdata);
-        }
+            => (src.dev, src.devdata);
 
         public static string DevicePath(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo) src)
         {
@@ -100,17 +87,7 @@ namespace QSoft.DevCon
             }
             return "";
         }
-
-
-        //[DllImport("setupapi.dll", SetLastError = true)]
-        //static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
-
-
     }
-
-    
-    
-
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct SP_DEVICE_INTERFACE_DATA

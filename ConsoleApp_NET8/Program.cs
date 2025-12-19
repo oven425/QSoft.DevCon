@@ -6,6 +6,12 @@ using System.Text;
 //USB xHCI 相容的主機控制器
 //USB 根集線器 (USB 3.0)
 
+var span = Enumerable.Range(0, 64).Select(x=>(byte)x).ToArray().AsSpan();
+var s1 = span.Slice(10);
+var s2 = span.Slice(5);
+
+
+
 var subs = "Usb".Devices().Select(x => new
 {
     childs = x.Childrens(),

@@ -147,6 +147,68 @@ namespace QSoft.DevCon
             }
         }
 
+        public static (List<Range> ranges, byte[] raw) ParseConfig(this byte[] src)
+        {
+            var commonDesc_buf = src;
+            var commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
+            List<Range> ll = [];
+            int index = 0;
+            while (commonDesc_buf.Length > 0)
+            {
+                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
+                if (commonDesc1.bLength == 0 || commonDesc_buf.Length < commonDesc1.bLength)
+                    break;
+                System.Diagnostics.Trace.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
+                commonDesc_buf = commonDesc_buf[commonDesc1.bLength..];
+                ll.Add(index..(index + commonDesc1.bLength));
+
+                index = index + commonDesc1.bLength;
+            }
+
+
+            foreach (var oo in ll)
+            {
+                var oi = src[oo];
+                commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(oi);
+                switch (commonDesc.bDescriptorType)
+                {
+                    case USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE:
+                        var quilty = MemoryMarshal.Read<USB_DEVICE_QUALIFIER_DESCRIPTOR>(oi);
+                        break;
+                    case USB_OTHER_SPEED_CONFIGURATION_DESCRIPTOR_TYPE:
+                        break;
+                    case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+                        var usb_configuration_desc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(oi);
+                        break;
+                    case USB_INTERFACE_DESCRIPTOR_TYPE:
+                        var cc = MemoryMarshal.Read<USB_INTERFACE_DESCRIPTOR>(oi);
+                        //bInterfaceClass = cc.bInterfaceClass;
+                        //bInterfaceSubClass = cc.bInterfaceSubClass;
+                        //bInterfaceProtocol = cc.bInterfaceProtocol;
+                        break;
+                    case USB_ENDPOINT_DESCRIPTOR_TYPE:
+                        var end = MemoryMarshal.Read<USB_ENDPOINT_DESCRIPTOR>(oi);
+                        break;
+                    case USB_HID_DESCRIPTOR_TYPE:
+                        //var hid = MemoryMarshal.Read<USB_HID_DESCRIPTOR>(oi);
+                        break;
+                    default:
+                        {
+                            //switch (bInterfaceClass)
+                            //{
+                            //    case USB_DEVICE_CLASS_VIDEO:
+                            //        var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(oi);
+                            //        break;
+                            //}
+                        }
+                        break;
+                }
+
+
+            }
+            return (ll, src);
+        }
+
         static byte[] GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex)
         {
             bool success = false;
@@ -303,6 +365,8 @@ namespace QSoft.DevCon
 
             return configDescReqBuf;
         }
+
+
         //static uint USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
         public static void DisplayConfigDesc(USB_NODE_CONNECTION_INFORMATION_EX_V2 ConnectionInfoV2, byte[] ConfigDesc/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
         {
@@ -334,6 +398,8 @@ namespace QSoft.DevCon
             //var ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
             var commonDesc_buf = ConfigDesc_buf;
             var commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
+            List<Range> ll = [];
+            int index = 0;
             while (commonDesc_buf.Length > 0)
             {
                 var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
@@ -341,6 +407,51 @@ namespace QSoft.DevCon
                     break;
                 System.Diagnostics.Trace.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
                 commonDesc_buf = commonDesc_buf[commonDesc1.bLength..];
+                ll.Add(index..(index+commonDesc1.bLength));
+
+                index = index + commonDesc1.bLength;
+            }
+            
+
+            foreach (var oo in ll)
+            {
+                var oi = ConfigDesc_buf[oo];
+                commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(oi);
+                switch(commonDesc.bDescriptorType)
+                {
+                    case USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE:
+                        var quilty = MemoryMarshal.Read<USB_DEVICE_QUALIFIER_DESCRIPTOR>(oi);
+                        break;
+                    case USB_OTHER_SPEED_CONFIGURATION_DESCRIPTOR_TYPE:                        
+                        break;
+                    case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+                        var usb_configuration_desc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(oi);
+                        break;
+                    case USB_INTERFACE_DESCRIPTOR_TYPE:
+                        var cc = MemoryMarshal.Read<USB_INTERFACE_DESCRIPTOR>(oi);
+                        bInterfaceClass = cc.bInterfaceClass;
+                        bInterfaceSubClass = cc.bInterfaceSubClass;
+                        bInterfaceProtocol = cc.bInterfaceProtocol;
+                        break;
+                    case USB_ENDPOINT_DESCRIPTOR_TYPE:
+                        var end = MemoryMarshal.Read<USB_ENDPOINT_DESCRIPTOR>(oi);
+                        break;
+                    case USB_HID_DESCRIPTOR_TYPE:
+                        //var hid = MemoryMarshal.Read<USB_HID_DESCRIPTOR>(oi);
+                        break;
+                    default:
+                        {
+                            switch (bInterfaceClass)
+                            {
+                                case USB_DEVICE_CLASS_VIDEO:
+                                    var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(oi);
+                                    break;
+                            }
+                        }
+                        break;
+                }
+
+                
             }
             commonDesc_buf = ConfigDesc_buf;
             do
