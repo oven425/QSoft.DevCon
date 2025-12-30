@@ -13,135 +13,22 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtensiona
     {
-        public struct VIDEO_CONTROL_HEADER_UNIT
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct VIDEO_CONTROL_HEADER_UNIT
         {
             byte bLength;              // Size of this descriptor in bytes
             byte bDescriptorType;      // CS_INTERFACE descriptor type
             byte bDescriptorSubtype;   // VC_HEADER descriptor subtype
-            byte bcdVideoSpec;        // USB video class spec revision number
-            byte wTotalLength;        // Total length, including all units and terminals
-            byte dwClockFreq;          // Device clock frequency in Hz
+            ushort bcdVideoSpec;        // USB video class spec revision number
+            ushort wTotalLength;        // Total length, including all units and terminals
+            uint dwClockFreq;          // Device clock frequency in Hz
             byte bInCollection;        // number of video streaming interfaces
             //byte baInterfaceNr[];      // interface number array
         };
         static bool DisplayVCHeader(Span<byte> VCInterfaceDesc)
         {
             var unit = MemoryMarshal.Read<VIDEO_CONTROL_HEADER_UNIT>(VCInterfaceDesc);
-            //@@DisplayVCHeader -Video Control Interface Header
-            uint i = 0;
-            uint uSize = 0;
-            //PUCHAR pData = NULL;
-
-            //AppendTextBuffer("\r\n          ===>Class-Specific Video Control Interface Header "\
-
-            //    "Descriptor<===\r\n");
-            //AppendTextBuffer("bLength:                           0x%02X\r\n", VCInterfaceDesc->bLength);
-            //AppendTextBuffer("bDescriptorType:                   0x%02X\r\n", VCInterfaceDesc->bDescriptorType);
-            //AppendTextBuffer("bDescriptorSubtype:                0x%02X\r\n", VCInterfaceDesc->bDescriptorSubtype);
-            //if (UVC10 == g_chUVCversion)
-            //{
-            //    AppendTextBuffer("bcdVDC:                          0x%04X\r\n", VCInterfaceDesc->bcdVideoSpec);
-            //}
-            //else
-            //{
-            //    AppendTextBuffer("bcdUVC:                          0x%04X\r\n", VCInterfaceDesc->bcdVideoSpec);
-            //}
-            //AppendTextBuffer("wTotalLength:                    0x%04X", VCInterfaceDesc->wTotalLength);
-
-            // Verify the total interface size (size of this header and all descriptors
-            //   following until and not including the first endpoint)
-            //uSize = GetVCInterfaceSize(VCInterfaceDesc);
-            //if (uSize != VCInterfaceDesc->wTotalLength)
-            //{
-            //    AppendTextBuffer("\r\n*!*ERROR: Invalid total interface size 0x%02X, should be 0x%02X\r\n",
-            //        VCInterfaceDesc->wTotalLength, uSize);
-            //}
-            //else
-            //{
-            //    //AppendTextBuffer("  -> Validated\r\n");
-            //}
-            //AppendTextBuffer("dwClockFreq:                 0x%08X",
-            //    VCInterfaceDesc->dwClockFreq);
-            //if (gDoAnnotation)
-            //{
-            //    AppendTextBuffer(" = (%d) Hz", VCInterfaceDesc->dwClockFreq);
-            //}
-            //AppendTextBuffer("\r\nbInCollection:                     0x%02X\r\n",
-            //    VCInterfaceDesc->bInCollection);
-
-            // baInterfaceNr is a variable length field
-            // Size is in bInCollection
-            //for (i = 1, pData = (PUCHAR) & VCInterfaceDesc->bInCollection;
-            //    i <= VCInterfaceDesc->bInCollection; i++, pData++)
-            //{
-            //    AppendTextBuffer("baInterfaceNr[%d]:                  0x%02X\r\n",
-            //        i, *pData);
-            //}
-
-            //uSize = (sizeof(VIDEO_CONTROL_HEADER_UNIT) + VCInterfaceDesc->bInCollection);
-            //if (VCInterfaceDesc->bLength != uSize)
-            {
-                //@@TestCase B2.1 (also in Descript.c)
-                //@@ERROR
-                //@@Descriptor Field - bLength
-                //@@The declared length in the device descriptor is less than required length in
-                //@@  the USB Video Device Specification
-                //AppendTextBuffer("*!*ERROR:  bLength of %d incorrect, should be %d\r\n",
-                //    VCInterfaceDesc->bLength, uSize);
-                //OOPS();
-            }
-
-            //@@TestCase B2.2 (also in Descript.c)
-            //@@WARNING
-            //@@Descriptor Field - bcdVDC
-            //@@The bcdVDC version of the device is not the same as the version of used by USBView
-            //if (VCInterfaceDesc->bcdVideoSpec < BCDVDC)
-            {
-                //AppendTextBuffer("*!*WARNING: This device is set to the old USB Video "\
-
-                //    "Class spec version 0x%04X\r\n", VCInterfaceDesc->bcdVideoSpec);
-                //OOPS();
-            }
-
-            //if (VCInterfaceDesc->dwClockFreq < 1)
-            {
-                //@@TestCase B2.3 (Descript.c Line 70)
-                //@@WARNING
-                //@@dwClockFrequency should be greater than 0
-                //@@Question should we check that any non-zero value is accurate
-                //AppendTextBuffer("*!*ERROR:  dwClockFreq must be non-zero\r\n");
-                //OOPS();
-            }
-
-            //@@TestCase B2.4
-            //@@Not yet implemented - Priority 1
-            //@@Descriptor Field - baInterfaceNr
-            //@@We should test to verify each interface number is valid?
-            //    for (i=0; i<VCInterfaceDesc->bInCollection; i++)
-            //      {AppendTextBuffer("baInterfaceNr[%d]:                  0x%02X\r\n", i+1,
-            //        VCInterfaceDesc->baInterfaceNr[i]);}
-
-
-//            if (gDoAnnotation)
-//            {
-//                switch (g_chUVCversion)
-//                {
-//                    case UVC10:
-//                        //AppendTextBuffer("USB Video Class device: spec version 1.0\r\n");
-//                        break;
-//                    case UVC11:
-//                        //AppendTextBuffer("USB Video Class device: spec version 1.1\r\n");
-//                        break;
-//# if H264_SUPPORT
-//                    case UVC15:
-//                        AppendTextBuffer("USB Video Class device: spec version 1.5\r\n");
-//                        break;
-//#endif
-
-//                    default:
-//                        break;
-//                }
-//            }
+            var baInterfaceNr = VCInterfaceDesc.Slice(12);
             return true;
         }
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -157,7 +44,7 @@ namespace QSoft.DevCon
             //UCHAR baSourceID[];         // IDs of connected units/terminals
         };
 
-        static bool DisplayVCExtensionUnit(Span<byte> VidExtensionDesc_buf, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
+        static bool DisplayVCExtensionUnit(Span<byte> VidExtensionDesc_buf)
         {
             //https://www.usbzh.com/article/detail-36.html
             var VidExtensionDesc = MemoryMarshal.Read<VIDEO_EXTENSION_UNIT>(VidExtensionDesc_buf);
@@ -165,7 +52,6 @@ namespace QSoft.DevCon
             var sz = Marshal.SizeOf<VIDEO_EXTENSION_UNIT>();
             if (VidExtensionDesc.bNrInPins > 0)
             {
-                
                 VidExtensionDesc_buf.Slice(sz, VidExtensionDesc.bNrInPins).CopyTo(baSourceID);
             }
             sz = sz + baSourceID.Length;
@@ -174,148 +60,12 @@ namespace QSoft.DevCon
             var aaa = VidExtensionDesc_buf.Slice(sz, bControlSize);
             var bits = new BitArray(aaa.ToArray());
 
-            ////@@DisplayVCExtensionUnit -Video Control Extension Unit
-            //int i = 0;
-            //UCHAR p = 0;
-            //UCHAR bControlSize = 0;
-            //PUCHAR pData = NULL;
-            //OLECHAR szGUID[256];
-            //size_t bLength = 0;
-
-            //bLength = SizeOfVideoExtensionUnit(VidExtensionDesc);
-
-            //memset((LPOLESTR)szGUID, 0, sizeof(OLECHAR) * 256);
-            //i = StringFromGUID2((REFGUID) & VidExtensionDesc->guidExtensionCode, (LPOLESTR)szGUID, 255);
-            //i++;
-
-            //AppendTextBuffer("\r\n          ===>Video Control Extension Unit Descriptor<===\r\n");
-            //AppendTextBuffer("bLength:                           0x%02X\r\n", VidExtensionDesc->bLength);
-            //AppendTextBuffer("bDescriptorType:                   0x%02X\r\n", VidExtensionDesc->bDescriptorType);
-            //AppendTextBuffer("bDescriptorSubtype:                0x%02X\r\n", VidExtensionDesc->bDescriptorSubtype);
-            //AppendTextBuffer("bUnitID:                           0x%02X\r\n", VidExtensionDesc->bUnitID);
-            //AppendTextBuffer("guidExtensionCode:                 %S\r\n", szGUID);
-            //AppendTextBuffer("bNumControls:                      0x%02X\r\n", VidExtensionDesc->bNumControls);
-            //AppendTextBuffer("bNrInPins:                         0x%02X\r\n", VidExtensionDesc->bNrInPins);
-
-            StringDescs.AppendLine($"          ===>Video Control Extension Unit Descriptor<===");
-            StringDescs.AppendLine($"bLength:0x{VidExtensionDesc}");
-            //if (gDoAnnotation)
-            //{
-            //    AppendTextBuffer("===>List of Connected Units and Terminal ID's\r\n");
-            //}
-            //// baSourceID is a variable length field
-            //// Size is in bNrInPins, must be at least 1 (so index starts at 1)
-            //for (i = 1, pData = (PUCHAR) & VidExtensionDesc->baSourceID;
-            //    i <= VidExtensionDesc->bNrInPins; i++, pData++)
-            //{
-            //    AppendTextBuffer("baSourceID[%d]:                     0x%02X\r\n",
-            //        i, *pData);
-            //}
-            //// point to bControlSize (address of bNrInPins plus number of fields in bNrInPins
-            ////   plus 1 for next field)
-            //pData = &VidExtensionDesc->bNrInPins + VidExtensionDesc->bNrInPins + 1;
-            //bControlSize = *pData;
-            //AppendTextBuffer("bControlSize:                      0x%02X\r\n", bControlSize);
-
-            //// Are there any controls?
-            //if (bControlSize > 0)
-            //{
-            //    AppendTextBuffer("bmControls : ");
-            //    VDisplayBytes(pData + 1, *pData);
-
-            //    // Map one byte at a time of the bmControls field in the Video Control Extension Unit Descriptor
-            //    for (i = 1; i <= bControlSize; i++)
-            //    {
-            //        UINT uBitIndex = 0;
-            //        BYTE cCheckBit = 0;
-            //        BYTE cMask = 1;
-
-            //        // map byte
-            //        for (; uBitIndex < 8; uBitIndex++)
-            //        {
-            //            cCheckBit = cMask & *(pData + i);
-
-            //            AppendTextBuffer("     D%02d = %d  %s %s\r\n",
-            //                uBitIndex + 8 * (i - 1),
-            //                cCheckBit ? 1 : 0,
-            //                cCheckBit ? "yes - " : " no - ",
-            //                "Vendor-Specific (Optional)");
-
-            //            cMask = cMask << 1;
-            //        }
-            //    }
-            //}
-
-            //// get address of iExtension
-            //pData = &VidExtensionDesc->bNrInPins + VidExtensionDesc->bNrInPins + bControlSize + 2;
-            ////  pData = (PUCHAR) VidExtensionDesc + (VidExtensionDesc->bLength - 1);
-            //AppendTextBuffer("iExtension:                        0x%02X\r\n", *pData);
-            //if (gDoAnnotation)
-            //{
-            //    if (*pData)
-            //    {
-            //        DisplayStringDescriptor(*pData, StringDescs, LatestDevicePowerState);
-            //    }
-            //}
-
-            //// size of descriptor struct size (23) + bNrInPins + bControlSize + iExtension size
-            ////
-            ////  p = (sizeof(VIDEO_EXTENSION_UNIT)
-            ////      + VidExtensionDesc->bNrInPins + bControlSize + 1);
-            //if (VidExtensionDesc->bLength != bLength)
-            //{
-            //    //@@TestCase B10.1 (also in Descript.c)
-            //    //@@ERROR
-            //    //@@Descriptor Field - bLength
-            //    //@@The declared length in the device descriptor is not equal to the
-            //    //@@  required length in the USB Video Device Specification
-            //    AppendTextBuffer("*!*ERROR:  bLength of 0x%02X incorrect, should be 0x%02X\r\n",
-            //        VidExtensionDesc->bLength, p);
-            //    OOPS();
-            //}
-
-            //if (VidExtensionDesc->bUnitID < 1)
-            //{
-            //    //@@TestCase B10.2 (Descript.c  Line 517)
-            //    //@@ERROR
-            //    //@@Descriptor Field - bUnitID
-            //    //@@bUnitID must be non-zero
-            //    //@@Question: Should we test to verify bUnitID is valid
-            //    AppendTextBuffer("*!*ERROR:  bUnitID must be non-zero\r\n");
-            //    OOPS();
-            //}
-
-            ////bugbug do we need two
-            //if (VidExtensionDesc->bNrInPins < 1)
-            //{
-            //    //@@TestCase B10.3 (Descript.c  Line 522)
-            //    //@@ERROR
-            //    //@@Descriptor Field - bNrInPins
-            //    //@@bNrInPins must be non-zero
-            //    //@@Question: Should we test to verify bNrInPins is valid
-            //    AppendTextBuffer("*!*ERROR:  bNrInPins must be non-zero\r\n");
-            //    OOPS();
-            //}
-
-            //for (i = 1, pData = (PUCHAR) & VidExtensionDesc->baSourceID;
-            //    i <= VidExtensionDesc->bNrInPins; i++, pData++)
-            //{
-            //    if (*pData == 0)
-            //    {
-            //        //@@TestCase B10.4  (Descript.c  Line 527)
-            //        //@@ERROR
-            //        //@@Descriptor Field - baSourceID[]
-            //        //@@baSourceID[] must be non-zero
-            //        //@@Question: Should we test to verify baSourceID is valid
-            //        AppendTextBuffer("*!*ERROR:  baSourceID[%d] must be non-zero\r\n", *pData);
-            //        OOPS();
-            //    }
-            //}
             return true;
         }
 
 
         // VideoControl Processing Unit Descriptor
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct VIDEO_PROCESSING_UNIT
         {
             public byte bLength;              // Size of this descriptor in bytes
@@ -329,7 +79,7 @@ namespace QSoft.DevCon
         };
 
 
-        static bool DisplayVCProcessingUnit(Span<byte> VidProcessingDescBuf, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
+        static bool DisplayVCProcessingUnit(this Span<byte> VidProcessingDescBuf)
         {
             var VidProcessingDesc = MemoryMarshal.Read<VIDEO_PROCESSING_UNIT>(VidProcessingDescBuf);
             ////@@DisplayVCProcessingUnit -Video Control Processor Unit
@@ -514,7 +264,42 @@ namespace QSoft.DevCon
             return true;
         }
 
+        public static void GetUVC(this Span<byte> src, byte interfaceclass, byte interfacesubclass)
+        {
+            var VidCommonDesc = MemoryMarshal.Read<VIDEO_SPECIFIC>(src);
+            switch (VidCommonDesc.bDescriptorType)
+            {
+                case CS_INTERFACE:
+                    switch(interfacesubclass)
+                    {
+                        case VIDEO_SUBCLASS_CONTROL:
+                            switch(VidCommonDesc.bDescriptorSubtype)
+                            {
+                                case VC_HEADER:
+                                    DisplayVCHeader(src);
+                                    break;
+                                case PROCESSING_UNIT:
+                                    src.DisplayVCProcessingUnit();
+                                    break;
+                                case EXTENSION_UNIT:
+                                    DisplayVCExtensionUnit(src);
+                                    break;
+                            }
+                            break;
+                        case VIDEO_SUBCLASS_STREAMING:
+                            switch(VidCommonDesc.bDescriptorSubtype)
+                            {
 
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
 
         static bool DisplayVideoDescriptor(Span<byte> VidCommonDesc_buf, byte bInterfaceSubClass, StringBuilder StringDescs, DEVICE_POWER_STATE LatestDevicePowerState)
         {
@@ -565,7 +350,7 @@ namespace QSoft.DevCon
 
                                 case EXTENSION_UNIT:
                                     //var extunit = MemoryMarshal.Read<VIDEO_EXTENSION_UNIT>(VidCommonDesc_buf);
-                                    return DisplayVCExtensionUnit(VidCommonDesc_buf, StringDescs, LatestDevicePowerState);
+                                    //return DisplayVCExtensionUnit(VidCommonDesc_buf, StringDescs, LatestDevicePowerState);
                                     break;
 
 #if H264_SUPPORT
@@ -964,6 +749,7 @@ const ushort UVC15 =  0x150;
         const byte EP_ENDPOINT = 0x02;
         const byte EP_INTERRUPT = 0x03;
     }
+
 
     public struct USB_IAD_DESCRIPTOR
     {

@@ -432,6 +432,7 @@ namespace QSoft.DevCon
                         bInterfaceClass = cc.bInterfaceClass;
                         bInterfaceSubClass = cc.bInterfaceSubClass;
                         bInterfaceProtocol = cc.bInterfaceProtocol;
+                        System.Diagnostics.Trace.WriteLine($"Class:{bInterfaceClass} SubClass:{bInterfaceSubClass} Protocol:{bInterfaceProtocol}");
                         break;
                     case USB_ENDPOINT_DESCRIPTOR_TYPE:
                         var end = MemoryMarshal.Read<USB_ENDPOINT_DESCRIPTOR>(oi);
@@ -444,7 +445,10 @@ namespace QSoft.DevCon
                             switch (bInterfaceClass)
                             {
                                 case USB_DEVICE_CLASS_VIDEO:
-                                    var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(oi);
+                                    oi.GetUVC(bInterfaceClass, bInterfaceSubClass);
+                                    //var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(oi);
+                                    //DisplayVideoDescriptor(commonDesc_buf, bInterfaceSubClass, new StringBuilder(), DEVICE_POWER_STATE.PowerDeviceD0);
+
                                     break;
                             }
                         }
@@ -1409,7 +1413,7 @@ namespace QSoft.DevCon
             UsbHighSpeed,
             UsbSuperSpeed
         }
-
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct USB_ENDPOINT_DESCRIPTOR
         {
             byte bLength;
