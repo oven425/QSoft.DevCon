@@ -7,6 +7,7 @@ using System.Net;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 using static QSoft.DevCon.DevConExtensiona;
@@ -127,7 +128,7 @@ namespace QSoft.DevCon
 
                 if(connectionInfoEx.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected)
                 {
-                    if(i==6)
+                    //if(i==6)
                     {
                         var buf = src.GetConfigDescriptor(i, 0);
                         DisplayConfigDesc(usb_node_connection_info_v2, buf);
@@ -367,35 +368,29 @@ namespace QSoft.DevCon
         }
 
 
-        //static uint USB_CONFIGURATION_DESCRIPTOR_TYPE = 0x02;
+        struct USB_HID_DESCRIPTOR
+        {
+            byte bLength;
+            byte bDescriptorType;
+            ushort bcdHID;
+            byte bCountryCode;
+            byte bNumDescriptors;
+            //struct
+            //{
+            //    byte bDescriptorType;
+            //    ushort wDescriptorLength;
+            //}
+            //OptionalDescriptors[1];
+        };
         public static void DisplayConfigDesc(USB_NODE_CONNECTION_INFORMATION_EX_V2 ConnectionInfoV2, byte[] ConfigDesc/*, PSTRING_DESCRIPTOR_NODE StringDescs*/)
         {
             var ConfigDesc_buf = ConfigDesc.AsSpan();
-            //USB_COMMON_DESCRIPTOR commonDesc = NULL;
             byte bInterfaceClass = 0;
             byte bInterfaceSubClass = 0;
             byte bInterfaceProtocol = 0;
             bool displayUnknown = false;
-
-            //bool isSS;
-
-            //isSS = info->ConnectionInfoV2
-            //    && info->ConnectionInfoV2->Flags.DeviceIsOperatingAtSuperSpeedOrHigher
-            //   ? true
-            //   : false;
-
             var isSS = ConnectionInfoV2.Flags.DeviceIsOperatingAtSuperSpeedOrHigher;
 
-            //commonDesc = (PUSB_COMMON_DESCRIPTOR)ConfigDesc;
-
-            //// initialize global Configuration start/end address and string desc address
-            //g_pConfigDesc = ConfigDesc;
-            //g_pStringDescs = StringDescs;
-            //g_descEnd = (PUCHAR)ConfigDesc + ConfigDesc->wTotalLength;
-
-            //AppendTextBuffer("\r\n       ---===>Full Configuration Descriptor<===---\r\n");
-
-            //var ConfigDesc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(ConfigDesc_buf);
             var commonDesc_buf = ConfigDesc_buf;
             var commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
             List<Range> ll = [];
@@ -438,7 +433,7 @@ namespace QSoft.DevCon
                         var end = MemoryMarshal.Read<USB_ENDPOINT_DESCRIPTOR>(oi);
                         break;
                     case USB_HID_DESCRIPTOR_TYPE:
-                        //var hid = MemoryMarshal.Read<USB_HID_DESCRIPTOR>(oi);
+                        var hid = MemoryMarshal.Read<USB_HID_DESCRIPTOR>(oi);
                         break;
                     default:
                         {
@@ -446,9 +441,6 @@ namespace QSoft.DevCon
                             {
                                 case USB_DEVICE_CLASS_VIDEO:
                                     oi.GetUVC(bInterfaceClass, bInterfaceSubClass);
-                                    //var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(oi);
-                                    //DisplayVideoDescriptor(commonDesc_buf, bInterfaceSubClass, new StringBuilder(), DEVICE_POWER_STATE.PowerDeviceD0);
-
                                     break;
                             }
                         }

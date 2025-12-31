@@ -79,190 +79,29 @@ namespace QSoft.DevCon
         };
 
 
-        static bool DisplayVCProcessingUnit(this Span<byte> VidProcessingDescBuf)
+        static void DisplayVCProcessingUnit(this Span<byte> VidProcessingDescBuf)
         {
             var VidProcessingDesc = MemoryMarshal.Read<VIDEO_PROCESSING_UNIT>(VidProcessingDescBuf);
-            ////@@DisplayVCProcessingUnit -Video Control Processor Unit
-            //PUCHAR pData = NULL;
-            //UCHAR bLength = 0;
-
-            //AppendTextBuffer("\r\n          ===>Video Control Processing Unit Descriptor<===\r\n");
-            //AppendTextBuffer("bLength:                           0x%02X\r\n", VidProcessingDesc->bLength);
-            //AppendTextBuffer("bDescriptorType:                   0x%02X\r\n", VidProcessingDesc->bDescriptorType);
-            //AppendTextBuffer("bDescriptorSubtype:                0x%02X\r\n", VidProcessingDesc->bDescriptorSubtype);
-            //AppendTextBuffer("bUnitID:                           0x%02X\r\n", VidProcessingDesc->bUnitID);
-            //AppendTextBuffer("bSourceID:                         0x%02X\r\n", VidProcessingDesc->bSourceID);
-            //AppendTextBuffer("wMaxMultiplier:                  0x%04X\r\n", VidProcessingDesc->wMaxMultiplier);
-            //AppendTextBuffer("bControlSize:                      0x%02X\r\n", VidProcessingDesc->bControlSize);
-
-            //pData = &VidProcessingDesc->bControlSize;
-
-            //// Are there any controls?
-            //if (0 < *pData)
-            //{
-            //    UINT uBitIndex = 0;
-            //    BYTE cCheckBit = 0;
-            //    BYTE cMask = 1;
-
-            //    AppendTextBuffer("bmControls : ");
-            //    VDisplayBytes(pData + 1, *pData);
-
-            //    // map the first control
-            //    for (; uBitIndex < 8; uBitIndex++)
-            //    {
-            //        cCheckBit = cMask & *(pData + 1);
-
-            //        AppendTextBuffer("     D%02d = %d  %s %s\r\n",
-            //            uBitIndex,
-            //            cCheckBit ? 1 : 0,
-            //            cCheckBit ? "yes - " : " no - ",
-            //            GetStringFromList(slProcessorControls1,
-            //                sizeof(slProcessorControls1) / sizeof(STRINGLIST),
-            //                cMask,
-            //                "Invalid PU bmControl value"));
-
-            //        cMask = cMask << 1;
-            //    }
-
-            //    // Is there a second control?
-            //    if (1 < *pData)
-            //    {
-            //        // map the second control
-            //        for (uBitIndex = 8, cMask = 1; uBitIndex < 16; uBitIndex++)
-            //        {
-            //            cCheckBit = cMask & *(pData + 2);
-
-            //            AppendTextBuffer("     D%02d = %d  %s %s\r\n",
-            //                uBitIndex,
-            //                cCheckBit ? 1 : 0,
-            //                cCheckBit ? "yes - " : " no - ",
-            //                GetStringFromList(slProcessorControls2,
-            //                    sizeof(slProcessorControls2) / sizeof(STRINGLIST),
-            //                    cMask,
-            //                    "Invalid PU bmControl value"));
-
-            //            cMask = cMask << 1;
-            //        }
-            //    }
-
-            //    // Is there a third control?
-            //    if (2 < *pData)
-            //    {
-            //        // map the third control
-            //        for (uBitIndex = 16, cMask = 1; uBitIndex < 24; uBitIndex++)
-            //        {
-            //            cCheckBit = cMask & *(pData + 3);
-
-            //            AppendTextBuffer("     D%02d = %d  %s %s\r\n",
-            //                uBitIndex,
-            //                cCheckBit ? 1 : 0,
-            //                cCheckBit ? "yes - " : " no - ",
-            //                GetStringFromList(slProcessorControls3,
-            //                    sizeof(slProcessorControls3) / sizeof(STRINGLIST),
-            //                    cMask,
-            //                    "Invalid PU bmControl value"));
-
-            //            cMask = cMask << 1;
-            //        }
-            //    }
-            //}
-
-            //// get address of iProcessing
-            //if (UVC10 != g_chUVCversion)
-            //{
-            //    // size of descriptor is struct size plus control size plus 2 if UVC11
-            //    bLength = sizeof(VIDEO_PROCESSING_UNIT) + 2 + VidProcessingDesc->bControlSize;
-            //    pData = (PUCHAR)VidProcessingDesc + (VidProcessingDesc->bLength - 2);
-            //}
-            //else // UVC 1.0
-            //{
-            //    // size of descriptor is struct size plus control size plus 1 if UVC10
-            //    bLength = sizeof(VIDEO_PROCESSING_UNIT) + 1 + VidProcessingDesc->bControlSize;
-            //    pData = (PUCHAR)VidProcessingDesc + (VidProcessingDesc->bLength - 1);
-            //}
-            //AppendTextBuffer("iProcessing :                      0x%02X\r\n", *pData);
-            //if (gDoAnnotation)
-            //{
-            //    if (*pData)
-            //    {
-            //        // if executing this code, the configuration descriptor has been
-            //        // obtained.  If a device is suspended, then its configuration
-            //        // descriptor was not obtained and we do not want errors to be
-            //        // displayed when string descriptors were not obtained.
-            //        DisplayStringDescriptor(*pData, StringDescs, LatestDevicePowerState);
-            //    }
-            //}
-
-            //// check for new UVC 1.1 bmVideoStandards fields
-            //if (UVC10 != g_chUVCversion)
-            //{
-            //    UINT uBitIndex = 0;
-            //    BYTE cCheckBit = 0;
-            //    BYTE cMask = 1;
-
-            //    pData = (PUCHAR)VidProcessingDesc + (VidProcessingDesc->bLength - 1);
-
-            //    AppendTextBuffer("bmVideoStandards :                 ");
-            //    VDisplayBytes(pData, 1);
-
-            //    // map the first control
-            //    for (; uBitIndex < 8; uBitIndex++)
-            //    {
-            //        cCheckBit = cMask & *(pData);
-
-            //        AppendTextBuffer("     D%02d = %d  %s %s\r\n",
-            //            uBitIndex,
-            //            cCheckBit ? 1 : 0,
-            //            cCheckBit ? "yes - " : " no - ",
-            //            GetStringFromList(slProcessorVideoStandards,
-            //                sizeof(slProcessorVideoStandards) / sizeof(STRINGLIST),
-            //                cMask,
-            //                "Invalid PU bmVideoStandards value"));
-
-            //        cMask = cMask << 1;
-            //    }
-            //}
-
-            //if (VidProcessingDesc.bLength != bLength)
-            //{
-            //    //@@TestCase B9.1 (also in Descript.c)
-            //    //@@ERROR
-            //    //@@Descriptor Field - bLength
-            //    AppendTextBuffer("*!*ERROR:  bLength of 0x%02X incorrect, should be 0x%02X\r\n",
-            //        VidProcessingDesc->bLength, bLength);
-            //    OOPS();
-            //}
-
-            //if (VidProcessingDesc.bUnitID < 1)
-            //{
-            //    //@@TestCase B9.2 (Descript.c   Line 466)
-            //    //@@ERROR
-            //    //@@Descriptor Field - bUnitID
-            //    //@@bUnitID must be greater than 0
-            //    //@@Question: Should we test to verify unit number is unique?
-            //    AppendTextBuffer("*!*ERROR:  bUnitID must be non-zero\r\n");
-            //    OOPS();
-            //}
-
-            //if (VidProcessingDesc.bSourceID < 1)
-            //{
-            //    //@@TestCase B9.3 (Descript.c   Line 471)
-            //    //@@ERROR
-            //    //@@Descriptor Field - bSourceID
-            //    //@@bSourceID must be non-zero
-            //    //@@Question: Should we test to verify the bSourceID is valid?
-            //    AppendTextBuffer("*!*ERROR:  bSourceID must be non-zero\r\n");
-            //    OOPS();
-            //}
-
-            //@@TestCase B9.4
-            //@@Not yet implemented - Priority 1
-            //@@Descriptor Field - wMaxMultiplier
-            //@@We should test to verify multiplier is valid
-            //    AppendTextBuffer("wMaxMultiplier:                  0x%04X\r\n", VidProcessingDesc->wMaxMultiplier);
-
-            return true;
         }
+
+        // VideoStreaming Input Header Descriptor
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct VIDEO_STREAMING_INPUT_HEADER
+        {
+            byte bLength;              // Size of this descriptor in bytes
+            byte bDescriptorType;      // CS_INTERFACE descriptor type
+            byte bDescriptorSubtype;   // VS_INPUT_HEADER descriptor subtype
+            byte bNumFormats;
+            ushort wTotalLength;
+            byte bEndpointAddress;
+            byte bmInfo;
+            byte bTerminalLink;
+            byte bStillCaptureMethod;
+            byte bTriggerSupport;
+            byte bTriggerUsage;
+            byte bControlSize;
+            //UCHAR bmaControls[];
+        };
 
         public static void GetUVC(this Span<byte> src, byte interfaceclass, byte interfacesubclass)
         {
@@ -289,7 +128,9 @@ namespace QSoft.DevCon
                         case VIDEO_SUBCLASS_STREAMING:
                             switch(VidCommonDesc.bDescriptorSubtype)
                             {
-
+                                case VS_INPUT_HEADER:
+                                    var dd = MemoryMarshal.Read<VIDEO_STREAMING_INPUT_HEADER>(src);
+                                    break;
                             }
                             break;
                         default:
