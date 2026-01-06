@@ -85,7 +85,7 @@ namespace QSoft.DevCon
 
         [LibraryImport("setupapi.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static internal partial bool SetupDiGetDevicePropertyKeys(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, IntPtr PropertyKeyArray, uint PropertyKeyCount, out uint RequiredPropertyKeyCount, uint Flags);
+        static internal partial bool SetupDiGetDevicePropertyKeys(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, Span<byte> PropertyKeyArray, uint PropertyKeyCount, out uint RequiredPropertyKeyCount, uint Flags);
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

@@ -3,6 +3,7 @@ using QSoft.DevCon;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using static QSoft.DevCon.DevConExtensiona;
 //USB xHCI 相容的主機控制器
 //USB 根集線器 (USB 3.0)
 
@@ -12,6 +13,7 @@ var subs = "Usb".Devices().Select(x => new
     childs = x.Childrens(),
     enumerator = x.EnumeratorName(),
     desc = x.GetDeviceDesc(),
+    pps = x.AllPropertys(),
     //x.DeviceDesc,
     instanceid = x.DeviceInstanceId(),
 });
@@ -51,15 +53,18 @@ var pc = controlers.Join(usbhub, x => x.child.ToUpperInvariant(), y => y.instanc
 foreach(var oo in pc)
 {
     using var ff = File.OpenHandle(oo.controller.devicepath, FileMode.Open);
-    //var roothubname = ff.GetRootHubName();
-    //var devicepath = $"\\\\.\\{roothubname}";
     using var ff1 = File.OpenHandle(oo.hub.devicepath, FileMode.Open);
-    ff1.GET_NODE_INFORMATION();
-    var nodeinfo = ff1.GetNodeInfomation();
+    //ff1.GET_NODE_INFORMATION();
+    var nodeinfo = ff1.NodeInfo();
     for(uint i= 1; i < nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts; i++)
     {
         var pcps = ff1.GetPortConntorProperties(i);
         var nodeEX = ff1.GetNodeConnectionInformationEX(i);
+        if (nodeEX.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected)
+        {
+            var desc = ff1.GetConfigDescriptor(i);
+        }
+            
     }
     System.Diagnostics.Trace.WriteLine($"controller: {oo.controller.friendname}, hub: {oo.hub.desc}");
 }

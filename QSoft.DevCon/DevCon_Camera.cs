@@ -8,7 +8,7 @@ namespace QSoft.DevCon
     //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/stream/camera-device-orientation
     public static partial class DevConExtension
     {
-        static DEVPROPKEY DEVPKEY_Devices_PhysicalDeviceLocation = new DEVPROPKEY() { fmtid = Guid.Parse("{540B947E-8B40-45BC-A8A2-6A0B894CBDA2}"), pid = 9 };
+        static DEVPROPKEY DEVPKEY_Devices_PhysicalDeviceLocation = new() { fmtid = Guid.Parse("{540B947E-8B40-45BC-A8A2-6A0B894CBDA2}"), pid = 9 };
         public static CameraPanel Panel(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
             int reqsz = 0;

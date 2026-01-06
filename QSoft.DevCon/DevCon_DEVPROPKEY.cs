@@ -10,7 +10,7 @@ namespace QSoft.DevCon
     public static partial class DevConExtension
     {
         [StructLayout(LayoutKind.Sequential)]
-        internal struct DEVPROPKEY
+        public struct DEVPROPKEY
         {
             public DEVPROPKEY(uint l, ushort w1, ushort w2, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7, byte b8, int pid_value)
             {
@@ -43,7 +43,6 @@ namespace QSoft.DevCon
         //DEFINE_DEVPROPKEY(DEVPKEY_Device_EjectionRelations,      0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7, 4);     // DEVPROP_TYPE_STRING_LIST
         //DEFINE_DEVPROPKEY(DEVPKEY_Device_RemovalRelations,       0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7, 5);     // DEVPROP_TYPE_STRING_LIST
         readonly internal static DEVPROPKEY DEVPKEY_Device_PowerRelations = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 6 };
-        //DEFINE_DEVPROPKEY(DEVPKEY_Device_BusRelations,           0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7, 7);     // DEVPROP_TYPE_STRING_LIST
         readonly internal static DEVPROPKEY DEVPKEY_Device_BusRelations = new(0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7, 7);   // DEVPROP_TYPE_STRING_LIST
 
         readonly internal static DEVPROPKEY DEVPKEY_Device_Parent = new() { fmtid = Guid.Parse("{4340a6c5-93fa-4706-972c-7b648008a5a7}"), pid = 8 };

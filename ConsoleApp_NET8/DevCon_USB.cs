@@ -43,15 +43,6 @@ namespace QSoft.DevCon
 
         public static string GetRootHubName(this SafeFileHandle src) => src.GetString(IOCTL_USB_GET_ROOT_HUB_NAME);
 
-        public static USB_NODE_INFORMATION GetNodeInfomation(this SafeFileHandle src)
-        {
-            var nodeinfo = new USB_NODE_INFORMATION();
-            var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
-            var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes, IntPtr.Zero);
-            var err = Marshal.GetLastWin32Error();
-            return nodeinfo;
-        }
-
         public static USB_PORT_CONNECTOR_PROPERTIES GetPortConntorProperties(this SafeFileHandle src, uint index)
         {
             var portcoonectproperties = new USB_PORT_CONNECTOR_PROPERTIES
@@ -77,6 +68,16 @@ namespace QSoft.DevCon
             var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX, connectionInfoEx_buffer, (uint)connectionInfoEx_buffer.Length, connectionInfoEx_buffer, (uint)connectionInfoEx_buffer.Length, out var nBytes, IntPtr.Zero);
             var err = Marshal.GetLastWin32Error();
             return connectionInfoEx;
+
+        }
+
+        public static USB_NODE_INFORMATION NodeInfo(this SafeFileHandle src)
+        {
+            var nodeinfo = new USB_NODE_INFORMATION();
+            var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
+            var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes, IntPtr.Zero);
+            var err = Marshal.GetLastWin32Error();
+            return nodeinfo;
 
         }
 
@@ -210,7 +211,7 @@ namespace QSoft.DevCon
             return (ll, src);
         }
 
-        static byte[] GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex)
+        public static byte[] GetConfigDescriptor(this SafeFileHandle hHubDevice, uint ConnectionIndex, byte DescriptorIndex=0)
         {
             bool success = false;
             uint nBytes = 0;
@@ -226,49 +227,17 @@ namespace QSoft.DevCon
             USB_DESCRIPTOR_REQUEST configDescReq = new();
             USB_CONFIGURATION_DESCRIPTOR configDesc = new();
 
-
-
-
-            // Request the Configuration Descriptor the first time using our
-            // local buffer, which is just big enough for the Cofiguration
-            // Descriptor itself.
-            //
             nBytes = (uint)configDescReqBuf.Length;
 
-            //configDescReq = (PUSB_DESCRIPTOR_REQUEST)configDescReqBuf;
-            //configDesc = (PUSB_CONFIGURATION_DESCRIPTOR)(configDescReq + 1);
-
-
-            // Zero fill the entire request structure
-            //
-            //memset(configDescReq, 0, nBytes);
-
-            // Indicate the port from which the descriptor will be requested
-            //
             configDescReq.ConnectionIndex = ConnectionIndex;
 
-            //
-            // USBHUB uses URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE to process this
-            // IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION request.
-            //
-            // USBD will automatically initialize these fields:
-            //     bmRequest = 0x80
-            //     bRequest  = 0x06
-            //
-            // We must inititialize these fields:
-            //     wValue    = Descriptor Type (high) and Descriptor Index (low byte)
-            //     wIndex    = Zero (or Language ID for String Descriptors)
-            //     wLength   = Length of descriptor buffer
-            //
             configDescReq.SetupPacket.wValue = (ushort)((USB_CONFIGURATION_DESCRIPTOR_TYPE << 8) | DescriptorIndex);
 
             configDescReq.SetupPacket.wLength = (ushort)(nBytes - Marshal.SizeOf<USB_DESCRIPTOR_REQUEST>());
 
-            MemoryMarshal.Write(configDescReqBuf, ref configDescReq);
+            MemoryMarshal.Write(configDescReqBuf, in configDescReq);
 
 
-            // Now issue the get descriptor request.
-            //
             success = DeviceIoControl(hHubDevice,
                                       IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
                                       configDescReqBuf,
@@ -335,7 +304,7 @@ namespace QSoft.DevCon
 
             // Now issue the get descriptor request.
             //
-            MemoryMarshal.Write(configDescReqBuf, ref configDescReq);
+            MemoryMarshal.Write(configDescReqBuf, in configDescReq);
 
             success = DeviceIoControl(hHubDevice,
                                       IOCTL_USB_GET_DESCRIPTOR_FROM_NODE_CONNECTION,
@@ -449,6 +418,7 @@ namespace QSoft.DevCon
 
                 
             }
+            return;
             commonDesc_buf = ConfigDesc_buf;
             do
             {
