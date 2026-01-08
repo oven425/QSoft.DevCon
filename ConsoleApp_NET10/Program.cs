@@ -12,7 +12,7 @@ var aaa = "Camera".Devices().Select(x => new
     powerdata = x.PowerData(),
     ids = x.HardwaeeIDs(),
     panel = x.Panel(),
-    x.DeviceDesc,
+    //x.DeviceDesc,
     desc = x.GetDeviceDesc(),
     aa = x.CompatibleIDs()
 });
@@ -25,7 +25,7 @@ foreach (var a in aaa)
     Console.WriteLine($"DeviceInstanceId:{a.id}");
     Console.WriteLine($"ProblemCode:{a.problemcode}");
     Console.WriteLine($"PowerData:{a.powerdata}");
-    Console.WriteLine($"DeviceDesc:{a.DeviceDesc}");
+    //Console.WriteLine($"DeviceDesc:{a.DeviceDesc}");
     Console.WriteLine("HardwareIDs:");
     foreach (var id in a.ids)
     {

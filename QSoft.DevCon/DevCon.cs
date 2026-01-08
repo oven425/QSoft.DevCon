@@ -183,10 +183,10 @@ namespace QSoft.DevCon
 
 
 
-        extension((IntPtr dev, SP_DEVINFO_DATA a) src)
-        {
-            public string DeviceDesc => src.GetString(SPDRP_DEVICEDESC);
-        }
+        //extension((IntPtr dev, SP_DEVINFO_DATA a) src)
+        //{
+        //    public string DeviceDesc => src.GetString(SPDRP_DEVICEDESC);
+        //}
 
 
 
@@ -198,8 +198,8 @@ namespace QSoft.DevCon
         public static void SetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data)
             => src.SetString(data, SPDRP_FRIENDLYNAME);
 
-        //public static string DeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        //    => GetString(src, SPDRP_DEVICEDESC);
+        public static string DeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => GetString(src, SPDRP_DEVICEDESC);
 
         public static List<string> HardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_HARDWAREID);
