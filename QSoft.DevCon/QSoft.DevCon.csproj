@@ -2,7 +2,7 @@
   <PropertyGroup>
     <UseWPF>true</UseWPF>
     <Title>DevCon.NET</Title>
-    <VersionPrefix>2.0.0.5</VersionPrefix>
+    <VersionPrefix>2.0.0.6</VersionPrefix>
     <TargetFrameworks>net10.0-windows;net8.0-windows;net6.0-windows;net472;net481;net462;net460</TargetFrameworks>
     <LangVersion>14.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -16,7 +16,8 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright © Ben Hsu 2022</Copyright>
     <Description>easy get device manager info</Description>
-    <PackageReleaseNotes>1. modify Span&lt;byte&gt; and stackalloc instance Marasal.Allocate at .net8 or greate</PackageReleaseNotes>
+    <PackageReleaseNotes>1. add AllPropertys can get all property keys
+2. remove some function name of get </PackageReleaseNotes>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <PackageId>$(MSBuildProjectName)</PackageId>
     <Authors>$(MSBuildProjectName)</Authors>
