@@ -18,8 +18,6 @@ namespace QSoft.DevCon
             {
                 Span<byte> mem = stackalloc byte[(int)reqsize];
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICE_POWER_DATA, out property_type, mem, reqsize, out reqsize);
-                
-                
                 var pd = MemoryMarshal.AsRef<CM_Power_Data>(mem);
                 return pd;
             }

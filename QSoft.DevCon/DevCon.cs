@@ -180,11 +180,13 @@ namespace QSoft.DevCon
             return guids;
 
         }
-        
-        //extension((IntPtr dev, SP_DEVINFO_DATA a) src)
-        //{
-        //    public string DeviceDesc=>src.GetString(SPDRP_DEVICEDESC);
-        //}
+
+
+
+        extension((IntPtr dev, SP_DEVINFO_DATA a) src)
+        {
+            public string DeviceDesc => src.GetString(SPDRP_DEVICEDESC);
+        }
 
 
 
@@ -196,8 +198,8 @@ namespace QSoft.DevCon
         public static void SetFriendName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, string data)
             => src.SetString(data, SPDRP_FRIENDLYNAME);
 
-        public static string GetDeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => GetString(src, SPDRP_DEVICEDESC);
+        //public static string DeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        //    => GetString(src, SPDRP_DEVICEDESC);
 
         public static List<string> HardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_HARDWAREID);
@@ -205,7 +207,7 @@ namespace QSoft.DevCon
         public static List<string> CompatibleIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_COMPATIBLEIDS);
 
-        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static List<string> LocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_LOCATION_PATHS);
 
 
@@ -213,7 +215,7 @@ namespace QSoft.DevCon
         public static string Service(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_SERVICE);
 
-        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static string PhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
 
         public static int ProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)

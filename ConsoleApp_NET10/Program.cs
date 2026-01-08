@@ -13,6 +13,7 @@ var aaa = "Camera".Devices().Select(x => new
     ids = x.HardwaeeIDs(),
     panel = x.Panel(),
     x.DeviceDesc,
+    desc = x.GetDeviceDesc(),
     aa = x.CompatibleIDs()
 });
 foreach (var a in aaa)

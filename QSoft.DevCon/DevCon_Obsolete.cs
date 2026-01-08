@@ -41,6 +41,15 @@ namespace QSoft.DevCon
         [Obsolete("Obsoleted, please use PowerRelations")]
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_PowerRelations);
+        [Obsolete("Obsoleted, please use DeviceDesc")]
+        public static string GetDeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => GetString(src, SPDRP_DEVICEDESC);
+        [Obsolete("Obsoleted, please use LocationPaths")]
+        public static List<string> GetLocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetStrings(SPDRP_LOCATION_PATHS);
+        [Obsolete("Obsoleted, please use PhysicalDeviceObjectName")]
+        public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
 
 
     }
