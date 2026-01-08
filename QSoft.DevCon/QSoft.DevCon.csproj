@@ -37,7 +37,7 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.6.1" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\48607350112_057637c3b5_o.jpg">
