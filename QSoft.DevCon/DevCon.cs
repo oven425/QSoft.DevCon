@@ -227,32 +227,32 @@ namespace QSoft.DevCon
         public static bool IsPresent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetBoolean(DEVPKEY_Device_IsPresent);
 
-        //static List<DEVPROPKEY> GetDevicePropertyKeys(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        //{
-        //    var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
-        //    var ss = Marshal.SizeOf<DEVPROPKEY>();
-        //    ss *= (int)cc;
-        //    var ptr = Marshal.AllocHGlobal((int)ss);
-        //    bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, ptr, cc, out cc, 0);
-        //    List<DEVPROPKEY> keys = [];
-        //    for (int i = 0; i < cc; i++)
-        //    {
-        //        ptr = IntPtr.Add(ptr, Marshal.SizeOf<DEVPROPKEY>());
-        //        var kk = Marshal.PtrToStructure<DEVPROPKEY>(ptr);
-        //        keys.Add(kk);
-        //    }
-        //    var aa = keys.ToLookup(x => x.fmtid);
-        //    foreach (var oo in aa)
-        //    {
+        static List<DEVPROPKEY> GetDevicePropertyKeys(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        {
+            //var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
+            //var ss = Marshal.SizeOf<DEVPROPKEY>();
+            //ss *= (int)cc;
+            //var ptr = Marshal.AllocHGlobal((int)ss);
+            //bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, ptr, cc, out cc, 0);
+            //List<DEVPROPKEY> keys = [];
+            //for (int i = 0; i < cc; i++)
+            //{
+            //    ptr = IntPtr.Add(ptr, Marshal.SizeOf<DEVPROPKEY>());
+            //    var kk = Marshal.PtrToStructure<DEVPROPKEY>(ptr);
+            //    keys.Add(kk);
+            //}
+            //var aa = keys.ToLookup(x => x.fmtid);
+            //foreach (var oo in aa)
+            //{
 
-        //        foreach (var ooo in oo)
-        //        {
-        //            System.Diagnostics.Trace.WriteLine($"{oo.Key} {ooo.pid}");
-        //        }
+            //    foreach (var ooo in oo)
+            //    {
+            //        System.Diagnostics.Trace.WriteLine($"{oo.Key} {ooo.pid}");
+            //    }
 
-        //    }
-        //    return [];
-        //}
+            //}
+            return [];
+        }
 
         public static string DeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_InstanceId);
@@ -289,20 +289,22 @@ namespace QSoft.DevCon
         public static ReadOnlyCollection<DEVPROPKEY> AllPropertys(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
 #if NET8_0_OR_GREATER
-            var hr = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, Span<byte>.Empty, 0, out var count, 0);
-            var size = Marshal.SizeOf<DEVPROPKEY>();
-            var reqsize = size * count;
-            Span<byte> mem = stackalloc byte[(int)reqsize];
+            var hr = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, [], 0, out var count, 0);
+            if (count == 0)
+                return new ReadOnlyCollection<DEVPROPKEY>(Array.Empty<DEVPROPKEY>());
+            var ll = new DEVPROPKEY[(int)count];
+            Span<byte> mem = MemoryMarshal.AsBytes(ll.AsSpan());
             hr = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, mem, count, out count, 0);
-            ReadOnlySpan<DEVPROPKEY> span = MemoryMarshal.Cast<byte, DEVPROPKEY>(mem);
-            return new ReadOnlyCollection<DEVPROPKEY>(span.ToArray());
+            return new ReadOnlyCollection<DEVPROPKEY>(ll);
 #else
             var hr = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var count, 0);
+            if (count == 0)
+                return new ReadOnlyCollection<DEVPROPKEY>(Array.Empty<DEVPROPKEY>());
             var size = Marshal.SizeOf<DEVPROPKEY>();
             var reqsize = size * count;
             using var mem = new IntPtrMem<char>((int)reqsize);
             hr = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, mem.Pointer, count, out count, 0);
-            List<DEVPROPKEY> ll = [];
+            List<DEVPROPKEY> ll = new((int)count);
             for(int i = 0; i < count; i++)
             {
                 var ptr = IntPtr.Add(mem.Pointer, i*size);
