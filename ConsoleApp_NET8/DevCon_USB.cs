@@ -71,6 +71,24 @@ namespace QSoft.DevCon
 
         }
 
+        public static IEnumerable<TResult> NodeInfo<TResult>(this SafeFileHandle src, Func<USB_NODE_CONNECTION_INFORMATION_EX, bool> filter, Func<USB_NODE_CONNECTION_INFORMATION_EX, byte[], TResult> get)
+        {
+            var nodeinfo = new USB_NODE_INFORMATION();
+            var nodeinfo_buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref nodeinfo, 1));
+            var success = DeviceIoControl(src, IOCTL_USB_GET_NODE_INFORMATION, [], 0, nodeinfo_buffer, (uint)nodeinfo_buffer.Length, out var nBytes, IntPtr.Zero);
+            var err = Marshal.GetLastWin32Error();
+            for (uint i = 1; i <= nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts; i++)
+            {
+                var pcps = src.GetPortConntorProperties(i);
+                var nodeEX = src.GetNodeConnectionInformationEX(i);
+                if (filter.Invoke(nodeEX))
+                {
+                    var desc = src.GetConfigDescriptor(i);
+                    yield return get.Invoke(nodeEX, desc);
+                }
+            }
+        }
+
         public static USB_NODE_INFORMATION NodeInfo(this SafeFileHandle src)
         {
             var nodeinfo = new USB_NODE_INFORMATION();
@@ -149,6 +167,72 @@ namespace QSoft.DevCon
             }
         }
 
+        public static T Cast<T> (this Span<byte> src) where T : struct 
+        {
+            var tt = MemoryMarshal.Read<T>(src);
+            return tt;
+        }
+
+        //public static void ParseNode(this ReadOnlyMemory<byte> src)
+        //    => src.Span.ParseNode();
+
+        public static void ParseNode(this ReadOnlySpan<byte> src, Func<USB_INTERFACE_DESCRIPTOR, bool> func)
+        {
+            var commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(src);
+            switch (commonDesc.bDescriptorType)
+            {
+                case USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE:
+                    var quilty = MemoryMarshal.Read<USB_DEVICE_QUALIFIER_DESCRIPTOR>(src);
+                    break;
+                case USB_OTHER_SPEED_CONFIGURATION_DESCRIPTOR_TYPE:
+                    break;
+                case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+                    var usb_configuration_desc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(src);
+                    break;
+                case USB_INTERFACE_DESCRIPTOR_TYPE:
+                    var cc = MemoryMarshal.Read<USB_INTERFACE_DESCRIPTOR>(src);
+                    //bInterfaceClass = cc.bInterfaceClass;
+                    //bInterfaceSubClass = cc.bInterfaceSubClass;
+                    //bInterfaceProtocol = cc.bInterfaceProtocol;
+                    //System.Diagnostics.Trace.WriteLine($"Class:{bInterfaceClass} SubClass:{bInterfaceSubClass} Protocol:{bInterfaceProtocol}");
+                    break;
+                case USB_ENDPOINT_DESCRIPTOR_TYPE:
+                    var end = MemoryMarshal.Read<USB_ENDPOINT_DESCRIPTOR>(src);
+                    break;
+                case USB_HID_DESCRIPTOR_TYPE:
+                    var hid = MemoryMarshal.Read<USB_HID_DESCRIPTOR>(src);
+                    break;
+                default:
+                    {
+                        //switch (bInterfaceClass)
+                        //{
+                        //    case USB_DEVICE_CLASS_VIDEO:
+                        //        oi.GetUVC(bInterfaceClass, bInterfaceSubClass);
+                        //        break;
+                        //}
+                    }
+                    break;
+            }
+        }
+
+
+
+        public static IEnumerable<ReadOnlyMemory<byte>> ParseConfig1(this byte[] src)
+        {
+            var commonDesc_buf = src;
+            int index = 0;
+            while (commonDesc_buf.Length > 0)
+            {
+                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
+                if (commonDesc1.bLength == 0 || commonDesc_buf.Length < commonDesc1.bLength)
+                    break;
+                System.Diagnostics.Trace.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
+                commonDesc_buf = commonDesc_buf[commonDesc1.bLength..];
+                yield return new Memory<byte>(src, index, commonDesc1.bLength);
+                index = index + commonDesc1.bLength;
+            }
+        }
+
         public static (List<Range> ranges, byte[] raw) ParseConfig(this byte[] src)
         {
             var commonDesc_buf = src;
@@ -167,47 +251,6 @@ namespace QSoft.DevCon
                 index = index + commonDesc1.bLength;
             }
 
-
-            foreach (var oo in ll)
-            {
-                var oi = src[oo];
-                commonDesc = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(oi);
-                switch (commonDesc.bDescriptorType)
-                {
-                    case USB_DEVICE_QUALIFIER_DESCRIPTOR_TYPE:
-                        var quilty = MemoryMarshal.Read<USB_DEVICE_QUALIFIER_DESCRIPTOR>(oi);
-                        break;
-                    case USB_OTHER_SPEED_CONFIGURATION_DESCRIPTOR_TYPE:
-                        break;
-                    case USB_CONFIGURATION_DESCRIPTOR_TYPE:
-                        var usb_configuration_desc = MemoryMarshal.Read<USB_CONFIGURATION_DESCRIPTOR>(oi);
-                        break;
-                    case USB_INTERFACE_DESCRIPTOR_TYPE:
-                        var cc = MemoryMarshal.Read<USB_INTERFACE_DESCRIPTOR>(oi);
-                        //bInterfaceClass = cc.bInterfaceClass;
-                        //bInterfaceSubClass = cc.bInterfaceSubClass;
-                        //bInterfaceProtocol = cc.bInterfaceProtocol;
-                        break;
-                    case USB_ENDPOINT_DESCRIPTOR_TYPE:
-                        var end = MemoryMarshal.Read<USB_ENDPOINT_DESCRIPTOR>(oi);
-                        break;
-                    case USB_HID_DESCRIPTOR_TYPE:
-                        //var hid = MemoryMarshal.Read<USB_HID_DESCRIPTOR>(oi);
-                        break;
-                    default:
-                        {
-                            //switch (bInterfaceClass)
-                            //{
-                            //    case USB_DEVICE_CLASS_VIDEO:
-                            //        var ccc = MemoryMarshal.Read<VIDEO_SPECIFIC>(oi);
-                            //        break;
-                            //}
-                        }
-                        break;
-                }
-
-
-            }
             return (ll, src);
         }
 
@@ -1059,7 +1102,7 @@ namespace QSoft.DevCon
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct USB_INTERFACE_DESCRIPTOR
+        public struct USB_INTERFACE_DESCRIPTOR
         {
             byte bLength;
             byte bDescriptorType;
@@ -1088,7 +1131,7 @@ namespace QSoft.DevCon
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct USB_COMMON_DESCRIPTOR
+        public struct USB_COMMON_DESCRIPTOR
         {
             public byte bLength;
             public byte bDescriptorType;

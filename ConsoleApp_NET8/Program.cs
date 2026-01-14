@@ -54,7 +54,7 @@ foreach(var oo in pc)
 {
     using var ff = File.OpenHandle(oo.controller.devicepath, FileMode.Open);
     using var ff1 = File.OpenHandle(oo.hub.devicepath, FileMode.Open);
-    //ff1.GET_NODE_INFORMATION();
+    ff1.GET_NODE_INFORMATION();
     var nodeinfo = ff1.NodeInfo();
     for(uint i= 1; i < nodeinfo.HubInformation.HubDescriptor.bNumberOfPorts; i++)
     {
@@ -64,7 +64,19 @@ foreach(var oo in pc)
         {
             var desc = ff1.GetConfigDescriptor(i);
         }
+        else
+        {
+            var desc = ff1.GetConfigDescriptor(i);
+        }
             
+    }
+    var nodes = ff1.NodeInfo(nodeex => nodeex.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected,
+        (nodeex, desc) => desc);
+    var aa = nodes.ElementAt(0).ParseConfig1();
+    foreach(var oo1 in aa)
+    {
+        oo1.Span.ParseNode(x=>x.bInterfaceClass==4);
+        //oo1.as
     }
     System.Diagnostics.Trace.WriteLine($"controller: {oo.controller.friendname}, hub: {oo.hub.desc}");
 }

@@ -227,33 +227,6 @@ namespace QSoft.DevCon
         public static bool IsPresent(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetBoolean(DEVPKEY_Device_IsPresent);
 
-        //static List<DEVPROPKEY> GetDevicePropertyKeys(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        //{
-        //    //var bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, IntPtr.Zero, 0, out var cc, 0);
-        //    //var ss = Marshal.SizeOf<DEVPROPKEY>();
-        //    //ss *= (int)cc;
-        //    //var ptr = Marshal.AllocHGlobal((int)ss);
-        //    //bb = SetupDiGetDevicePropertyKeys(src.dev, ref src.devdata, ptr, cc, out cc, 0);
-        //    //List<DEVPROPKEY> keys = [];
-        //    //for (int i = 0; i < cc; i++)
-        //    //{
-        //    //    ptr = IntPtr.Add(ptr, Marshal.SizeOf<DEVPROPKEY>());
-        //    //    var kk = Marshal.PtrToStructure<DEVPROPKEY>(ptr);
-        //    //    keys.Add(kk);
-        //    //}
-        //    //var aa = keys.ToLookup(x => x.fmtid);
-        //    //foreach (var oo in aa)
-        //    //{
-
-        //    //    foreach (var ooo in oo)
-        //    //    {
-        //    //        System.Diagnostics.Trace.WriteLine($"{oo.Key} {ooo.pid}");
-        //    //    }
-
-        //    //}
-        //    return [];
-        //}
-
         public static string DeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_InstanceId);
 
