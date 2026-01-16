@@ -72,11 +72,13 @@ foreach(var oo in pc)
     }
     var nodes = ff1.NodeInfo(nodeex => nodeex.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected,
         (nodeex, desc) => desc);
-    var aa = nodes.ElementAt(0).ParseConfig1();
+    var aa1 = nodes.ParseConfig1((usb, mem) => new { usb, mem });
+    var aa2 = aa1.SelectMany(x => x.values, (x,y)=>new { x,y});
+
+   var aa = nodes.ElementAt(2).ParseConfig1((usb,mem)=>new { usb, mem});
     foreach(var oo1 in aa)
     {
-        oo1.Span.ParseNode(x=>x.bInterfaceClass==4);
-        //oo1.as
+
     }
     System.Diagnostics.Trace.WriteLine($"controller: {oo.controller.friendname}, hub: {oo.hub.desc}");
 }
@@ -131,6 +133,5 @@ foreach(var oo in aaa)
     System.Diagnostics.Trace.WriteLine(oo.powerdata?.ToString());
 }
 
-
-
 Console.ReadLine();
+

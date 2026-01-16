@@ -15,6 +15,15 @@ using static QSoft.DevCon.DevConExtensiona;
 
 namespace QSoft.DevCon
 {
+    public readonly struct UsbContext(ReadOnlyMemory<byte> raw)
+    {
+        public ReadOnlyMemory<byte> Raw => raw;
+
+        T As<T>() where T:struct
+        {
+            return MemoryMarshal.Read<T>(raw.Span);
+        }
+    }
     static public partial class DevConExtensiona
     {
         public static string GetHCDDriverKeyName(this SafeFileHandle src)
@@ -167,14 +176,8 @@ namespace QSoft.DevCon
             }
         }
 
-        public static T Cast<T> (this Span<byte> src) where T : struct 
-        {
-            var tt = MemoryMarshal.Read<T>(src);
-            return tt;
-        }
-
-        //public static void ParseNode(this ReadOnlyMemory<byte> src)
-        //    => src.Span.ParseNode();
+        public static USB_INTERFACE_DESCRIPTOR InterfaceDescritptor(this ReadOnlySpan<byte> src)
+            => MemoryMarshal.Read<USB_INTERFACE_DESCRIPTOR>(src);
 
         public static void ParseNode(this ReadOnlySpan<byte> src, Func<USB_INTERFACE_DESCRIPTOR, bool> func)
         {
@@ -215,21 +218,43 @@ namespace QSoft.DevCon
             }
         }
 
+        public static IEnumerable<(int index, IEnumerable<T> values)> ParseConfig1<T>(this IEnumerable<byte[]> src, Func<USB_COMMON_DESCRIPTOR, UsbContext, T> func)
+        {
+            //int index = 1;
+            //foreach(var oo in src)
+            //{
+            //    yield return (index++, ParseConfig1(oo, func));
+            //}
+            return src.Select((x, index) => (index+1, x.ParseConfig1(func)));
+        }
 
+        public static IEnumerable<T> ParseConfig1<T>(this byte[] src, Func<USB_COMMON_DESCRIPTOR, UsbContext, T> func)
+        {
+            var buf = src.AsMemory();
+            while (buf.Length > 0)
+            {
+                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(buf.Span);
+                if (commonDesc1.bLength == 0 || buf.Length < commonDesc1.bLength)
+                    break;
+                System.Diagnostics.Debug.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
+                var hr = new UsbContext( buf[0..commonDesc1.bLength]);
+                yield return func.Invoke(commonDesc1, hr);
+                buf = buf[commonDesc1.bLength..];
+            }
+        }
 
         public static IEnumerable<ReadOnlyMemory<byte>> ParseConfig1(this byte[] src)
         {
-            var commonDesc_buf = src;
-            int index = 0;
-            while (commonDesc_buf.Length > 0)
+            var buf = src.AsMemory();
+            while (buf.Length > 0)
             {
-                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(commonDesc_buf);
-                if (commonDesc1.bLength == 0 || commonDesc_buf.Length < commonDesc1.bLength)
+                var commonDesc1 = MemoryMarshal.Read<USB_COMMON_DESCRIPTOR>(buf.Span);
+                if (commonDesc1.bLength == 0 || buf.Length < commonDesc1.bLength)
                     break;
-                System.Diagnostics.Trace.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
-                commonDesc_buf = commonDesc_buf[commonDesc1.bLength..];
-                yield return new Memory<byte>(src, index, commonDesc1.bLength);
-                index = index + commonDesc1.bLength;
+                System.Diagnostics.Debug.WriteLine($"bDescriptorType:{commonDesc1.bDescriptorType}, bLength:{commonDesc1.bLength}");
+                var hr = buf[0.. commonDesc1.bLength];
+                yield return hr;
+                buf = buf[commonDesc1.bLength..];
             }
         }
 
