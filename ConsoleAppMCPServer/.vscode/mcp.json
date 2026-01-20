@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "McpServer_DevCon": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/ConsoleAppMCPServer.csproj"
+      ]
+    }
+  }
+}
