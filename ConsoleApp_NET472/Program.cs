@@ -25,6 +25,7 @@ namespace ConsoleApp_NET472
                 power = x.PowerData(),
                 mac = x.Manufacturer(),
                 pps = x.AllPropertys(),
+                id = x.DeviceInstanceId(),
                 installdate = x.FirstInstallDate(),
             });
             aaa.ToArray();
