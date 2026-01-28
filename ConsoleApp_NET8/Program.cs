@@ -71,15 +71,17 @@ foreach(var oo in pc)
             
     }
     var nodes = ff1.NodeInfo(nodeex => nodeex.ConnectionStatus == USB_CONNECTION_STATUS.DeviceConnected,
-        (nodeex, desc) => desc);
-    var aa1 = nodes.ParseConfig1((usb, mem) => new { usb, mem });
-    var aa2 = aa1.SelectMany(x => x.values, (x,y)=>new { x,y});
+        (nodeex, desc) => new { nodeex, desc });
+    var aa3 = nodes.Select(x => new {x.nodeex, usb = x.desc.ParseConfig1((usb, mem) => new { usb, mem }) });
+    var aa4 = aa3.SelectMany(x => x.usb, (x, y) => new { x.nodeex.ConnectionIndex, y });
+    //var aa1 = nodes.Select(x=>x.desc).ParseConfig1((usb, mem) => new { usb, mem });
+    //var aa2 = aa1.SelectMany(x => x.values, (x,y)=>new { x,y});
+    //foreach(var oo2 in aa2)
+    //{
 
-   var aa = nodes.ElementAt(2).ParseConfig1((usb,mem)=>new { usb, mem});
-    foreach(var oo1 in aa)
-    {
+    //}
 
-    }
+
     System.Diagnostics.Trace.WriteLine($"controller: {oo.controller.friendname}, hub: {oo.hub.desc}");
 }
 

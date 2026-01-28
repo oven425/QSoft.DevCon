@@ -19,7 +19,7 @@ namespace QSoft.DevCon
     {
         public ReadOnlyMemory<byte> Raw => raw;
 
-        T As<T>() where T:struct
+        public T As<T>() where T:struct
         {
             return MemoryMarshal.Read<T>(raw.Span);
         }
@@ -218,15 +218,15 @@ namespace QSoft.DevCon
             }
         }
 
-        public static IEnumerable<(int index, IEnumerable<T> values)> ParseConfig1<T>(this IEnumerable<byte[]> src, Func<USB_COMMON_DESCRIPTOR, UsbContext, T> func)
-        {
-            //int index = 1;
-            //foreach(var oo in src)
-            //{
-            //    yield return (index++, ParseConfig1(oo, func));
-            //}
-            return src.Select((x, index) => (index+1, x.ParseConfig1(func)));
-        }
+        //public static IEnumerable<(int index, IEnumerable<T> values)> ParseConfig1<T>(this IEnumerable<byte[]> src, Func<USB_COMMON_DESCRIPTOR, UsbContext, T> func)
+        //{
+        //    //int index = 1;
+        //    //foreach(var oo in src)
+        //    //{
+        //    //    yield return (index++, ParseConfig1(oo, func));
+        //    //}
+        //    return src.Select((x, index) => (index+1, x.ParseConfig1(func)));
+        //}
 
         public static IEnumerable<T> ParseConfig1<T>(this byte[] src, Func<USB_COMMON_DESCRIPTOR, UsbContext, T> func)
         {
