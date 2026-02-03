@@ -7,13 +7,30 @@ using static QSoft.DevCon.DevConExtensiona;
 //USB xHCI 相容的主機控制器
 //USB 根集線器 (USB 3.0)
 
+try
+{
+    
+    foreach(var oo in Guid.Empty.Devices())
+    {
+        var fn = oo.GetFriendName();
+        if(fn == null)
+        {
+            var desc = oo.DeviceDesc();
+        }
+    }
+}
+catch(Exception ee)
+{
+
+}
 
 var subs = "Usb".Devices().Select(x => new
 {
     childs = x.Childrens(),
     enumerator = x.EnumeratorName(),
-    desc = x.GetDeviceDesc(),
+    desc = x.DeviceDesc(),
     pps = x.AllPropertys(),
+    classdesc = x.GetClassGuid().GetClassDesc(),
     //x.DeviceDesc,
     instanceid = x.DeviceInstanceId(),
 });

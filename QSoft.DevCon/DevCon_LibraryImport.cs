@@ -48,9 +48,9 @@ namespace QSoft.DevCon
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)] string ClassName, IntPtr ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
 
-        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDescriptionW", SetLastError = true)]
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDescriptionW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool SetupDiGetClassDescription(Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
+        internal static partial bool SetupDiGetClassDescription(Guid ClassGuid, Span<byte> ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDevicePropertyW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

@@ -26,6 +26,7 @@ namespace ConsoleApp_NET472
                 mac = x.Manufacturer(),
                 pps = x.AllPropertys(),
                 id = x.DeviceInstanceId(),
+                clssdesc = x.GetClassGuid().GetClassDesc(),
                 installdate = x.FirstInstallDate(),
             });
             aaa.ToArray();

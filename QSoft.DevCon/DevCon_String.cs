@@ -14,7 +14,7 @@ namespace QSoft.DevCon
             string? str = null;
 #if NET8_0_OR_GREATER
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
-            if (reqsize <= 2) return "";
+            if (reqsize <= 2) return str;
             Span<byte> span = stackalloc byte[(int)reqsize];
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
             str = Encoding.Unicode.GetString(span[..^2]);
