@@ -248,16 +248,10 @@ namespace QSoft.DevCon
 #if NET8_0_OR_GREATER
             SetupDiGetClassDescription(guid, [], 0, out var reqsize);
             System.Diagnostics.Trace.WriteLine($"reqsize:{reqsize}");
-            if (reqsize <= 2) return "";
-            Span<byte> span = stackalloc byte[(int)reqsize];
+            if (reqsize <= 1) return "";
+            Span<byte> span = stackalloc byte[(int)reqsize*2];
             SetupDiGetClassDescription(guid, span, reqsize, out reqsize);
-            str =  System.Text.Encoding.Unicode.GetString(span);
-
-            //SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
-            //if (reqsize <= 2) return "";
-            //Span<byte> span = stackalloc byte[(int)reqsize];
-            //SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
-            //str = Encoding.Unicode.GetString(span[..^2]);
+            str = System.Text.Encoding.Unicode.GetString(span[..^2]);
 #else
             SetupDiGetClassDescription(guid, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 1)

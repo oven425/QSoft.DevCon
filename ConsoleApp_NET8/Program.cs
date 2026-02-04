@@ -12,6 +12,7 @@ try
     
     foreach(var oo in Guid.Empty.Devices())
     {
+        var classdesc = oo.GetClassGuid().GetClassDesc();
         var fn = oo.GetFriendName();
         if(fn == null)
         {

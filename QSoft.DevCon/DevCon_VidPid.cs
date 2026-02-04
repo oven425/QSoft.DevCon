@@ -14,7 +14,6 @@ namespace QSoft.DevCon
     {
         public static (int vid, int pid) VidPid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            var requiredSize = 0;
             var id = src.DeviceInstanceId();
             var match = Regex.Match(id, @"VID_(?<vid>[0-9A-F]{4})&PID_(?<pid>[0-9A-F]{4})", RegexOptions.IgnoreCase);
             if(match.Success)

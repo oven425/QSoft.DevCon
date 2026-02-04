@@ -27,14 +27,12 @@ namespace QSoft.DevCon
                 str = Marshal.PtrToStringUni(mem.Pointer);
             }
 #endif
-
             return str;
         }
 
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
         {
             string str = "";
-
 #if NET8_0_OR_GREATER
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
             if (reqsize <= 2) return "";
@@ -47,10 +45,9 @@ namespace QSoft.DevCon
             {
                 using var mem = new IntPtrMem<char>((int)reqsize);
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
-                str = Marshal.PtrToStringUni(mem.Pointer);
+                str = Marshal.PtrToStringUni(mem.Pointer, (int)reqsize);
             }
 #endif
-
             return str??"";
         }
 
