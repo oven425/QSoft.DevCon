@@ -8,13 +8,13 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtension
     {
-        public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static string DriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_DriverVersion);
 
         public static string DriverInfSection(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_DriverInfSection);
 
-        public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static DateTime DriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_DriverDate);
 
         public static string DriverProvider(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)

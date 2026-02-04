@@ -9,7 +9,12 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
-    
+    var aaaaa = "Camera".Devices().Select(x => new
+    {
+        fn = x.GetFriendName(),
+        date = x.GetDriverDate(),
+        version = x.GetDriverVersion(),
+    });
     foreach(var oo in Guid.Empty.Devices())
     {
         var classdesc = oo.GetClassGuid().GetClassDesc();

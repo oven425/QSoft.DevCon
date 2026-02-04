@@ -51,6 +51,12 @@ namespace QSoft.DevCon
         public static string GetPhysicalDeviceObjectName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_PHYSICAL_DEVICE_OBJECT_NAME);
 
+        [Obsolete("Obsoleted, please use DriverVersion")]
+        public static string GetDriverVersion(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString(DEVPKEY_Device_DriverVersion);
+        [Obsolete("Obsoleted, please use DriverDate")]
+        public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetDateTime(DEVPKEY_Device_DriverDate);
 
     }
 }
