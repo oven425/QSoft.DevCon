@@ -24,14 +24,18 @@ namespace TestDevCon
             //    Console.WriteLine($"HardwareID: {string.Join(", ", hwIds)}");
             //    Console.WriteLine();
             //}
+
+            Console.WriteLine("Test1--");
             var dds = Guid.Empty.Devices().Select(x => new
             {
                 name = x.GetFriendName()??x.DeviceDesc()
             });
+            Console.WriteLine($"dds count:{dds.Count()}");
             foreach (var d in dds)
             {
                 Console.WriteLine($"name:{d.name}");
             }
+            Console.WriteLine("Test1----");
             Assert.True(true);
         }
     }
