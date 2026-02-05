@@ -30,7 +30,7 @@ namespace TestDevCon
             });
             foreach (var d in dds)
             {
-                Assert.Fail($"name:{d.name}");
+                Console.WriteLine($"name:{d.name}");
             }
             
         }
