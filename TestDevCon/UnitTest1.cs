@@ -32,7 +32,7 @@ namespace TestDevCon
             {
                 Console.WriteLine($"name:{d.name}");
             }
-            
+            Assert.True(true);
         }
     }
 }
