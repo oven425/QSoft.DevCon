@@ -11,6 +11,23 @@ namespace QSoft.DevCon
         static DEVPROPKEY DEVPKEY_Devices_PhysicalDeviceLocation = new(fmt_id: Guid.Parse("{540B947E-8B40-45BC-A8A2-6A0B894CBDA2}"), p_id: 9);
         public static CameraPanel Panel(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
+#if NET8_0_OR_GREATER
+
+            int reqsz = 0;
+            var bb = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out var propertytype, [], 0, out reqsz, 0);
+            if (!bb && reqsz == 0) return CameraPanel.Unknow;
+
+            Span<byte> mem = stackalloc byte[reqsz];
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, mem, reqsz, out reqsz, 0);
+            byte[] lbuffer = new byte[reqsz];
+
+            BitArray myBA3 = new(mem.ToArray());
+            var rotate = Convert(myBA3.Get(82), myBA3.Get(81), myBA3.Get(80), myBA3.Get(79));
+
+            return (CameraPanel)Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
+
+#else
+
             int reqsz = 0;
             var bb = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out var propertytype, IntPtr.Zero, 0, out reqsz, 0);
             if (!bb && reqsz == 0) return CameraPanel.Unknow;
@@ -24,6 +41,8 @@ namespace QSoft.DevCon
             var rotate = Convert(myBA3.Get(82), myBA3.Get(81), myBA3.Get(80), myBA3.Get(79));
 
             return (CameraPanel)Convert(myBA3.Get(69), myBA3.Get(68), myBA3.Get(67));
+
+#endif
 
         }
 

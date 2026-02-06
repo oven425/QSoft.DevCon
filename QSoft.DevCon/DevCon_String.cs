@@ -34,12 +34,20 @@ namespace QSoft.DevCon
         {
             string str = "";
 #if NET8_0_OR_GREATER
+            System.Diagnostics.Trace.WriteLine($"NET8_0_OR_GREATER");
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
             if (reqsize <= 2) return "";
             Span<byte> span = stackalloc byte[(int)reqsize];
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
-            str = Encoding.Unicode.GetString(span[..^2]);
+            ReadOnlySpan<char> charSpan = MemoryMarshal.Cast<byte, char>(span);
+            int nullIndex = charSpan.IndexOf('\0');
+            System.Diagnostics.Trace.WriteLine($"nullIndex:{nullIndex}");
+            //str = Encoding.Unicode.GetString(span[..nullIndex]);
+            str = (nullIndex >= 0)
+                ? charSpan.Slice(0, nullIndex).ToString()
+                : charSpan.ToString();
 #else
+System.Diagnostics.Trace.WriteLine($"NET8_0_OR_GREATER----");
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
@@ -48,7 +56,7 @@ namespace QSoft.DevCon
                 str = Marshal.PtrToStringUni(mem.Pointer, (int)reqsize);
             }
 #endif
-            return str??"";
+            return str ?? "";
         }
 
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)

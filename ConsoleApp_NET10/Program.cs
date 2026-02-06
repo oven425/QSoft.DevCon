@@ -12,12 +12,12 @@ var aaa = "Camera".Devices().Select(x => new
     powerdata = x.PowerData(),
     ids = x.HardwaeeIDs(),
     panel = x.Panel(),
-    //x.DeviceDesc,
-    desc = x.GetDeviceDesc(),
+    desc = x.DeviceDesc(),
     aa = x.CompatibleIDs()
 });
 foreach (var a in aaa)
 {
+    Console.WriteLine($"desc:{a.desc}");
     Console.WriteLine($"Name:{a.name}");
     Console.WriteLine($"VidPid:{a.vp}");
     Console.WriteLine($"IsConnected:{a.isconnect}");

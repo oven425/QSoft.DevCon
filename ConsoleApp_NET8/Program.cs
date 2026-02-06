@@ -12,8 +12,10 @@ try
     var aaaaa = "Camera".Devices().Select(x => new
     {
         fn = x.GetFriendName(),
-        date = x.GetDriverDate(),
-        version = x.GetDriverVersion(),
+        date = x.DriverDate(),
+        version = x.DriverVersion(),
+        desc = x.DeviceDesc(),
+        pandel = x.Panel(),
     });
     foreach(var oo in Guid.Empty.Devices())
     {
