@@ -7,12 +7,23 @@ using static QSoft.DevCon.DevConExtensiona;
 //USB xHCI 相容的主機控制器
 //USB 根集線器 (USB 3.0)
 
+foreach(var oo in Guid.Empty.Devices()
+    .Select(x => new
+    {
+        fn = x.GetFriendName(),
+        desc = x.DeviceDesc(),
+    }))
+{
+    System.Diagnostics.Trace.WriteLine($"fn: {oo.fn??"null"}, desc: {oo.desc}");
+}
+
+
 try
 {
     var aaaaa = "Camera".Devices().Select(x => new
     {
         fn = x.GetFriendName(),
-        date = x.DriverDate(),
+        date = x.DriverDate().OrNull()?.ToString("yyyy/MM/dd")??"",
         version = x.DriverVersion(),
         desc = x.DeviceDesc(),
         pandel = x.Panel(),

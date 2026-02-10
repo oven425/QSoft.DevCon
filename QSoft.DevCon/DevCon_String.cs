@@ -9,39 +9,41 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtension
     {
-        static string? GetStringNull(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
-        {
-            string? str = null;
-#if NET8_0_OR_GREATER
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
-            if (reqsize <= 2) return str;
-            Span<byte> span = stackalloc byte[(int)reqsize];
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
-            str = Encoding.Unicode.GetString(span[..^2]);
-#else
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
-            if (reqsize > 0)
-            {
-                using var mem = new IntPtrMem<char>((int)reqsize);
-                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
-                str = Marshal.PtrToStringUni(mem.Pointer);
-            }
-#endif
-            return str;
-        }
+//        static string? GetStringNull(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
+//        {
+//            string? str = null;
+//#if NET8_0_OR_GREATER
+//            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
+//            if (reqsize <= 2) return str;
+//            Span<byte> span = stackalloc byte[(int)reqsize];
+//            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
+//            str = Encoding.Unicode.GetString(span[..^2]);
+//#else
+//            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
+//            if (reqsize > 0)
+//            {
+//                using var mem = new IntPtrMem<char>((int)reqsize);
+//                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
+//                str = Marshal.PtrToStringUni(mem.Pointer);
+//            }
+//#endif
+//            return str;
+//        }
 
+        public static string? OrNull(this string src)
+        {
+            return string.IsNullOrEmpty(src) ? null : src;
+        }
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint spdrp)
         {
             string str = "";
 #if NET8_0_OR_GREATER
-            System.Diagnostics.Trace.WriteLine($"NET8_0_OR_GREATER");
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
             if (reqsize <= 2) return "";
             Span<byte> span = stackalloc byte[(int)reqsize];
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
             ReadOnlySpan<char> charSpan = MemoryMarshal.Cast<byte, char>(span);
             int nullIndex = charSpan.IndexOf('\0');
-            System.Diagnostics.Trace.WriteLine($"nullIndex:{nullIndex}");
             //str = Encoding.Unicode.GetString(span[..nullIndex]);
             str = (nullIndex >= 0)
                 ? charSpan.Slice(0, nullIndex).ToString()
