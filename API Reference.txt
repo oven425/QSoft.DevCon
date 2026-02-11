@@ -1,0 +1,105 @@
+# QSoft.DevCon API Reference
+
+## Device Enumeration
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `Guid.Devices()` | `IEnumerable<(IntPtr, SP_DEVINFO_DATA)>` | Enumerate devices by Class GUID. Use `Guid.Empty` to list all | |
+| `string.Devices()` | `IEnumerable<(IntPtr, SP_DEVINFO_DATA)>` | Enumerate devices by Class name (e.g. `"Camera"`) | |
+| `Guid.DevicesFromInterface()` | `IEnumerable<(IntPtr, SP_DEVINFO_DATA, SP_DEVICE_INTERFACE_DATA)>` | Enumerate devices by Device Interface GUID | |
+| `string.GetClassGuids()` | `List<Guid>` | Get Class GUIDs for a given Class name | |
+
+## Device Properties
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `GetFriendName()` | `string?` | Get device friendly name | |
+| `SetFriendName()` | `void` | Set device friendly name | |
+| `DeviceDesc()` | `string` | Get device description | `GetDeviceDesc()` |
+| `DeviceInstanceId()` | `string` | Get device Instance ID | `GetDeviceInstanceId()` |
+| `GetClass()` | `string` | Get device Class name | |
+| `ClassGuid()` | `Guid` | Get device Class GUID | `GetClassGuid()` |
+| `ClassDesc()` | `string` | Get description text for a Class GUID | `GetClassDesc()` |
+| `Service()` | `string` | Get device service name | `GetService()` |
+| `Manufacturer()` | `string` | Get device manufacturer | `GetMFG()` |
+| `EnumeratorName()` | `string` | Get enumerator name | |
+| `HardwareIDs()` | `List<string>` | Get hardware ID list | `GetHardwaeeIDs()`, `HardwaeeIDs()` |
+| `CompatibleIDs()` | `List<string>` | Get compatible ID list | |
+| `LocationPaths()` | `List<string>` | Get location path list | `GetLocationPaths()` |
+| `PhysicalDeviceObjectName()` | `string` | Get Physical Device Object (PDO) name | `GetPhysicalDeviceObjectName()` |
+| `BiosDeviceName()` | `string` | Get BIOS device name | |
+| `AllPropertys()` | `ReadOnlyCollection<DEVPROPKEY>` | Get all property keys of the device | |
+
+## Device Status
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `IsConnected()` | `bool` | Check if the device is connected | |
+| `IsPresent()` | `bool` | Check if the device is present | |
+| `ProblemCode()` | `int` | Get the device problem code | |
+
+## Device Relations
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `Parent()` | `string` | Get parent device Instance ID | `GetParent()` |
+| `Childrens()` | `List<string>` | Get child device Instance ID list | `GetChildrens()` |
+| `Siblings()` | `List<string>` | Get sibling device Instance ID list | |
+| `PowerRelations()` | `List<string>` | Get power-related device list | `GetPowerRelations()` |
+| `BusRelations()` | `List<string>` | Get bus-related device list | |
+
+## Driver Info
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `DriverVersion()` | `string` | Get driver version | `GetDriverVersion()` |
+| `DriverDate()` | `DateTime` | Get driver date | `GetDriverDate()` |
+| `DriverDate().OrNull()` | `DateTime?` | Convert default date to `null` | |
+| `DriverInfSection()` | `string` | Get INF section name | |
+| `DriverProvider()` | `string` | Get driver provider | |
+| `FirstInstallDate()` | `DateTime` | Get first install date | |
+
+## Device Control
+
+> ⚠️ Requires administrator privileges
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `Enable()` | `int` | Enable devices, returns count | |
+| `Disable()` | `int` | Disable devices, returns count | |
+
+## Serial Port / COM Port
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `GetComPortName()` | `string` | Get COM port name | |
+| `SetComPortName()` | `void` | Set COM port name (requires admin) | |
+
+## USB / HID
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `VidPid()` | `(int vid, int pid)` | Get USB Vendor ID and Product ID | |
+| `PowerData()` | `CM_Power_Data?` | Get device power data | |
+
+## Device Interface
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `DevicePath()` | `string` | Get device path | |
+| `As()` | `(IntPtr, SP_DEVINFO_DATA)` | Convert interface tuple to device tuple | |
+| `Panel()` | `CameraPanel` | Get camera panel orientation (Front/Back, etc.) | |
+
+## WPF Extension
+
+> Namespace: `QSoft.DevCon.WPF`
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `Icon()` | `BitmapSource` | Get device icon | `GetICon()` |
+
+## Utility
+
+| Method | Return Type | Description | Obsolete Name |
+|--------|-------------|-------------|---------------|
+| `GetVolumeName()` | `IEnumerable<(string letter, string target)>` | Get drive letter to DOS device name mapping | |

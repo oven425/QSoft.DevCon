@@ -24,20 +24,12 @@ namespace QSoft.DevCon
         [Obsolete("Obsoleted, please use HardwaeeIDs")]
         public static List<string> GetHardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_HARDWAREID);
+        [Obsolete("Obsoleted, please use HardwareIDs")]
+        public static List<string> HardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => [];
         [Obsolete("Obsoleted, please use DeviceInstanceId")]
         public static string GetDeviceInstanceId(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            var str = "";
-            //SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, IntPtr.Zero, 0, out var reqsize);
-            ////System.Diagnostics.Trace.WriteLine($"reqszie:{reqsize}");
-            //if (reqsize > 0)
-            //{
-            //    using var buffer = new IntPtrMem<char>(reqsize);
-            //    SetupDiGetDeviceInstanceId(src.dev, ref src.devdata, buffer.Pointer, reqsize, out reqsize);
-            //    str = Marshal.PtrToStringUni(buffer.Pointer);
-            //}
-            return str ?? "";
-        }
+            => "";
         [Obsolete("Obsoleted, please use PowerRelations")]
         public static string GetPowerRelations(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_PowerRelations);
@@ -57,6 +49,12 @@ namespace QSoft.DevCon
         [Obsolete("Obsoleted, please use DriverDate")]
         public static DateTime GetDriverDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_DriverDate);
+        [Obsolete("Obsoleted, please use ClassDesc")]
+        public static string GetClassDesc(this Guid guid) => "";
+
+        [Obsolete("Obsoleted, please use ClassGuid")]
+        public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => Guid.Empty;
 
     }
 }

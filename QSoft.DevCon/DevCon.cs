@@ -32,6 +32,10 @@ namespace QSoft.DevCon
 
             uint index = 0;
             IntPtr hDevInfo = SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
+            if (hDevInfo == new IntPtr(-1))
+            {
+                yield break;
+            }
             try
             {
                 while (true)
@@ -61,7 +65,7 @@ namespace QSoft.DevCon
             {
                 return [];
             }
-            return src.GetClassGuids().FirstOrDefault().Devices(showhiddendevice);
+            return classguids.FirstOrDefault().Devices(showhiddendevice);
         }
 
         //must be administrator privileges
@@ -201,7 +205,7 @@ namespace QSoft.DevCon
         public static string DeviceDesc(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => GetString(src, SPDRP_DEVICEDESC);
 
-        public static List<string> HardwaeeIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static List<string> HardwareIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_HARDWAREID);
 
         public static List<string> CompatibleIDs(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
@@ -209,9 +213,6 @@ namespace QSoft.DevCon
 
         public static List<string> LocationPaths(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetStrings(SPDRP_LOCATION_PATHS);
-
-
-        
         public static string Service(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_SERVICE);
 
@@ -233,35 +234,27 @@ namespace QSoft.DevCon
         public static string EnumeratorName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_ENUMERATOR_NAME);
 
-        public static Guid GetClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-        {
-            if(Guid.TryParse(GetString(src, SPDRP_CLASSGUID), out var guid))
-            {
-                return guid;
-            }
-            return Guid.Empty;
-        }
+        public static Guid ClassGuid(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.devdata.ClassGuid;
 
-        public static string GetClassDesc(this Guid guid)
+        public static string ClassDesc(this Guid guid)
         {
+            if (guid == Guid.Empty) return "";
             var str = "";
 #if NET8_0_OR_GREATER
             SetupDiGetClassDescription(guid, [], 0, out var reqsize);
-            System.Diagnostics.Trace.WriteLine($"reqsize:{reqsize}");
             if (reqsize <= 1) return "";
-            Span<byte> span = stackalloc byte[(int)reqsize*2];
+            Span<byte> span = stackalloc byte[(int)(reqsize-1)*2];
             SetupDiGetClassDescription(guid, span, reqsize, out reqsize);
-            str = System.Text.Encoding.Unicode.GetString(span[..^2]);
+            str = System.Text.Encoding.Unicode.GetString(span);
 #else
             SetupDiGetClassDescription(guid, IntPtr.Zero, 0, out var reqsize);
-            if (reqsize > 1)
-            {
-                using var mem = new IntPtrMem<byte>((int)reqsize * 2);
-                SetupDiGetClassDescription(guid, mem.Pointer, reqsize, out reqsize);
-                str = Marshal.PtrToStringUni(mem.Pointer, (int)reqsize-1);
-            }
+            if (reqsize <= 1) return "";
+            using var mem = new IntPtrMem<byte>((int)reqsize * 2);
+            SetupDiGetClassDescription(guid, mem.Pointer, reqsize, out reqsize);
+            str = Marshal.PtrToStringUni(mem.Pointer, (int)reqsize - 1);
 #endif
-            
+
             return str;
         }
 

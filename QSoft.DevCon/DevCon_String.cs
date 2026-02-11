@@ -30,7 +30,7 @@ namespace QSoft.DevCon
 //            return str;
 //        }
 
-        public static string? OrNull(this string src)
+        static string? OrNull(this string src)
         {
             return string.IsNullOrEmpty(src) ? null : src;
         }
@@ -49,7 +49,6 @@ namespace QSoft.DevCon
                 ? charSpan.Slice(0, nullIndex).ToString()
                 : charSpan.ToString();
 #else
-System.Diagnostics.Trace.WriteLine($"NET8_0_OR_GREATER----");
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
@@ -93,9 +92,5 @@ System.Diagnostics.Trace.WriteLine($"NET8_0_OR_GREATER----");
                 ThrowExceptionForLastError();
             }
         }
-
-        
-
-
     }
 }

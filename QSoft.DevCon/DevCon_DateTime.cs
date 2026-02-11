@@ -9,11 +9,12 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtension
     {
+        static readonly DateTime FileTimeDefault = DateTime.FromFileTime(0);
         public static DateTime? OrNull(this DateTime src)
         {
             DateTime? dd = src switch
             {
-                var d when d == DateTime.FromFileTime(0) => null,
+                var d when d == FileTimeDefault => null,
                 _ => src
             };
             return dd;
@@ -21,7 +22,7 @@ namespace QSoft.DevCon
 
         static DateTime GetDateTime(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
-            var datetime = DateTime.FromFileTime(0);
+            var datetime = FileTimeDefault;
 #if NET8_0_OR_GREATER
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var propertytype, [], 0, out var reqsz, 0);
             if (reqsz > 0)
