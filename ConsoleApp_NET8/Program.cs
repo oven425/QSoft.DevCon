@@ -1,9 +1,19 @@
-﻿using Microsoft.Win32.SafeHandles;
+﻿using Microsoft.Management.Infrastructure;
+using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using static QSoft.DevCon.DevConExtensiona;
+
+
+
+
+
+
+
+
+
 //USB xHCI 相容的主機控制器
 //USB 根集線器 (USB 3.0)
 
