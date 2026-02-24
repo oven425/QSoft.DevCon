@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace QSoft.DevCon
 {
@@ -34,7 +35,33 @@ namespace QSoft.DevCon
 #endif
             return null;
         }
-
+#if NET8_0_OR_GREATER
+        private static ReadOnlySpan<PDCAP> AllValues => 
+            [
+                PDCAP.PDCAP_D0_SUPPORTED,
+                PDCAP.PDCAP_D1_SUPPORTED,
+                PDCAP.PDCAP_D2_SUPPORTED,
+                PDCAP.PDCAP_D3_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D0_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D1_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D2_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D3_SUPPORTED,
+                PDCAP.PDCAP_WARM_EJECT_SUPPORTED
+            ];
+#else
+        static readonly PDCAP[] AllValues = 
+            [
+                PDCAP.PDCAP_D0_SUPPORTED,
+                PDCAP.PDCAP_D1_SUPPORTED,
+                PDCAP.PDCAP_D2_SUPPORTED,
+                PDCAP.PDCAP_D3_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D0_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D1_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D2_SUPPORTED,
+                PDCAP.PDCAP_WAKE_FROM_D3_SUPPORTED,
+                PDCAP.PDCAP_WARM_EJECT_SUPPORTED
+            ];
+#endif
         [Flags]
         public enum PDCAP
         {
@@ -68,7 +95,7 @@ namespace QSoft.DevCon
         public struct CM_Power_Data
         {
             public uint PD_Size;
-            DEVICE_POWER_STATE PD_MostRecentPowerState;
+            public DEVICE_POWER_STATE PD_MostRecentPowerState;
             public uint PD_Capabilities;
             public uint PD_D1Latency;
             public uint PD_D2Latency;
@@ -91,10 +118,17 @@ namespace QSoft.DevCon
                 sb.AppendLine($"Power Capabilities:");
                 sb.AppendLine($"{PD_Capabilities:x08}");
                 var dps = (PDCAP)PD_Capabilities;
-                foreach (var oo in Enum.GetValues(typeof(PDCAP)).Cast<PDCAP>().Where(x => dps.HasFlag(x)))
+                foreach(var oo in AllValues)
                 {
-                    sb.AppendLine($"{oo}");
+                    if(dps.HasFlag(oo))
+                    {
+                        sb.AppendLine($"{oo}");
+                    }
                 }
+                //foreach (var oo in Enum.GetValues(typeof(PDCAP)).Cast<PDCAP>().Where(x => dps.HasFlag(x)))
+                //{
+                //    sb.AppendLine($"{oo}");
+                //}
                 sb.AppendLine();
 
                 int index = 0;

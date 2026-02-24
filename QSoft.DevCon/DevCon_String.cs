@@ -55,8 +55,14 @@ namespace QSoft.DevCon
                 using var mem = new IntPtrMem<char>((int)reqsize);
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
                 str = Marshal.PtrToStringUni(mem.Pointer, (int)reqsize);
+                var idx = str.IndexOf('\0');
+                if (idx > 0)
+                {
+                    str = str.Substring(0, idx);
+                }
             }
 #endif
+
             return str ?? "";
         }
 

@@ -26,11 +26,11 @@ namespace ConsoleApp_NET472
                 mac = x.Manufacturer(),
                 pps = x.AllPropertys(),
                 id = x.DeviceInstanceId(),
-                clssdesc = x.GetClassGuid().GetClassDesc(),
+                clssdesc = x.ClassGuid().ClassDesc(),
                 installdate = x.FirstInstallDate(),
             });
-            aaa.ToArray();
-
+            var pp = aaa.ToArray()[0].power.ToString();
+            System.Diagnostics.Trace.WriteLine(pp);
             var ffs = "Camera".GetClassGuids();
             var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
             var ddd = ggu.GetClassDesc();

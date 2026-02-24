@@ -1,17 +1,24 @@
 using Microsoft.Management.Infrastructure;
 using QSoft.DevCon;
+using System.Text;
+using System.Xml;
 
 namespace TestDevCon
 {
-    public class UnitTest1
+    public class CameraTest
     {
         [Fact]
-        public void Test1()
+        public void Test()
         {
             using CimSession session = CimSession.Create(null);
             string query = "SELECT * FROM Win32_PnPEntity WHERE PNPClass = 'Camera'";
             var instances = session.QueryInstances(@"root\cimv2", "WQL", query);
-            var aa = instances.Select(x => new {
+            foreach(var oo in instances)
+            {
+                System.Diagnostics.Trace.WriteLine(oo);
+            }
+            var aa = instances.Select(x => new
+            {
                 id = x.CimInstanceProperties["DeviceID"].Value as string,
                 name = x.CimInstanceProperties["Caption"].Value as string,
                 hardwareIDs = x.CimInstanceProperties["HardwareID"].Value as string[],
@@ -25,11 +32,15 @@ namespace TestDevCon
                 hardwareIDs = x.HardwareIDs()
             }).ToList();
 
-            var ass = aa.Join(bb, x => x.id, y => y.id, (x, y) =>new
-            {
-                x,
-                y
-            });
+
+            Newtonsoft.Json.JsonConvert.SerializeObject(aa);
+            string json_aa = Newtonsoft.Json.JsonConvert.SerializeObject(aa);
+            string json_bb = Newtonsoft.Json.JsonConvert.SerializeObject(bb);
+            Assert.Equal(json_aa, json_bb);
+
         }
+
     }
+
+
 }
