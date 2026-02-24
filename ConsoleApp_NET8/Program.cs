@@ -1,21 +1,29 @@
-﻿using Microsoft.Win32.SafeHandles;
+﻿using Microsoft.Management.Infrastructure;
+using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using static QSoft.DevCon.DevConExtensiona;
+
+
+
+
+
+
+
+
+
 //USB xHCI 相容的主機控制器
 //USB 根集線器 (USB 3.0)
 
-foreach(var oo in Guid.Empty.Devices()
+//transform date is default value to null
+var alldevices = Guid.Empty.Devices()
     .Select(x => new
     {
-        fn = x.GetFriendName(),
-        desc = x.DeviceDesc(),
-    }))
-{
-    System.Diagnostics.Trace.WriteLine($"fn: {oo.fn??"null"}, desc: {oo.desc}");
-}
+        description = x.DeviceDesc(),
+        driverdate = x.DriverDate().OrNull()?.ToString("yyyy/MM/dd") ?? "",
+    });
 
 
 try
@@ -30,7 +38,12 @@ try
     });
     foreach(var oo in Guid.Empty.Devices())
     {
-        var classdesc = oo.GetClassGuid().GetClassDesc();
+        var classguid = oo.ClassGuid();
+        var classdesc = classguid.ClassDesc();
+        if(classdesc == "")
+        {
+
+        }
         var fn = oo.GetFriendName();
         if(fn == null)
         {

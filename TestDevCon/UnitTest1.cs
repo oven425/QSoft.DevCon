@@ -1,42 +1,46 @@
 using Microsoft.Management.Infrastructure;
 using QSoft.DevCon;
+using System.Text;
+using System.Xml;
 
 namespace TestDevCon
 {
-    public class UnitTest1
+    public class CameraTest
     {
         [Fact]
-        public void Test1()
+        public void Test()
         {
-            //using CimSession session = CimSession.Create(null);
-            //// 查詢 Windows PnP 實體，篩選與相機相關的服務或類別
-            //string query = "SELECT * FROM Win32_PnPEntity WHERE PNPClass = 'Camera' OR Service = 'usbvideo'";
-            //var instances = session.QueryInstances(@"root\cimv2", "WQL", query);
-
-            //foreach (var instance in instances)
-            //{
-            //    Console.WriteLine($"[MI 來源]");
-            //    Console.WriteLine($"名稱: {instance.CimInstanceProperties["Name"].Value}");
-            //    Console.WriteLine($"DeviceID: {instance.CimInstanceProperties["PNPDeviceID"].Value}");
-            //    System.Diagnostics.Trace.WriteLine($"{instance.CimInstanceProperties["InstallDate"].Value}");
-            //    // HardwareID 通常是字串陣列
-            //    var hwIds = (string[])instance.CimInstanceProperties["HardwareID"].Value;
-            //    Console.WriteLine($"HardwareID: {string.Join(", ", hwIds)}");
-            //    Console.WriteLine();
-            //}
-
-            Console.WriteLine("Test1--");
-            var dds = Guid.Empty.Devices().Select(x => new
+            using CimSession session = CimSession.Create(null);
+            string query = "SELECT * FROM Win32_PnPEntity WHERE PNPClass = 'Camera'";
+            var instances = session.QueryInstances(@"root\cimv2", "WQL", query);
+            foreach(var oo in instances)
             {
-                name = x.GetFriendName()??x.DeviceDesc()
-            });
-            Console.WriteLine($"dds count:{dds.Count()}");
-            foreach (var d in dds)
-            {
-                Console.WriteLine($"name:{d.name}");
+                System.Diagnostics.Trace.WriteLine(oo);
             }
-            Console.WriteLine("Test1----");
-            Assert.True(true);
+            var aa = instances.Select(x => new
+            {
+                id = x.CimInstanceProperties["DeviceID"].Value as string,
+                name = x.CimInstanceProperties["Caption"].Value as string,
+                hardwareIDs = x.CimInstanceProperties["HardwareID"].Value as string[],
+            }).ToList();
+
+
+            var bb = "Camera".Devices().Select(x => new
+            {
+                id = x.DeviceInstanceId(),
+                name = x.GetFriendName(),
+                hardwareIDs = x.HardwareIDs()
+            }).ToList();
+
+
+            Newtonsoft.Json.JsonConvert.SerializeObject(aa);
+            string json_aa = Newtonsoft.Json.JsonConvert.SerializeObject(aa);
+            string json_bb = Newtonsoft.Json.JsonConvert.SerializeObject(bb);
+            Assert.Equal(json_aa, json_bb);
+
         }
+
     }
+
+
 }

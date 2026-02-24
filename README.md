@@ -1,13 +1,13 @@
 # QSoft.DevCon
 ## Quick start
 
-1. Get all devices displayname
+1. Get all devices displayname and more info
 ```c#
 var alldevices = Guid.Empty.Devices()
     .Select(x => new
     {
         displayname = x.GetFriendName(),
-        description = x.GetDeviceDesc()
+        description = x.DeviceDesc(),
     });
 ```
 2. Get all serial port info
@@ -18,7 +18,7 @@ var ports = "Ports".Devices()
     {
         portname = x.GetComPortName(),
         instanceid = x.DeviceInstanceId(),
-        locationpaths = x.GetLocationPaths()
+        locationpaths = x.LocationPaths()
     });
 ```
 3. Get serial port info from Modem
@@ -27,7 +27,7 @@ var ffs = "Modem".Devices()
     .Select(x=>new 
     { 
         port = x.GetComPortName(),
-        desc = x.GetDeviceDesc(),
+        desc = x.DeviceDesc(),
     });
 
 ```
@@ -41,7 +41,7 @@ var ffs = "Modem".Devices()
 5. Get all device class name and class guid
 ```c#
 var class_guid = Guid.Empty.Devices()
-    .GroupBy(x => x.GetClass(), x => x.GetClassGuid());
+    .GroupBy(x => x.GetClass(), x => x.ClassGuid());
 ```
 
 6. Change friend name
@@ -53,9 +53,23 @@ foreach (var oo in "Camera".Devices())
     oo.SetFriendName($"test {friendname}");
 }
 ```
-7. Get device path
+
+7. check datetime is null or empty
+```c#
+//transform date is default value to null
+var alldevices = Guid.Empty.Devices()
+    .Select(x => new
+    {
+        description = x.DeviceDesc(),
+        driverdate = x.DriverDate().OrNull()?.ToString("yyyy/MM/dd") ?? "",
+    });
+
+```
+
+
+8. Get device path
 ```c#   
-var cameras = DevConExtension.KSCATEGORY_VIDEO_CAMERA
+var cameras = QSoft.DevCon.DevConExtension.KSCATEGORY_VIDEO_CAMERA
     .DevicesFromInterface()
     .Select(x => new
     {
@@ -64,13 +78,13 @@ var cameras = DevConExtension.KSCATEGORY_VIDEO_CAMERA
         panel = x.As().Panel(),
     });
 ```
-8. Get device icon
+9. Get device icon
 ```c#
 using QSoft.DevCon.WPF;
 
 foreach (var oo in "Camera".Devices())
 {
-    var icon = oo.GetIcon();
+    var icon = oo.Icon();
 }
 ```
 

@@ -32,6 +32,10 @@ namespace QSoft.DevCon
             Guid ggid = Guid.Empty;
             uint index = 0;
             IntPtr hDevInfo = SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
+            if (hDevInfo == new IntPtr(-1))
+            {
+                yield break;
+            }
             try
             {
                 while (true)
@@ -75,15 +79,23 @@ namespace QSoft.DevCon
             if(reqsize >0)
             {
                 var ptr = Marshal.AllocHGlobal((int)reqsize);
-                Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
-                uint nBytes = reqsize;
-                bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
+                try
+                {
+                    Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
+                    uint nBytes = reqsize;
+                    bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
 
-                byte[] bb1 = new byte[nBytes];
-                Marshal.Copy(ptr, bb1, 0, bb1.Length);
-                var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4));
-                Marshal.FreeHGlobal(ptr);
-                return po;
+                    byte[] bb1 = new byte[nBytes];
+                    Marshal.Copy(ptr, bb1, 0, bb1.Length);
+                    var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4))??"";
+                    Marshal.FreeHGlobal(ptr);
+                    return po;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+                
             }
             return "";
         }

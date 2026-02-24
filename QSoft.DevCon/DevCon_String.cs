@@ -30,7 +30,7 @@ namespace QSoft.DevCon
 //            return str;
 //        }
 
-        public static string? OrNull(this string src)
+        static string? OrNull(this string src)
         {
             return string.IsNullOrEmpty(src) ? null : src;
         }
@@ -49,15 +49,20 @@ namespace QSoft.DevCon
                 ? charSpan.Slice(0, nullIndex).ToString()
                 : charSpan.ToString();
 #else
-System.Diagnostics.Trace.WriteLine($"NET8_0_OR_GREATER----");
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
             {
                 using var mem = new IntPtrMem<char>((int)reqsize);
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, mem.Pointer, reqsize, out reqsize);
                 str = Marshal.PtrToStringUni(mem.Pointer, (int)reqsize);
+                var idx = str.IndexOf('\0');
+                if (idx > 0)
+                {
+                    str = str.Substring(0, idx);
+                }
             }
 #endif
+
             return str ?? "";
         }
 
@@ -93,9 +98,5 @@ System.Diagnostics.Trace.WriteLine($"NET8_0_OR_GREATER----");
                 ThrowExceptionForLastError();
             }
         }
-
-        
-
-
     }
 }
