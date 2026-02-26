@@ -167,6 +167,20 @@ namespace QSoft.DevCon
         public static List<Guid> GetClassGuids(this string src)
         {
             var guids = new List<Guid>();
+
+#if NET8_0_OR_GREATER
+            SetupDiClassGuidsFromName(src, [], 0, out var reqsize);
+            if (reqsize > 1)
+            {
+                System.Diagnostics.Trace.WriteLine("");
+            }
+            if (reqsize > 0)
+            {
+                Span<Guid> span = stackalloc Guid[(int)reqsize];
+                SetupDiClassGuidsFromName(src, span, reqsize, out reqsize);
+                guids.AddRange(span[..(int)reqsize]);
+            }
+#else
             SetupDiClassGuidsFromName(src, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 1)
             {
@@ -174,13 +188,17 @@ namespace QSoft.DevCon
             }
             if (reqsize > 0)
             {
-                using var mem = new IntPtrMem<Guid>((int)reqsize);
-                SetupDiClassGuidsFromName(src, mem.Pointer, reqsize, out reqsize);
+                using var mem = new IntPtrMem1<Guid>((int)reqsize);
+                SetupDiClassGuidsFromName(src, mem, reqsize, out reqsize);
                 var guid = new byte[16];
                 Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
                 var gg = new Guid(guid);
                 guids.Add(gg);
             }
+#endif
+
+
+
             return guids;
 
         }

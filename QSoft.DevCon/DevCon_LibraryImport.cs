@@ -44,9 +44,18 @@ namespace QSoft.DevCon
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, IntPtr PropertyBuffer, uint PropertyBufferSize);
 
+        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
+        //[return: MarshalAs(UnmanagedType.Bool)]
+        //internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)] string ClassName, IntPtr ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
+
+        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
+        //[return: MarshalAs(UnmanagedType.Bool)]
+        //internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)] string ClassName, SafeHandle ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
+
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)] string ClassName, IntPtr ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
+        internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)] string ClassName, Span<Guid> ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
+
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDescriptionW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
