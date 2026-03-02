@@ -12,7 +12,7 @@ namespace QSoft.DevCon
     {
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
-        internal static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
+        internal static extern IntPtr SetupDiGetClassDevs(in Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
         [DllImport("setupapi.dll", SetLastError = true)]
         internal static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
         [DllImport("setupapi.dll", SetLastError = true)]
@@ -39,7 +39,7 @@ namespace QSoft.DevCon
 
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern bool SetupDiGetClassDescription(Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
+        internal static extern bool SetupDiGetClassDescription(in Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
@@ -61,7 +61,7 @@ namespace QSoft.DevCon
                                  ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
 
         [DllImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", CharSet = CharSet.Ansi, SetLastError = true)]
-        static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
+        static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, in SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
 
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);

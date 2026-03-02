@@ -9,11 +9,11 @@ namespace QSoft.DevCon
         {
             var str = 0;
 #if NET8_0_OR_GREATER
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, [], 0, out var reqsize, 0);
+            SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out var property_type, [], 0, out var reqsize, 0);
             if (reqsize > 0)
             {
                 Span<byte> mem = stackalloc byte[reqsize];
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem, reqsize, out reqsize, 0);
+                SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out property_type, mem, reqsize, out reqsize, 0);
                 str = mem[0];
             }
 #else

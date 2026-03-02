@@ -31,7 +31,7 @@ namespace QSoft.DevCon
 
             Guid ggid = Guid.Empty;
             uint index = 0;
-            IntPtr hDevInfo = SetupDiGetClassDevs(ref guid, IntPtr.Zero, IntPtr.Zero, flags);
+            IntPtr hDevInfo = SetupDiGetClassDevs(guid, IntPtr.Zero, IntPtr.Zero, flags);
             if (hDevInfo == new IntPtr(-1))
             {
                 yield break;

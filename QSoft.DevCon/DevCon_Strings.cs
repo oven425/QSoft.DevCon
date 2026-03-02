@@ -13,12 +13,13 @@ namespace QSoft.DevCon
         {
             var ids = new List<string>();
 #if NET8_0_OR_GREATER
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, [], 0, out var reqsize, 0);
+            SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out _, [], 0, out var reqsize, 0);
             if (reqsize > 0)
             {
                 Span<byte> mem = stackalloc byte[reqsize];
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, mem, reqsize, out reqsize, 0);
-                ids.AddRange(mem.GetStrings());
+                SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out _, mem, reqsize, out reqsize, 0);
+                //ids.AddRange(mem.GetStrings());
+                return mem.GetStrings();
             }
 #else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
@@ -36,11 +37,11 @@ namespace QSoft.DevCon
         {
             var ids = new List<string>();
 #if NET8_0_OR_GREATER
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, [], 0, out var reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, property, out var property_type, [], 0, out var reqsize);
             if (reqsize > 0)
             {
                 Span<byte> mem = stackalloc byte[(int)reqsize];
-                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem, reqsize, out reqsize);
+                SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, property, out property_type, mem, reqsize, out reqsize);
                 ids.AddRange(mem.GetStrings());
             }
 #else

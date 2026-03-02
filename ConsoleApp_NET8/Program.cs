@@ -62,7 +62,7 @@ var subs = "Usb".Devices().Select(x => new
     enumerator = x.EnumeratorName(),
     desc = x.DeviceDesc(),
     pps = x.AllPropertys(),
-    classdesc = x.GetClassGuid().GetClassDesc(),
+    classdesc = x.ClassGuid().ClassDesc(),
     //x.DeviceDesc,
     instanceid = x.DeviceInstanceId(),
 });
@@ -93,7 +93,7 @@ var usbhub = DevConExtension.GUID_DEVINTERFACE_USB_HUB.DevicesFromInterface()
     {
         devicepath = x.DevicePath(),
         friendname = x.As().GetFriendName(),
-        desc = x.As().GetDeviceDesc(),
+        desc = x.As().DeviceDesc(),
         instanceid = x.As().DeviceInstanceId(),
         childs = x.As().Childrens(),
     });
@@ -139,7 +139,7 @@ foreach(var oo in pc)
 var usbs = DevConExtension.GUID_DEVINTERFACE_USB_DEVICE.DevicesFromInterface();
 foreach(var usb in usbs)
 {
-    var desc = usb.As().GetDeviceDesc();
+    var desc = usb.As().DeviceDesc();
     var firendname = usb.As().GetFriendName();
     System.Diagnostics.Trace.WriteLine($"desc: {desc}, friendname: {firendname}");
     var devicepath = usb.DevicePath();
@@ -171,7 +171,7 @@ var aaa = "Camera".Devices().Select(x => new
     id = x.DeviceInstanceId(),
     problemcode = x.ProblemCode(),
     powerdata = x.PowerData(),
-    ids = x.HardwaeeIDs(),
+    ids = x.HardwareIDs(),
     panel = x.Panel(),
     //x.DeviceDesc,
     aa = x.CompatibleIDs()

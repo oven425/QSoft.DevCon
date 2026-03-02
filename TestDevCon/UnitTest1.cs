@@ -22,15 +22,19 @@ namespace TestDevCon
                 id = x.CimInstanceProperties["DeviceID"].Value as string,
                 name = x.CimInstanceProperties["Caption"].Value as string,
                 hardwareIDs = x.CimInstanceProperties["HardwareID"].Value as string[],
-            }).ToList();
+                service = x.CimInstanceProperties["Service"].Value as string,
+                compatibleIDs = x.CimInstanceProperties["CompatibleID"].Value as string[],
+            });
 
 
             var bb = "Camera".Devices().Select(x => new
             {
                 id = x.DeviceInstanceId(),
                 name = x.GetFriendName(),
-                hardwareIDs = x.HardwareIDs()
-            }).ToList();
+                hardwareIDs = x.HardwareIDs(),
+                service = x.Service(),
+                compatibleIDs = x.CompatibleIDs(),
+            });
 
 
             Newtonsoft.Json.JsonConvert.SerializeObject(aa);

@@ -11,7 +11,7 @@ namespace QSoft.DevCon
     static public partial class DevConExtension
     {
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDevsW")]
-        internal static partial IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
+        internal static partial IntPtr SetupDiGetClassDevs(in Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
         [LibraryImport("setupapi.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
@@ -26,31 +26,14 @@ namespace QSoft.DevCon
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DestroyIcon(IntPtr hIcon);
 
-        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInstanceIdW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
-        //[return: MarshalAs(UnmanagedType.Bool)]
-        //internal static partial bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
-        
-        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceRegistryPropertyW", SetLastError = true)]
-        //[return: MarshalAs(UnmanagedType.Bool)]
-        //internal static partial bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
-
-
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceRegistryPropertyW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType,Span<byte> PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
+        internal static partial bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, in SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType,Span<byte> PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
 
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiSetDeviceRegistryPropertyW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, IntPtr PropertyBuffer, uint PropertyBufferSize);
-
-        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
-        //[return: MarshalAs(UnmanagedType.Bool)]
-        //internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)] string ClassName, IntPtr ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
-
-        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
-        //[return: MarshalAs(UnmanagedType.Bool)]
-        //internal static partial bool SetupDiClassGuidsFromName([MarshalAs(UnmanagedType.LPWStr)] string ClassName, SafeHandle ClassGuidArray1stItem, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiClassGuidsFromNameW", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -59,14 +42,14 @@ namespace QSoft.DevCon
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDescriptionW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool SetupDiGetClassDescription(Guid ClassGuid, Span<byte> ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
+        internal static partial bool SetupDiGetClassDescription(in Guid ClassGuid, Span<byte> ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
 
+        //[LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDevicePropertyW", SetLastError = true)]
+        //[return: MarshalAs(UnmanagedType.Bool)]
+        //internal static partial bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, in SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDevicePropertyW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, IntPtr propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
-        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDevicePropertyW", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static partial bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, ref DEVPROPKEY propertyKey, out UInt32 propertyType, Span<byte> propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
+        internal static partial bool SetupDiGetDeviceProperty(IntPtr deviceInfoSet, in SP_DEVINFO_DATA DeviceInfoData, in DEVPROPKEY propertyKey, out UInt32 propertyType, Span<byte> propertyBuffer, int propertyBufferSize, out int requiredSize, UInt32 flags);
 
 
         [LibraryImport("kernel32.dll", EntryPoint = "QueryDosDeviceW", SetLastError = true)]
@@ -98,7 +81,7 @@ namespace QSoft.DevCon
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static internal partial bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
+        static internal partial bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, in SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiEnumDeviceInterfaces", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

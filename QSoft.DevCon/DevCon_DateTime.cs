@@ -24,11 +24,11 @@ namespace QSoft.DevCon
         {
             var datetime = FileTimeDefault;
 #if NET8_0_OR_GREATER
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var propertytype, [], 0, out var reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out var propertytype, [], 0, out var reqsz, 0);
             if (reqsz > 0)
             {
                 Span<byte> mem = stackalloc byte[reqsz];
-                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out propertytype, mem, reqsz, out reqsz, 0);
+                SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out propertytype, mem, reqsz, out reqsz, 0);
                 var tt = BitConverter.ToInt64(mem);
                 datetime = DateTime.FromFileTime(tt);
             }

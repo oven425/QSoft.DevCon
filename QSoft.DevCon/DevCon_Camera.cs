@@ -14,11 +14,11 @@ namespace QSoft.DevCon
 #if NET8_0_OR_GREATER
 
             int reqsz = 0;
-            var bb = SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out var propertytype, [], 0, out reqsz, 0);
+            var bb = SetupDiGetDeviceProperty(src.dev, src.devdata, DEVPKEY_Devices_PhysicalDeviceLocation, out var propertytype, [], 0, out reqsz, 0);
             if (!bb && reqsz == 0) return CameraPanel.Unknow;
 
             Span<byte> mem = stackalloc byte[reqsz];
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, mem, reqsz, out reqsz, 0);
+            SetupDiGetDeviceProperty(src.dev, src.devdata, DEVPKEY_Devices_PhysicalDeviceLocation, out propertytype, mem, reqsz, out reqsz, 0);
             byte[] lbuffer = new byte[reqsz];
 
             BitArray myBA3 = new(mem.ToArray());

@@ -38,10 +38,10 @@ namespace QSoft.DevCon
         {
             string str = "";
 #if NET8_0_OR_GREATER
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, spdrp, out var property_type, [], 0, out var reqsize);
             if (reqsize <= 2) return "";
             Span<byte> span = stackalloc byte[(int)reqsize];
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
             ReadOnlySpan<char> charSpan = MemoryMarshal.Cast<byte, char>(span);
             int nullIndex = charSpan.IndexOf('\0');
             //str = Encoding.Unicode.GetString(span[..nullIndex]);
@@ -71,10 +71,10 @@ namespace QSoft.DevCon
             var str = "";
 #if NET8_0_OR_GREATER
             
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, [], 0, out var reqsize, 0);
+            SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out var property_type, [], 0, out var reqsize, 0);
             if (reqsize <= 2) return "";
             Span<byte> span = stackalloc byte[reqsize];
-            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, span, reqsize, out reqsize, 0);
+            SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out property_type, span, reqsize, out reqsize, 0);
             //str = Encoding.Unicode.GetString(span[..^2]);
             //var cast = MemoryMarshal.Cast<byte, char>(span);
             str = new string(MemoryMarshal.Cast<byte, char>(span[..^2]));

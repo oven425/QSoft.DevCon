@@ -14,11 +14,11 @@ namespace QSoft.DevCon
         public static CM_Power_Data? PowerData(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
 #if NET8_0_OR_GREATER
-            SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICE_POWER_DATA, out var property_type, [], 0, out var reqsize);
+            SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, SPDRP_DEVICE_POWER_DATA, out var property_type, [], 0, out var reqsize);
             if (reqsize > 0)
             {
                 Span<byte> mem = stackalloc byte[(int)reqsize];
-                SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, SPDRP_DEVICE_POWER_DATA, out property_type, mem, reqsize, out reqsize);
+                SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, SPDRP_DEVICE_POWER_DATA, out property_type, mem, reqsize, out reqsize);
                 var pd = MemoryMarshal.AsRef<CM_Power_Data>(mem);
                 return pd;
             }
