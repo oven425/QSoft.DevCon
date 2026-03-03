@@ -43,11 +43,12 @@ namespace QSoft.DevCon
             Span<byte> span = stackalloc byte[(int)reqsize];
             SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, spdrp, out property_type, span, reqsize, out reqsize);
             ReadOnlySpan<char> charSpan = MemoryMarshal.Cast<byte, char>(span);
-            int nullIndex = charSpan.IndexOf('\0');
-            //str = Encoding.Unicode.GetString(span[..nullIndex]);
-            str = (nullIndex >= 0)
-                ? charSpan.Slice(0, nullIndex).ToString()
-                : charSpan.ToString();
+            str = charSpan.TrimEnd('\0').ToString();
+            //int nullIndex = charSpan.IndexOf('\0');
+            ////str = Encoding.Unicode.GetString(span[..nullIndex]);
+            //str = (nullIndex >= 0)
+            //    ? charSpan.Slice(0, nullIndex).ToString()
+            //    : charSpan.ToString();
 #else
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize > 0)
