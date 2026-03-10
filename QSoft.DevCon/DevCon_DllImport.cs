@@ -28,8 +28,6 @@ namespace QSoft.DevCon
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, IntPtr guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
 
 
-        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        internal static extern bool SetupDiClassGuidsFromName(string ClassName, SafeHandle guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]

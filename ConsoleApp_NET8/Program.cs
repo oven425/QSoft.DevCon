@@ -11,7 +11,13 @@ using static QSoft.DevCon.DevConExtensiona;
 
 
 
-
+try
+{
+    "Camera".Devices().Enable();
+}
+catch(Exception ee)
+{
+}
 
 
 //USB xHCI 相容的主機控制器

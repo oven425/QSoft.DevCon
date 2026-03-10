@@ -85,10 +85,10 @@ namespace QSoft.DevCon
                     uint nBytes = reqsize;
                     bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
 
-                    byte[] bb1 = new byte[nBytes];
-                    Marshal.Copy(ptr, bb1, 0, bb1.Length);
+                    //byte[] bb1 = new byte[nBytes];
+                    //Marshal.Copy(ptr, bb1, 0, bb1.Length);
                     var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4))??"";
-                    Marshal.FreeHGlobal(ptr);
+                    //Marshal.FreeHGlobal(ptr);
                     return po;
                 }
                 finally

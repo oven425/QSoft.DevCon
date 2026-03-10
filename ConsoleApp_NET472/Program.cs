@@ -18,7 +18,7 @@ namespace ConsoleApp_NET472
             //{
             //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
             //}
-
+            QSoft.DevCon.DevConExtension.GetBatteryInfo();
             var aaa = "Camera".Devices().Select(x => new
             {
                 name = x.Service(),

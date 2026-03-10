@@ -103,13 +103,14 @@ namespace QSoft.DevCon
 
         static void ThrowExceptionForLastError()
         {
-            var error = Marshal.GetLastWin32Error();
-            var msg = error.GetLastErrorMessage();
-            if(!string.IsNullOrEmpty(msg))
-            {
-                var ex = new Exception(msg);
-                throw ex;
-            }
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+            //var error = Marshal.GetLastWin32Error();
+            //var msg = error.GetLastErrorMessage();
+            //if(!string.IsNullOrEmpty(msg))
+            //{
+            //    var ex = new Exception(msg);
+            //    throw ex;
+            //}
         }
 
         internal static string GetLastErrorMessage(this int error)
@@ -188,7 +189,7 @@ namespace QSoft.DevCon
             }
             if (reqsize > 0)
             {
-                using var mem = new IntPtrMem1<Guid>((int)reqsize);
+                using var mem = new IntPtrMem<Guid>((int)reqsize);
                 SetupDiClassGuidsFromName(src, mem, reqsize, out reqsize);
                 var guid = new byte[16];
                 Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
@@ -438,32 +439,6 @@ namespace QSoft.DevCon
         internal const int DEVPROP_TYPE_EMPTY = 0x00000000;  // nothing, no property data
         internal const int DEVPROP_TYPE_NULL= 0x00000001;  // null property data
         internal const int DEVPROP_TYPE_SBYTE = 0x00000002;  // 8-bit signed int (SBYTE)
-//#define DEVPROP_TYPE_BYTE                       0x00000003  // 8-bit unsigned int (BYTE)
-//#define DEVPROP_TYPE_INT16                      0x00000004  // 16-bit signed int (SHORT)
-//#define DEVPROP_TYPE_UINT16                     0x00000005  // 16-bit unsigned int (USHORT)
-//#define DEVPROP_TYPE_INT32                      0x00000006  // 32-bit signed int (LONG)
-//#define DEVPROP_TYPE_UINT32                     0x00000007  // 32-bit unsigned int (ULONG)
-//#define DEVPROP_TYPE_INT64                      0x00000008  // 64-bit signed int (LONG64)
-//#define DEVPROP_TYPE_UINT64                     0x00000009  // 64-bit unsigned int (ULONG64)
-//#define DEVPROP_TYPE_FLOAT                      0x0000000A  // 32-bit floating-point (FLOAT)
-//#define DEVPROP_TYPE_DOUBLE                     0x0000000B  // 64-bit floating-point (DOUBLE)
-//#define DEVPROP_TYPE_DECIMAL                    0x0000000C  // 128-bit data (DECIMAL)
-//#define DEVPROP_TYPE_GUID                       0x0000000D  // 128-bit unique identifier (GUID)
-//#define DEVPROP_TYPE_CURRENCY                   0x0000000E  // 64 bit signed int currency value (CURRENCY)
-//#define DEVPROP_TYPE_DATE                       0x0000000F  // date (DATE)
-//#define DEVPROP_TYPE_FILETIME                   0x00000010  // file time (FILETIME)
-//#define DEVPROP_TYPE_BOOLEAN                    0x00000011  // 8-bit boolean (DEVPROP_BOOLEAN)
-//#define DEVPROP_TYPE_STRING                     0x00000012  // null-terminated string
-//#define DEVPROP_TYPE_STRING_LIST (DEVPROP_TYPE_STRING|DEVPROP_TYPEMOD_LIST) // multi-sz string list
-//#define DEVPROP_TYPE_SECURITY_DESCRIPTOR        0x00000013  // self-relative binary SECURITY_DESCRIPTOR
-//#define DEVPROP_TYPE_SECURITY_DESCRIPTOR_STRING 0x00000014  // security descriptor string (SDDL format)
-//#define DEVPROP_TYPE_DEVPROPKEY                 0x00000015  // device property key (DEVPROPKEY)
-//#define DEVPROP_TYPE_DEVPROPTYPE                0x00000016  // device property type (DEVPROPTYPE)
-//#define DEVPROP_TYPE_BINARY      (DEVPROP_TYPE_BYTE|DEVPROP_TYPEMOD_ARRAY)  // custom binary data
-//#define DEVPROP_TYPE_ERROR                      0x00000017  // 32-bit Win32 system error code
-//#define DEVPROP_TYPE_NTSTATUS                   0x00000018  // 32-bit NTSTATUS code
-//#define DEVPROP_TYPE_STRING_INDIRECT            0x00000019  // string resource (@[path\]<dllname>,-<strId>)
-
     }
 
 }
