@@ -82,6 +82,9 @@ namespace QSoft.DevCon
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         static internal partial bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, in SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static internal partial bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, in SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, Span<byte> DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiEnumDeviceInterfaces", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

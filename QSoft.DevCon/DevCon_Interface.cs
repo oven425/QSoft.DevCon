@@ -72,8 +72,21 @@ namespace QSoft.DevCon
 
         public static string DevicePath(this (IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfaceinfo) src)
         {
+            string devpath = "";
+            var cbsz = (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8;
             SP_DEVINFO_DATA devinfo = new();
             devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+#if NET8_0_OR_GREATER
+            var bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, [], 0, out var reqsize, ref devinfo);
+            if(reqsize >0)
+            {
+                Span<byte> span = stackalloc byte[(int)reqsize];
+                MemoryMarshal.Write(span, cbsz);
+                uint nBytes = reqsize;
+                bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, span, nBytes, out reqsize, ref devinfo);
+                devpath = MemoryMarshal.Cast<byte, char>(span[4..]).TrimEnd('\0').ToString();
+            }
+#else
             var bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, IntPtr.Zero, 0, out var reqsize, ref devinfo);
             var err = Marshal.GetLastWin32Error();
             if(reqsize >0)
@@ -81,15 +94,11 @@ namespace QSoft.DevCon
                 var ptr = Marshal.AllocHGlobal((int)reqsize);
                 try
                 {
-                    Marshal.WriteInt32(ptr, (IntPtr.Size == 4) ? (4 + Marshal.SystemDefaultCharSize) : 8);
+                    Marshal.WriteInt32(ptr, cbsz);
                     uint nBytes = reqsize;
                     bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
 
-                    //byte[] bb1 = new byte[nBytes];
-                    //Marshal.Copy(ptr, bb1, 0, bb1.Length);
-                    var po = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4))??"";
-                    //Marshal.FreeHGlobal(ptr);
-                    return po;
+                    devpath = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4))??"";
                 }
                 finally
                 {
@@ -97,7 +106,8 @@ namespace QSoft.DevCon
                 }
                 
             }
-            return "";
+#endif
+            return devpath;
         }
     }
 

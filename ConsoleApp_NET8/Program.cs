@@ -1,4 +1,5 @@
-﻿using Microsoft.Management.Infrastructure;
+﻿using ConsoleApp_NET8;
+using Microsoft.Management.Infrastructure;
 using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
 using System.DirectoryServices;
@@ -10,15 +11,23 @@ using static QSoft.DevCon.DevConExtensiona;
 
 
 
-
 try
 {
-    "Camera".Devices().Enable();
+    var guid = "Battery".GetClassGuids().FirstOrDefault();
+    var batterys = guid.DevicesFromInterface().Select(x => new
+    {
+        devpath = x.DevicePath(),
+        desc = x.As().DeviceDesc(),
+    });
+    foreach(var oo in batterys)
+    {
+        using var ff = File.OpenHandle(oo.devpath, FileMode.Open);
+        ff.GetBatteryInfo();
+    }
 }
 catch(Exception ee)
 {
 }
-
 
 //USB xHCI 相容的主機控制器
 //USB 根集線器 (USB 3.0)

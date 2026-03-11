@@ -19,6 +19,7 @@ namespace QSoft.DevCon
             foreach (var oo in ll)
             {
                 System.Diagnostics.Trace.WriteLine($"{oo.friendname} {oo.devicepath}");
+                
             }
         }
     }

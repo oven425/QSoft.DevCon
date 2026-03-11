@@ -21,14 +21,12 @@ namespace QSoft.DevCon
         internal static extern bool SetupDiLoadDeviceIcon(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint cxIcon, uint cyIcon, uint Flags, out IntPtr hIcon);
         [DllImport("User32.dll", SetLastError = true)]
         internal static extern bool DestroyIcon(IntPtr hIcon);
-        //[DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        //internal static extern bool SetupDiGetDeviceInstanceId(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, IntPtr DeviceInstanceId, int DeviceInstanceIdSize, out int RequiredSize);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiClassGuidsFromName(string ClassName, IntPtr guids, UInt32 ClassGuidArraySize, out UInt32 RequiredSize);
 
 
-        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiGetDeviceRegistryProperty(IntPtr deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint property, out uint PropertyRegDataType, IntPtr PropertyBuffer, uint PropertyBufferSize, out UInt32 RequiredSize);
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiSetDeviceRegistryProperty(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, uint Property, IntPtr PropertyBuffer, uint PropertyBufferSize);
@@ -36,7 +34,7 @@ namespace QSoft.DevCon
         internal static extern bool SetupDiGetDevicePropertyKeys(IntPtr DeviceInfoSet, ref SP_DEVINFO_DATA DeviceInfoData, IntPtr PropertyKeyArray, uint PropertyKeyCount, out uint RequiredPropertyKeyCount, uint Flags);
 
 
-        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool SetupDiGetClassDescription(in Guid ClassGuid, IntPtr ClassDescription, uint ClassDescriptionSize, out uint RequiredSize);
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
