@@ -16,18 +16,32 @@ namespace ConsoleApp_NET8
             BATTERY_QUERY_INFORMATION info = new();
             info.InformationLevel = BatteryInformation;
             Span<byte> span_in = stackalloc byte[sizeof(uint)];
-            var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref info.BatteryTag, 1));
+            var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info.BatteryTag, 1));
 
             var hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_TAG, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
 
 
-            info.InformationLevel = BatteryManufactureName;
+            info.InformationLevel = BatteryInformation;
             span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-            
-            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, [], 0, out reqsz, IntPtr.Zero);
-            span_out = stackalloc byte[(int)reqsz*4];
+            BATTERY_INFORMATION batterinfo = new();
+            span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref batterinfo, 1));
             hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
-            var err = Marshal.GetLastWin32Error();
+
+
+            span_out.Clear();
+            info.InformationLevel = BatterySerialNumber;
+            span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            span_out = stackalloc byte[256];
+            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            var SerialNumber = MemoryMarshal.Cast<byte, char>(span_out).TrimEnd('\0');
+
+            span_out.Clear();
+            info.InformationLevel = BatteryDeviceName;
+            span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            span_out = stackalloc byte[256];
+            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            var DeviceName = MemoryMarshal.Cast<byte, char>(span_out).TrimEnd('\0');
+
 
             BATTERY_WAIT_STATUS batter_wait_status = new()
             {
@@ -39,6 +53,26 @@ namespace ConsoleApp_NET8
             hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_STATUS, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
 
             
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct BATTERY_INFORMATION
+        {
+            public uint Capabilities;          // ULONG (4 bytes)
+            public byte Technology;            // UCHAR (1 byte)
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public byte[] Reserved;            // UCHAR[3]
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public byte[] Chemistry;           // UCHAR[4]
+
+            public uint DesignedCapacity;      // ULONG
+            public uint FullChargedCapacity;   // ULONG
+            public uint DefaultAlert1;         // ULONG
+            public uint DefaultAlert2;         // ULONG
+            public uint CriticalBias;          // ULONG
+            public uint CycleCount;            // ULONG
         }
 
         struct BATTERY_QUERY_INFORMATION

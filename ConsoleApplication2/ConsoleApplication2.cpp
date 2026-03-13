@@ -78,6 +78,7 @@ DWORD GetBatteryState()
                                     OPEN_EXISTING,
                                     FILE_ATTRIBUTE_NORMAL,
                                     NULL);
+
                             if (INVALID_HANDLE_VALUE != hBattery)
                             {
                                 // Ask the battery for its tag.
