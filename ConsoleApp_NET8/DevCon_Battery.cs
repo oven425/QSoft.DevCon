@@ -26,6 +26,7 @@ namespace ConsoleApp_NET8
             BATTERY_INFORMATION batterinfo = new();
             span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref batterinfo, 1));
             hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            var sss = System.Text.Encoding.ASCII.GetString(batterinfo.Chemistry);
 
 
             span_out.Clear();
@@ -42,6 +43,13 @@ namespace ConsoleApp_NET8
             hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
             var DeviceName = MemoryMarshal.Cast<byte, char>(span_out).TrimEnd('\0');
 
+            span_out.Clear();
+            info.InformationLevel = BatteryManufactureName;
+            span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            span_out = stackalloc byte[256];
+            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            var ManufactureName = MemoryMarshal.Cast<byte, char>(span_out).TrimEnd('\0');
+
 
             BATTERY_WAIT_STATUS batter_wait_status = new()
             {
@@ -55,17 +63,33 @@ namespace ConsoleApp_NET8
             
         }
 
+        [InlineArray(3)]
+        public struct BufferReserved3 { private byte _element0; }
+
+        [InlineArray(4)]
+        public struct BufferChemistry { private byte _element0; }
+
+        [Flags]
+        public enum BatteryCapabilities:uint
+        {
+            BATTERY_SET_CHARGE_SUPPORTED = 0x00000001,
+            BATTERY_SET_DISCHARGE_SUPPORTED = 0x00000002,
+            BATTERY_IS_SHORT_TERM = 0x20000000,
+            BATTERY_CAPACITY_RELATIVE = 0x40000000,
+            BATTERY_SYSTEM_BATTERY = 0x80000000,
+        }
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BATTERY_INFORMATION
         {
-            public uint Capabilities;          // ULONG (4 bytes)
-            public byte Technology;            // UCHAR (1 byte)
+            public BatteryCapabilities Capabilities;
+            public byte Technology;
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-            public byte[] Reserved;            // UCHAR[3]
+            public BufferReserved3 Reserved;            // UCHAR[3]
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public byte[] Chemistry;           // UCHAR[4]
+            public BufferChemistry Chemistry;           // UCHAR[4]
 
             public uint DesignedCapacity;      // ULONG
             public uint FullChargedCapacity;   // ULONG
