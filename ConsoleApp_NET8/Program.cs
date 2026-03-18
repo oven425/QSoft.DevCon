@@ -1,7 +1,7 @@
-﻿using ConsoleApp_NET8;
-using Microsoft.Management.Infrastructure;
+﻿using Microsoft.Management.Infrastructure;
 using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
+using QSoft.DevCon.Battery;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,13 +13,21 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
+    QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
     var guid = "Battery".GetClassGuids().FirstOrDefault();
     var batterys = guid.DevicesFromInterface().Select(x => new
     {
         devpath = x.DevicePath(),
         desc = x.As().DeviceDesc(),
     });
-    foreach(var oo in batterys)
+    var batteryinfo = batterys.Select(x => File.OpenHandle(x.devpath, FileMode.Open))
+        .Select(x => x.BatteryTag())
+        .Select(x => new
+        {
+            sn = x.BatterySerialNumber()
+        });
+
+    foreach (var oo in batterys)
     {
         using var ff = File.OpenHandle(oo.devpath, FileMode.Open);
         ff.GetBatteryInfo();

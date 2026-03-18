@@ -156,12 +156,34 @@ namespace QSoft.DevCon
         public static IEnumerable<(string letter, string target)> GetVolumeName()
         {
             var drives = System.IO.DriveInfo.GetDrives();
+#if NET8_0_OR_GREATER
+            foreach (var oo in drives.Select(x => x.Name))
+            {
+                Span<char> newc = stackalloc char[oo.Length];
+                MemoryExtensions.Replace(oo.AsSpan(), newc, '\\', '\0');
+
+                var span_in = MemoryMarshal.AsBytes(newc);
+                Span<char> dst = stackalloc char[256];
+                var span_out = MemoryMarshal.Cast<char, byte>(dst);
+                var len = QueryDosDevice(span_in, span_out, 256);
+                var str = "";
+                if (len > 0)
+                {
+                    str = dst[..(int)len].TrimEnd('\0').ToString();
+                }
+                
+                yield return (oo, str);
+            }
+#else
+
             foreach (var oo in drives.Select(x => x.Name))
             {
                 using var mem = new IntPtrMem<byte>(256 * 2);
                 QueryDosDevice(oo.Replace("\\", ""), mem.Pointer, 256);
                 yield return (oo, Marshal.PtrToStringUni(mem.Pointer) ?? "");
             }
+#endif
+
 
         }
 

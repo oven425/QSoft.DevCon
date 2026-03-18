@@ -54,7 +54,7 @@ namespace QSoft.DevCon
 
         [LibraryImport("kernel32.dll", EntryPoint = "QueryDosDeviceW", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.U4)]
-        internal static partial uint QueryDosDevice([MarshalAs(UnmanagedType.LPWStr)] string lpDeviceName, IntPtr lpTargetPath, int ucchMax);
+        internal static partial uint QueryDosDevice(ReadOnlySpan<byte> lpDeviceName, Span<byte> lpTargetPath, int ucchMax);
 
 
         [LibraryImport("setupapi.dll", EntryPoint = "SetupDiSetClassInstallParamsW", SetLastError = true)]
