@@ -123,6 +123,61 @@ namespace QSoft.DevCon.Battery
 
 
 
+        public static uint BatteryEstimatedTime(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.EstimatedTime
+            };
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            uint battery_est = 0;
+            var span_out = MemoryMarshal.AsBytes(new Span<uint>(ref battery_est));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+            return battery_est;
+        }
+
+        public static uint BatteryTemperature(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.Temperature
+            };
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            uint battery_temperature = 0;
+            var span_out = MemoryMarshal.AsBytes(new Span<uint>(ref battery_temperature));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+            return battery_temperature;
+        }
+
+        public static BATTERY_REPORTING_SCALE[] BatteryGranularityInformation(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.GranularityInformation
+            };
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            Span<byte> span_out = stackalloc byte[40];
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+            var scale = MemoryMarshal.Cast<byte, BATTERY_REPORTING_SCALE>(span_out);
+            return scale.ToArray();
+        }
+
+        public static BATTERY_MANUFACTURE_DATE BatteryManufactureDate(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.ManufactureDate
+            };
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            BATTERY_MANUFACTURE_DATE battery_manufacture_date = new();
+            var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_manufacture_date, 1));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+            return battery_manufacture_date;
+        }
 
         public static void GetBatteryInfo(this SafeFileHandle src)
         {
@@ -143,6 +198,10 @@ namespace QSoft.DevCon.Battery
             var batterydevicename = battery.BatteryDeviceName();
             var batterymn = battery.BatteryManufactureName();
             var batteryid = battery.BatteryUniqueID();
+            var batteryest = battery.BatteryEstimatedTime();
+            var batterytemp = battery.BatteryTemperature();
+            var batterygray = battery.BatteryGranularityInformation();
+            var battermd = battery.BatteryManufactureDate();
 
             //info.InformationLevel = BatteryInformation;
             //span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
@@ -151,34 +210,34 @@ namespace QSoft.DevCon.Battery
             //hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
             //var sss = System.Text.Encoding.ASCII.GetString(batterinfo.Chemistry);
 
-            info.InformationLevel = BatteryInformationLevel.ManufactureDate;
-            span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-            BATTERY_MANUFACTURE_DATE battery_manufacture_date = new();
-            span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_manufacture_date, 1));
-            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            //info.InformationLevel = BatteryInformationLevel.ManufactureDate;
+            //span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            //BATTERY_MANUFACTURE_DATE battery_manufacture_date = new();
+            //span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_manufacture_date, 1));
+            //hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
             
 
-            info.InformationLevel = BatteryInformationLevel.GranularityInformation;
-            span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-            span_out = stackalloc byte[40];
-            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
-            var scale = MemoryMarshal.Cast<byte, BATTERY_REPORTING_SCALE>(span_out);
-            var err = Marshal.GetLastWin32Error();
+            //info.InformationLevel = BatteryInformationLevel.GranularityInformation;
+            //span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            //span_out = stackalloc byte[40];
+            //hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            //var scale = MemoryMarshal.Cast<byte, BATTERY_REPORTING_SCALE>(span_out);
+            //var err = Marshal.GetLastWin32Error();
 
-            info.InformationLevel = BatteryInformationLevel.Temperature;
-            span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-            uint battery_temperature = 0;
-            span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_temperature, 1));
-            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
-            err = Marshal.GetLastWin32Error();
+            //info.InformationLevel = BatteryInformationLevel.Temperature;
+            //span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            //uint battery_temperature = 0;
+            //span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_temperature, 1));
+            //hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            //err = Marshal.GetLastWin32Error();
 
-            info.InformationLevel = BatteryInformationLevel.EstimatedTime;
-            span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-            uint battery_est = 0;
-            span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_est, 1));
-            hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
-            var est = MemoryMarshal.Read<uint>(span_out);
-            err = Marshal.GetLastWin32Error();
+            //info.InformationLevel = BatteryInformationLevel.EstimatedTime;
+            //span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            //uint battery_est = 0;
+            //span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_est, 1));
+            //hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+            //var est = MemoryMarshal.Read<uint>(span_out);
+            //err = Marshal.GetLastWin32Error();
 
             //info.InformationLevel = BatterySerialNumber;
             //span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
@@ -225,14 +284,14 @@ namespace QSoft.DevCon.Battery
 
 
 
-        struct BATTERY_REPORTING_SCALE
+        public struct BATTERY_REPORTING_SCALE
         {
             uint Granularity;
             uint Capacity;
         };
         
 
-        struct BATTERY_MANUFACTURE_DATE
+        public struct BATTERY_MANUFACTURE_DATE
         {
             byte Day;
             byte Month;

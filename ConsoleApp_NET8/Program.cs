@@ -8,9 +8,6 @@ using System.Text;
 using static QSoft.DevCon.DevConExtensiona;
 
 
-
-
-
 try
 {
     QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
