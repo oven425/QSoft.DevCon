@@ -50,9 +50,7 @@ namespace QSoft.DevCon
             if (reqsize <= 2) return "";
             Span<byte> span = stackalloc byte[reqsize];
             SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out property_type, span, reqsize, out reqsize, 0);
-            //str = Encoding.Unicode.GetString(span[..^2]);
-            //var cast = MemoryMarshal.Cast<byte, char>(span);
-            str = new string(MemoryMarshal.Cast<byte, char>(span[..^2]));
+            str = MemoryMarshal.Cast<byte, char>(span).TrimEnd('\0').ToString();
 #else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
@@ -74,12 +72,21 @@ namespace QSoft.DevCon
                 ThrowExceptionForLastError();
             }
 #else
-            using var mem = new IntPtrMem<byte>(Marshal.StringToHGlobalUni(data));
-            if (!SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, mem.Pointer, (uint)data.Length * 2))
+            IntPtr ptr = IntPtr.Zero;
+            try
             {
-                ThrowExceptionForLastError();
+                ptr = Marshal.StringToHGlobalUni(data);
+                if (!SetupDiSetDeviceRegistryProperty(src.dev, ref src.devdata, spdrp, ptr, (uint)data.Length * 2))
+                {
+                    ThrowExceptionForLastError();
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
             }
 #endif
+
         }
     }
 }

@@ -26,14 +26,8 @@ namespace QSoft.DevCon
         public int Size { private set; get; } = 0;
         public IntPtrMem(int size)
         {
-
             var s1 = Marshal.SizeOf<T>();
-
             Size = s1 * size;
-            //if (typeof(T) == typeof(char))
-            //{
-            //    Size = Size * 2;
-            //}
             m_pBuffer = Marshal.AllocHGlobal(Size);
         }
 
@@ -44,10 +38,6 @@ namespace QSoft.DevCon
 
         public static implicit operator IntPtr(IntPtrMem<T> h) => h.Pointer;
 
-        public IntPtrMem(IntPtr ptr)
-        {
-            m_pBuffer = ptr;
-        }
 
         IntPtr m_pBuffer = IntPtr.Zero;
         public void Dispose()
@@ -60,36 +50,4 @@ namespace QSoft.DevCon
             GC.SuppressFinalize(this);
         }
     }
-
-    //internal sealed class IntPtrMem1<T> : SafeHandle where T : struct
-    //{
-    //    public int Size { private set; get; } = 0;
-    //    public IntPtr Pointer => handle;
-    //    public override bool IsInvalid => handle == IntPtr.Zero;
-
-    //    public IntPtrMem1(int size) : base(IntPtr.Zero, true)
-    //    {
-
-    //        Size = Marshal.SizeOf<T>() * size;
-    //        if (Size > 0)
-    //        {
-    //            SetHandle(Marshal.AllocHGlobal(Size));
-    //        }
-    //    }
-
-
-
-    //    protected override bool ReleaseHandle()
-    //    {
-    //        if (handle != IntPtr.Zero)
-    //        {
-    //            Marshal.FreeHGlobal(handle);
-    //            return true;
-    //        }
-    //        return false;
-    //    }
-
-    //    public static implicit operator IntPtr(IntPtrMem1<T> h) => h.handle;
-    //}
-
 }
