@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32.SafeHandles;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -26,7 +28,7 @@ namespace QSoft.DevCon
             flags |= DIGCF_DEVICEINTERFACE;
             //if (guid == Guid.Empty)
             //{
-                //flags |= DIGCF_ALLCLASSES;
+            //flags |= DIGCF_ALLCLASSES;
             //}
 
             Guid ggid = Guid.Empty;
@@ -89,7 +91,7 @@ namespace QSoft.DevCon
 #else
             var bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, IntPtr.Zero, 0, out var reqsize, ref devinfo);
             var err = Marshal.GetLastWin32Error();
-            if(reqsize >0)
+            if (reqsize > 0)
             {
                 var ptr = Marshal.AllocHGlobal((int)reqsize);
                 try
@@ -98,27 +100,65 @@ namespace QSoft.DevCon
                     uint nBytes = reqsize;
                     bb = SetupDiGetDeviceInterfaceDetail(src.dev, src.interfaceinfo, ptr, nBytes, out reqsize, ref devinfo);
 
-                    devpath = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4))??"";
+                    devpath = Marshal.PtrToStringUni(IntPtr.Add(ptr, 4)) ?? "";
                 }
                 finally
                 {
                     Marshal.FreeHGlobal(ptr);
                 }
-                
+
             }
 #endif
             return devpath;
         }
+
+        public static SafeFileHandle OpenHandle(this string src)
+        {
+
+#if NET8_0_OR_GREATER
+            return File.OpenHandle(src, FileMode.Open, FileAccess.Read, FileShare.Read);
+#else
+            var handle = CreateFile(src, GENERIC_READ, FILE_SHARE_READ, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
+            if (handle.IsInvalid)
+            {
+                throw new System.ComponentModel.Win32Exception();
+            }
+            return handle;
+#endif
+
+        }
+
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern SafeFileHandle CreateFile(
+            string lpFileName,
+            uint dwDesiredAccess,
+            uint dwShareMode,
+            IntPtr lpSecurityAttributes,
+            uint dwCreationDisposition,
+            uint dwFlagsAndAttributes,
+            IntPtr hTemplateFile);
+
+        // 權限常數
+        const uint GENERIC_READ = 0x80000000;
+        const uint GENERIC_WRITE = 0x40000000;
+
+        // 共用模式
+        const uint FILE_SHARE_READ = 0x00000001;
+        const uint FILE_SHARE_WRITE = 0x00000002;
+
+        // 建立模式
+        const uint OPEN_EXISTING = 3;
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public struct SP_DEVICE_INTERFACE_DATA
+        {
+            public uint cbSize;
+            public Guid InterfaceClassGuid;
+            public uint Flags;
+            public UIntPtr Reserved;
+        };
+
     }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public struct SP_DEVICE_INTERFACE_DATA
-    {
-        public uint cbSize;
-        public Guid InterfaceClassGuid;
-        public uint Flags;
-        public UIntPtr Reserved;
-    };
-
 }
 

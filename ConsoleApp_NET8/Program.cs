@@ -1,7 +1,6 @@
 ﻿using Microsoft.Management.Infrastructure;
 using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
-using QSoft.DevCon.Battery;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -17,12 +16,7 @@ try
         devpath = x.DevicePath(),
         desc = x.As().DeviceDesc(),
     });
-    var batteryinfo = batterys.Select(x => File.OpenHandle(x.devpath, FileMode.Open))
-        .Select(x => x.BatteryTag())
-        .Select(x => new
-        {
-            sn = x.BatterySerialNumber()
-        });
+
 
     foreach (var oo in batterys)
     {

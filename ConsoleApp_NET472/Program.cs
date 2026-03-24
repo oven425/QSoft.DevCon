@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.Win32.SafeHandles;
+using QSoft.DevCon;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using QSoft.DevCon;
 
 namespace ConsoleApp_NET472
 {
@@ -13,12 +15,38 @@ namespace ConsoleApp_NET472
 
         static void Main(string[] args)
         {
-            //var pps = Guid.Empty.Devices().GroupBy(x => x.GetClass(), x=>x.GetClassGuid());
-            //foreach(var oo in pps)
-            //{
-            //    System.Diagnostics.Trace.WriteLine($"{oo.Key}");
-            //}
-            QSoft.DevCon.DevConExtension.GetBatteryInfo();
+            try
+            {
+                QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
+                var guid = "Battery".GetClassGuids().FirstOrDefault();
+                var batterys = guid.DevicesFromInterface().Select(x => new
+                {
+                    devpath = x.DevicePath(),
+                    desc = x.As().DeviceDesc(),
+                });
+
+
+
+                foreach (var oo in batterys)
+                {
+//                    public static SafeFileHandle OpenHandle(
+//    string path,
+//    FileMode mode = FileMode.Open,
+//    FileAccess access = FileAccess.Read,
+//    FileShare share = FileShare.Read,
+//    FileOptions options = FileOptions.None,
+//    long preallocationSize = 0
+//);
+
+                    using (var fs = oo.devpath.OpenHandle())
+                    {
+                        fs.GetBatteryInfo();
+                    }
+                }
+            }
+            catch (Exception ee)
+            {
+            }
             var aaa = "Camera".Devices().Select(x => new
             {
                 name = x.Service(),
