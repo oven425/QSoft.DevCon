@@ -20,7 +20,7 @@ try
 
     foreach (var oo in batterys)
     {
-        using var ff = File.OpenHandle(oo.devpath, FileMode.Open);
+        using var ff = oo.devpath.OpenHandle();
         ff.GetBatteryInfo();
     }
 }

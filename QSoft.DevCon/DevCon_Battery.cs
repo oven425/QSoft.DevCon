@@ -2,11 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QSoft.DevCon
 {
@@ -14,36 +11,41 @@ namespace QSoft.DevCon
     {
         public static (SafeFileHandle handle, uint tag) BatteryTag(this SafeFileHandle src)
         {
-            BATTERY_QUERY_INFORMATION info = new()
-            {
-                InformationLevel = BatteryInformationLevel.Information
-            };
 #if NET8_0_OR_GREATER
             Span<byte> span_in = stackalloc byte[sizeof(uint)];
-            Span<byte> span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info.BatteryTag, 1));
+            Span<byte> span_out = stackalloc byte[sizeof(uint)];
             var hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_TAG, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-            return (src, info.BatteryTag);
+            return (src, MemoryMarshal.Read<uint>(span_out));
 
 #else
             using var mem_out = new IntPtrMem<uint>(1);
-            using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
+            using var mem_in = new IntPtrMem<uint>(1);
             var hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_TAG, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
             return (src, (uint)Marshal.ReadInt32(mem_out.Pointer));
 #endif
         }
 
-        //public static BATTERY_STATUS BatteryStatus(this (SafeFileHandle handle, uint batteryTag) src)
-        //{
-        //    BATTERY_WAIT_STATUS batter_wait_status = new()
-        //    {
-        //        BatteryTag = src.batteryTag
-        //    };
-        //    Span<byte> span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref batter_wait_status, 1));
-        //    BATTERY_STATUS batter_status = new();
-        //    Span<byte> span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref batter_status, 1));
-        //    var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_STATUS, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-        //    return batter_status;
-        //}
+        public static BATTERY_STATUS BatteryStatus(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_WAIT_STATUS batter_wait_status = new()
+            {
+                BatteryTag = src.batteryTag
+            };
+            BATTERY_STATUS battery_status = new();
+#if NET8_0_OR_GREATER
+            Span<byte> span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref batter_wait_status, 1));
+            Span<byte> span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_status, 1));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_STATUS, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+#else
+            using var mem_in = new IntPtrMem<BATTERY_WAIT_STATUS>(1);
+            using var mem_out = new IntPtrMem<BATTERY_STATUS>(1);
+            Marshal.StructureToPtr(batter_wait_status, mem_in.Pointer, false);
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_STATUS, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
+            battery_status = Marshal.PtrToStructure<BATTERY_STATUS>(mem_out.Pointer);
+#endif
+
+            return battery_status;
+        }
 
         //public static BATTERY_INFORMATION BatteryInfo(this (SafeFileHandle handle, uint batteryTag) src)
         //{
@@ -107,22 +109,14 @@ namespace QSoft.DevCon
             var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref query, 1));
             Span<byte> span_out = stackalloc byte[256];
             var hr = DeviceIoControl(handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-            str = MemoryMarshal.Cast<byte, char>(span_out)[..(int)reqsz].TrimEnd('\0').ToString();
+            str = MemoryMarshal.Cast<byte, char>(span_out[..(int)reqsz]).TrimEnd('\0').ToString();
 #else
-            var gch = GCHandle.Alloc(query, GCHandleType.Pinned);
-            try
-            {
-                using var mem_out = new IntPtrMem<byte>(256);
-                DeviceIoControl(handle, IOCTL_BATTERY_QUERY_INFORMATION,
-                    gch.AddrOfPinnedObject(), (uint)Marshal.SizeOf<BATTERY_QUERY_INFORMATION>(),
-                    mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
-                if (reqsz > 0)
-                    str = Marshal.PtrToStringUni(mem_out.Pointer) ?? "";
-            }
-            finally
-            {
-                gch.Free();
-            }
+            using var mem_out = new IntPtrMem<byte>(256);
+            using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
+            Marshal.StructureToPtr(query, mem_in.Pointer, false);
+            DeviceIoControl(handle, IOCTL_BATTERY_QUERY_INFORMATION, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
+            if (reqsz > 0)
+                str = Marshal.PtrToStringUni(mem_out.Pointer) ?? "";
 #endif
 
             return str;
@@ -187,7 +181,7 @@ namespace QSoft.DevCon
         public static void GetBatteryInfo(this SafeFileHandle src)
         {
             var battery = src.BatteryTag();
-            //var batterystatus = battery.BatteryStatus();
+            var batterystatus = battery.BatteryStatus();
             //var batterinfo = battery.BatteryInfo();
             var batterysn = battery.BatterySerialNumber();
             var batterydevicename = battery.BatteryDeviceName();
@@ -248,7 +242,10 @@ namespace QSoft.DevCon
             public BufferReserved3 Reserved;
             public BufferChemistry Chemistry;
 #else
-            
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public byte[] Reserved;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public byte[] Chemistry;
 #endif
             public uint DesignedCapacity;
             public uint FullChargedCapacity;
@@ -281,13 +278,13 @@ namespace QSoft.DevCon
             BATTERY_CHARGING = 0x00000004,
             BATTERY_CRITICAL = 0x00000008
         }
-
-        public readonly struct BATTERY_STATUS
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct BATTERY_STATUS
         {
-            public readonly PowerState PowerState;
-            public readonly uint Capacity;
-            public readonly uint Voltage;
-            public readonly int Rate;
+            public PowerState PowerState;
+            public uint Capacity;
+            public uint Voltage;
+            public int Rate;
         }
 
         const uint IOCTL_BATTERY_QUERY_TAG = 0x00294040;
