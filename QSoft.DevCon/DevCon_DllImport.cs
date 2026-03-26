@@ -50,18 +50,15 @@ namespace QSoft.DevCon
         [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
 
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        static internal extern int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource,
-                                 int dwMessageId, int dwLanguageZId,
-                                 ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
-
         [DllImport("setupapi.dll", EntryPoint = "SetupDiGetDeviceInterfaceDetailW", CharSet = CharSet.Ansi, SetLastError = true)]
         static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr DeviceInfoSet, in SP_DEVICE_INTERFACE_DATA DeviceInterfaceData, IntPtr DeviceInterfaceDetailData, uint DeviceInterfaceDetailDataSize, out uint RequiredSize, ref SP_DEVINFO_DATA DeviceInfoData);
 
         [DllImport("setupapi.dll", SetLastError = true)]
         static extern bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
 
+
+        [DllImport("kernel32.dll", EntryPoint = "RtlZeroMemory")]
+        internal static extern void ZeroMemory(IntPtr dest, int size);
     }
 }
 #endif

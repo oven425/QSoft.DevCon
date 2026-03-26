@@ -113,24 +113,6 @@ namespace QSoft.DevCon
             //}
         }
 
-        internal static string GetLastErrorMessage(this int error)
-        {
-            IntPtr lpBuff = IntPtr.Zero;
-            var sMsg = "";
-
-            if (0 != FormatMessage(FORMAT_MESSAGE.ALLOCATE_BUFFER
-                   | FORMAT_MESSAGE.FROM_SYSTEM
-                   | FORMAT_MESSAGE.IGNORE_INSERTS,
-                   IntPtr.Zero,
-                   error, 0, ref lpBuff, 0, IntPtr.Zero))
-            {
-                sMsg = Marshal.PtrToStringUni(lpBuff);
-                Marshal.FreeHGlobal(lpBuff);
-            }
-            
-            return sMsg??"";
-        }
-
         static void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
         {
             SP_PROPCHANGE_PARAMS params1 = new();

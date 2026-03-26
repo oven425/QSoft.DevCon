@@ -47,20 +47,28 @@ namespace QSoft.DevCon
             return battery_status;
         }
 
-        //public static BATTERY_INFORMATION BatteryInfo(this (SafeFileHandle handle, uint batteryTag) src)
-        //{
-        //    BATTERY_QUERY_INFORMATION info = new()
-        //    {
-        //        InformationLevel = BatteryInformationLevel.Information,
-        //        BatteryTag = src.batteryTag
-        //    };
+        public static BATTERY_INFORMATION BatteryInfo(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                InformationLevel = BatteryInformationLevel.Information,
+                BatteryTag = src.batteryTag
+            };
+            BATTERY_INFORMATION batterinfo = new();
+#if NET8_0_OR_GREATER
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref batterinfo, 1));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+#else
+            using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
+            using var mem_out = new IntPtrMem<BATTERY_INFORMATION>(1);
+            Marshal.StructureToPtr(info, mem_in.Pointer, false);
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
+            batterinfo = Marshal.PtrToStructure<BATTERY_INFORMATION>(mem_out.Pointer);
+#endif
 
-        //    var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-        //    BATTERY_INFORMATION batterinfo = new();
-        //    var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref batterinfo, 1));
-        //    var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-        //    return batterinfo;
-        //}
+            return batterinfo;
+        }
 
         public static string BatterySerialNumber(this (SafeFileHandle handle, uint batteryTag) src)
         {
@@ -122,83 +130,135 @@ namespace QSoft.DevCon
             return str;
         }
 
-        //public static uint BatteryEstimatedTime(this (SafeFileHandle handle, uint batteryTag) src)
-        //{
-        //    BATTERY_QUERY_INFORMATION info = new()
-        //    {
-        //        BatteryTag = src.batteryTag,
-        //        InformationLevel = BatteryInformationLevel.EstimatedTime
-        //    };
-        //    var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-        //    uint battery_est = 0;
-        //    var span_out = MemoryMarshal.AsBytes(new Span<uint>(ref battery_est));
-        //    var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-        //    return battery_est;
-        //}
+        public static uint BatteryEstimatedTime(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.EstimatedTime
+            };
+            uint battery_est = 0;
+#if NET8_0_OR_GREATER
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            var span_out = MemoryMarshal.AsBytes(new Span<uint>(ref battery_est));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+#else
+            using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
+            using var mem_out = new IntPtrMem<uint>(1);
+            Marshal.StructureToPtr(info, mem_in.Pointer, false);
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
+            var err = Marshal.GetLastWin32Error();
+            battery_est = (uint)Marshal.ReadInt32(mem_out.Pointer);
 
-        //public static uint BatteryTemperature(this (SafeFileHandle handle, uint batteryTag) src)
-        //{
-        //    BATTERY_QUERY_INFORMATION info = new()
-        //    {
-        //        BatteryTag = src.batteryTag,
-        //        InformationLevel = BatteryInformationLevel.Temperature
-        //    };
-        //    var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-        //    uint battery_temperature = 0;
-        //    var span_out = MemoryMarshal.AsBytes(new Span<uint>(ref battery_temperature));
-        //    var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-        //    return battery_temperature;
-        //}
+#endif
 
-        //public static BATTERY_REPORTING_SCALE[] BatteryGranularityInformation(this (SafeFileHandle handle, uint batteryTag) src)
-        //{
-        //    BATTERY_QUERY_INFORMATION info = new()
-        //    {
-        //        BatteryTag = src.batteryTag,
-        //        InformationLevel = BatteryInformationLevel.GranularityInformation
-        //    };
-        //    var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-        //    Span<byte> span_out = stackalloc byte[40];
-        //    var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-        //    var scale = MemoryMarshal.Cast<byte, BATTERY_REPORTING_SCALE>(span_out);
-        //    return scale.ToArray();
-        //}
 
-        //public static BATTERY_MANUFACTURE_DATE BatteryManufactureDate(this (SafeFileHandle handle, uint batteryTag) src)
-        //{
-        //    BATTERY_QUERY_INFORMATION info = new()
-        //    {
-        //        BatteryTag = src.batteryTag,
-        //        InformationLevel = BatteryInformationLevel.ManufactureDate
-        //    };
-        //    var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
-        //    BATTERY_MANUFACTURE_DATE battery_manufacture_date = new();
-        //    var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_manufacture_date, 1));
-        //    var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-        //    return battery_manufacture_date;
-        //}
+            return battery_est;
+        }
+
+        public static uint BatteryTemperature(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.Temperature
+            };
+            uint battery_temperature = 0;
+#if NET8_0_OR_GREATER
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            var span_out = MemoryMarshal.AsBytes(new Span<uint>(ref battery_temperature));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+#else
+            using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
+            using var mem_out = new IntPtrMem<uint>(1);
+            Marshal.StructureToPtr(info, mem_in.Pointer, false);
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
+            var err = Marshal.GetLastWin32Error();
+            battery_temperature = (uint)Marshal.ReadInt32(mem_out.Pointer);
+#endif
+
+
+            return battery_temperature;
+        }
+
+        public static BATTERY_REPORTING_SCALE[] BatteryGranularityInformation(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.GranularityInformation
+            };
+#if NET8_0_OR_GREATER
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            Span<byte> span_out = MemoryMarshal.AsBytes(stackalloc BATTERY_REPORTING_SCALE[5]);
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+            var scale = MemoryMarshal.Cast<byte, BATTERY_REPORTING_SCALE>(span_out[..(int)reqsz]);
+            return scale.ToArray();
+#else
+            using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
+            using var mem_out = new IntPtrMem<BATTERY_REPORTING_SCALE>(5);
+            Marshal.StructureToPtr(info, mem_in.Pointer, false);
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
+            var ss = Marshal.SizeOf<BATTERY_REPORTING_SCALE>();
+            var count = reqsz / ss;
+            var scales = new BATTERY_REPORTING_SCALE[count];
+            for (int i = 0; i < count; i++)
+            {
+                var scale = Marshal.PtrToStructure<BATTERY_REPORTING_SCALE>(mem_out.Pointer + i * ss);
+                scales[i] = scale;
+            }
+            return scales;
+#endif
+        }
+
+        public static BATTERY_MANUFACTURE_DATE BatteryManufactureDate(this (SafeFileHandle handle, uint batteryTag) src)
+        {
+            BATTERY_QUERY_INFORMATION info = new()
+            {
+                BatteryTag = src.batteryTag,
+                InformationLevel = BatteryInformationLevel.ManufactureDate
+            };
+            
+            BATTERY_MANUFACTURE_DATE battery_manufacture_date = new();
+#if NET8_0_OR_GREATER
+            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+            var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_manufacture_date, 1));
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
+#else
+            
+#endif
+
+            return battery_manufacture_date;
+        }
 
         public static void GetBatteryInfo(this SafeFileHandle src)
         {
             var battery = src.BatteryTag();
             var batterystatus = battery.BatteryStatus();
-            //var batterinfo = battery.BatteryInfo();
+            var batterinfo = battery.BatteryInfo();
             var batterysn = battery.BatterySerialNumber();
             var batterydevicename = battery.BatteryDeviceName();
             var batterymn = battery.BatteryManufactureName();
             var batteryid = battery.BatteryUniqueID();
-            //var batteryest = battery.BatteryEstimatedTime();
-            //var batterytemp = battery.BatteryTemperature();
-            //var batterygray = battery.BatteryGranularityInformation();
-            //var battermd = battery.BatteryManufactureDate();
+            var batteryest = battery.BatteryEstimatedTime();
+            var batterytemp = battery.BatteryTemperature();
+            var batterygray = battery.BatteryGranularityInformation();
+            var battermd = battery.BatteryManufactureDate();
         }
 
-        public static void Throw(this uint? src)
+        public static void Throw<T>(this T? src) where T : struct
         {
             if (!src.HasValue)
                 throw new Win32Exception(Marshal.GetLastWin32Error());
         }
 
+        public static T Throw<T>(this T src) where T : struct
+        {
+            var err = Marshal.GetLastWin32Error();
+            if (err != 0)
+                throw new Win32Exception(err);
+            return src;
+        }
 
 
         public struct BATTERY_REPORTING_SCALE

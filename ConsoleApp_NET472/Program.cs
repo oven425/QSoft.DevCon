@@ -2,10 +2,12 @@
 using QSoft.DevCon;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace ConsoleApp_NET472
 {
@@ -17,6 +19,14 @@ namespace ConsoleApp_NET472
         {
             try
             {
+                //Process.Start("powercfg.exe", "/batteryreport  /output battery.xml xml").WaitForExit();
+                //var serializer = new XmlSerializer(typeof(BatteryReport));
+                //using (var reader = new StreamReader("battery.xml"))
+                //{
+                //    var report = (BatteryReport)serializer.Deserialize(reader);
+                //    Console.WriteLine($"設計容量: {report.Batteries[0].DesignCapacity} mWh");
+                //    Console.WriteLine($"完整充電容量: {report.Batteries[0].FullChargeCapacity} mWh");
+                //}
                 QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
                 var guid = "Battery".GetClassGuids().FirstOrDefault();
                 var batterys = guid.DevicesFromInterface().Select(x => new
@@ -172,5 +182,76 @@ namespace ConsoleApp_NET472
             Console.ReadLine();
 
         }
+    }
+
+    [XmlRoot("BatteryReport", Namespace = "http://schemas.microsoft.com/battery/2012")]
+    public class BatteryReport
+    {
+        //[XmlElement("ReportInformation")]
+        //public ReportInformation ReportInformation { get; set; }
+
+        //[XmlElement("SystemInformation")]
+        //public SystemInformation SystemInformation { get; set; }
+
+        [XmlArray("Batteries")]
+        [XmlArrayItem("Battery")]
+        public List<Battery> Batteries { get; set; }
+
+        [XmlElement("RuntimeEstimates")]
+        public RuntimeEstimates RuntimeEstimates { get; set; }
+    }
+
+    public class ReportInformation
+    {
+        public string ReportGuid { get; set; }
+        public string ReportVersion { get; set; }
+        public DateTime ScanTime { get; set; }
+        public DateTime LocalScanTime { get; set; }
+        public DateTime ReportStartTime { get; set; }
+        public DateTime LocalReportStartTime { get; set; }
+        public int ReportDuration { get; set; }
+        public string UtcOffset { get; set; }
+    }
+
+    public class SystemInformation
+    {
+        public string ComputerName { get; set; }
+        public string SystemManufacturer { get; set; }
+        public string SystemProductName { get; set; }
+        public DateTime BIOSDate { get; set; }
+        public string BIOSVersion { get; set; }
+        public string OSBuild { get; set; }
+        public string PlatformRole { get; set; }
+        public int ConnectedStandby { get; set; }
+    }
+
+    public class Battery
+    {
+        public string Id { get; set; }
+        public string Manufacturer { get; set; }
+        public string SerialNumber { get; set; }
+        public string ManufactureDate { get; set; }
+        public string Chemistry { get; set; }
+        public int LongTerm { get; set; }
+        public int RelativeCapacity { get; set; }
+        public int DesignCapacity { get; set; }
+        public int FullChargeCapacity { get; set; }
+        public int CycleCount { get; set; }
+    }
+
+    public class RuntimeEstimates
+    {
+        [XmlElement("DesignCapacity")]
+        public CapacityEstimate DesignCapacity { get; set; }
+
+        [XmlElement("FullChargeCapacity")]
+        public CapacityEstimate FullChargeCapacity { get; set; }
+    }
+
+    public class CapacityEstimate
+    {
+        public int Capacity { get; set; }
+        public string ActiveRuntime { get; set; }
+        public string ConnectedStandbyRuntime { get; set; }
     }
 }

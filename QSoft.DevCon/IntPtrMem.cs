@@ -5,7 +5,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+#if NET8_0_OR_GREATER
 
+#else
 namespace QSoft.DevCon
 {
     internal sealed class IntPtrMem<T> : IDisposable where T : struct
@@ -29,6 +31,7 @@ namespace QSoft.DevCon
             var s1 = Marshal.SizeOf<T>();
             Size = s1 * size;
             m_pBuffer = Marshal.AllocHGlobal(Size);
+            DevConExtension.ZeroMemory(m_pBuffer, Size);
         }
 
         ~IntPtrMem()
@@ -49,5 +52,10 @@ namespace QSoft.DevCon
             }
             GC.SuppressFinalize(this);
         }
+
+        
     }
+
+
 }
+#endif

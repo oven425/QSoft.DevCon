@@ -69,11 +69,6 @@ namespace QSoft.DevCon
         [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope, uint hwProfile, uint parameterRegistryValueKind, int samDesired);
 
-        [LibraryImport("kernel32.dll", EntryPoint = "FormatMessageW")]
-        [return: MarshalAs(UnmanagedType.I4)]
-        static internal partial int FormatMessage(FORMAT_MESSAGE dwFlags, IntPtr lpSource,
-                                 int dwMessageId, int dwLanguageZId,
-                                 ref IntPtr lpBuffer, int nSize, IntPtr Arguments);
 
         [LibraryImport("setupapi.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -90,6 +85,8 @@ namespace QSoft.DevCon
         [return: MarshalAs(UnmanagedType.Bool)]
         static internal partial bool SetupDiEnumDeviceInterfaces(IntPtr DeviceInfoSet, IntPtr DeviceInfoData, Guid InterfaceClassGuid, uint MemberIndex, out SP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
 
+        [LibraryImport("kernel32.dll", EntryPoint = "RtlZeroMemory", SetLastError = true)]
+        internal static partial void ZeroMemory(IntPtr dest, int size);
 
     }
 }
