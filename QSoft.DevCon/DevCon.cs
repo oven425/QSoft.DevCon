@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
+using System.Windows.Input;
 
 namespace QSoft.DevCon
 {
@@ -68,7 +69,10 @@ namespace QSoft.DevCon
             return classguids.FirstOrDefault().Devices(showhiddendevice);
         }
 
-        //must be administrator privileges
+        /// <summary>
+        /// 停用裝置。
+        /// </summary>
+        /// <remarks>⚠️ System administrator privileges required。</remarks>
         public static int Enable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             var count = 0;
@@ -79,7 +83,11 @@ namespace QSoft.DevCon
             }
             return count;
         }
-        //must be administrator privileges
+
+        /// <summary>
+        /// 停用裝置。
+        /// </summary>
+        /// <remarks>⚠️ System administrator privileges required。</remarks>
         public static int Disable(this IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> src)
         {
             var count = 0;
@@ -135,9 +143,11 @@ namespace QSoft.DevCon
 
         public static string GetClass(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(SPDRP_CLASS);
-        public static IEnumerable<(string letter, string target)> GetVolumeName()
+
+        public static List<(string letter, string target)> GetVolumeName()
         {
             var drives = System.IO.DriveInfo.GetDrives();
+            var result = new List<(string letter, string target)>(drives.Length);
 #if NET8_0_OR_GREATER
             foreach (var oo in drives.Select(x => x.Name))
             {
@@ -153,26 +163,24 @@ namespace QSoft.DevCon
                 {
                     str = dst[..(int)len].TrimEnd('\0').ToString();
                 }
-                
-                yield return (oo, str);
+
+                result.Add((oo, str));
             }
 #else
-
             foreach (var oo in drives.Select(x => x.Name))
             {
                 using var mem = new IntPtrMem<byte>(256 * 2);
                 QueryDosDevice(oo.Replace("\\", ""), mem.Pointer, 256);
-                yield return (oo, Marshal.PtrToStringUni(mem.Pointer) ?? "");
+                string str = Marshal.PtrToStringUni(mem.Pointer) ?? "";
+                result.Add((oo, str));
             }
 #endif
-
-
+            return result;
         }
 
         public static List<Guid> GetClassGuids(this string src)
         {
             var guids = new List<Guid>();
-
 #if NET8_0_OR_GREATER
             SetupDiClassGuidsFromName(src, [], 0, out var reqsize);
             if (reqsize > 1)
@@ -195,27 +203,23 @@ namespace QSoft.DevCon
             {
                 using var mem = new IntPtrMem<Guid>((int)reqsize);
                 SetupDiClassGuidsFromName(src, mem, reqsize, out reqsize);
-                var guid = new byte[16];
-                Marshal.Copy(mem.Pointer, guid, 0, guid.Length);
-                var gg = new Guid(guid);
-                guids.Add(gg);
+                var size = Marshal.SizeOf<Guid>();
+                for (int i = 0; i < (int)reqsize; i++)
+                {
+                    var gg = Marshal.PtrToStructure<Guid>(IntPtr.Add(mem.Pointer, i * size));
+                    guids.Add(gg);
+                }
             }
 #endif
-
-
-
             return guids;
 
         }
-
 
 
         //extension((IntPtr dev, SP_DEVINFO_DATA a) src)
         //{
         //    public string DeviceDesc => src.GetString(SPDRP_DEVICEDESC);
         //}
-
-
 
 
 

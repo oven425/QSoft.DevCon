@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 #else
 namespace QSoft.DevCon
 {
-    internal sealed class IntPtrMem<T> : IDisposable where T : struct
+    internal ref struct IntPtrMem<T> : IDisposable where T : struct
     {
         public IntPtr Pointer
         {
@@ -34,23 +34,23 @@ namespace QSoft.DevCon
             DevConExtension.ZeroMemory(m_pBuffer, Size);
         }
 
-        ~IntPtrMem()
-        {
-            Dispose();
-        }
-
         public static implicit operator IntPtr(IntPtrMem<T> h) => h.Pointer;
 
 
         IntPtr m_pBuffer = IntPtr.Zero;
         public void Dispose()
         {
-            IntPtr intPtr = Interlocked.Exchange(ref m_pBuffer, IntPtr.Zero);
-            if (intPtr != IntPtr.Zero)
+            //IntPtr intPtr = Interlocked.Exchange(ref m_pBuffer, IntPtr.Zero);
+            //if (intPtr != IntPtr.Zero)
+            //{
+            //    Marshal.FreeHGlobal(intPtr);
+            //}
+
+            if (m_pBuffer != IntPtr.Zero)
             {
-                Marshal.FreeHGlobal(intPtr);
+                Marshal.FreeHGlobal(m_pBuffer);
+                m_pBuffer = IntPtr.Zero;
             }
-            GC.SuppressFinalize(this);
         }
 
         

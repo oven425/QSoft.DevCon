@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QSoft.DevCon
 {
@@ -16,10 +13,23 @@ namespace QSoft.DevCon
             SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out _, [], 0, out var reqsize, 0);
             if (reqsize > 0)
             {
-                Span<byte> mem = stackalloc byte[reqsize];
-                SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out _, mem, reqsize, out reqsize, 0);
-                //ids.AddRange(mem.GetStrings());
-                return mem.GetStrings();
+                byte[]? rented = null;
+                Span<byte> mem = reqsize <= StackAllocThreshold
+                    ? stackalloc byte[(int)reqsize]
+                    : (rented = System.Buffers.ArrayPool<byte>.Shared.Rent((int)reqsize));
+                //Span<byte> mem = stackalloc byte[reqsize];
+                try
+                {
+                    SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out _, mem, reqsize, out reqsize, 0);
+                    return mem.GetStrings();
+                }
+                finally
+                {
+                    if (rented is not null)
+                        System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+                }
+                
+                
             }
 #else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
@@ -33,6 +43,8 @@ namespace QSoft.DevCon
             return ids;
         }
 
+        const int StackAllocThreshold = 512;
+
         static List<string> GetStrings(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, uint property)
         {
             var ids = new List<string>();
@@ -40,9 +52,21 @@ namespace QSoft.DevCon
             SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, property, out var property_type, [], 0, out var reqsize);
             if (reqsize > 0)
             {
-                Span<byte> mem = stackalloc byte[(int)reqsize];
-                SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, property, out property_type, mem, reqsize, out reqsize);
-                ids.AddRange(mem.GetStrings());
+                byte[]? rented = null;
+                Span<byte> mem = reqsize <= StackAllocThreshold
+                    ? stackalloc byte[(int)reqsize]
+                    : (rented = System.Buffers.ArrayPool<byte>.Shared.Rent((int)reqsize));
+                //Span<byte> mem = stackalloc byte[(int)reqsize];
+                try
+                {
+                    SetupDiGetDeviceRegistryProperty(src.dev, src.devdata, property, out property_type, mem, reqsize, out reqsize);
+                    ids.AddRange(mem.GetStrings());
+                }
+                finally
+                {
+                    if (rented is not null)
+                        System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+                }
             }
 #else
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);

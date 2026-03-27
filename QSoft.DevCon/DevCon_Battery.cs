@@ -117,7 +117,8 @@ namespace QSoft.DevCon
             var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref query, 1));
             Span<byte> span_out = stackalloc byte[256];
             var hr = DeviceIoControl(handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-            str = MemoryMarshal.Cast<byte, char>(span_out[..(int)reqsz]).TrimEnd('\0').ToString();
+            if (reqsz > 0)
+                str = MemoryMarshal.Cast<byte, char>(span_out[..(int)reqsz]).TrimEnd('\0').ToString();
 #else
             using var mem_out = new IntPtrMem<byte>(256);
             using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
@@ -151,8 +152,6 @@ namespace QSoft.DevCon
             battery_est = (uint)Marshal.ReadInt32(mem_out.Pointer);
 
 #endif
-
-
             return battery_est;
         }
 
@@ -176,8 +175,6 @@ namespace QSoft.DevCon
             var err = Marshal.GetLastWin32Error();
             battery_temperature = (uint)Marshal.ReadInt32(mem_out.Pointer);
 #endif
-
-
             return battery_temperature;
         }
 
@@ -246,33 +243,19 @@ namespace QSoft.DevCon
             var battermd = battery.BatteryManufactureDate();
         }
 
-        public static void Throw<T>(this T? src) where T : struct
-        {
-            if (!src.HasValue)
-                throw new Win32Exception(Marshal.GetLastWin32Error());
-        }
-
-        public static T Throw<T>(this T src) where T : struct
-        {
-            var err = Marshal.GetLastWin32Error();
-            if (err != 0)
-                throw new Win32Exception(err);
-            return src;
-        }
-
 
         public struct BATTERY_REPORTING_SCALE
         {
-            uint Granularity;
-            uint Capacity;
+            public uint Granularity;
+            public uint Capacity;
         };
 
 
         public struct BATTERY_MANUFACTURE_DATE
         {
-            byte Day;
-            byte Month;
-            ushort Year;
+            public byte Day;
+            public byte Month;
+            public ushort Year;
         };
 
 #if NET8_0_OR_GREATER

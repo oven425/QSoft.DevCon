@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -19,6 +20,34 @@ namespace ConsoleApp_NET472
         {
             try
             {
+                string namespacePath = @"\\.\root\wmi";
+                string queryString = "SELECT * FROM BatteryStatus";
+
+                ManagementObjectSearcher searcher = new ManagementObjectSearcher(namespacePath, queryString);
+
+                // 2. 執行查詢並遍歷結果
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    Console.WriteLine("--- Battery Status ---");
+
+                    // 讀取屬性 (例如：是否正在充電)
+                    // 注意：WMI 傳回的是 object，需要根據文件轉型
+                    bool isCharging = (bool)obj["Charging"];
+                    uint voltage = (uint)obj["Voltage"];
+                    uint capacity = (uint)obj["RemainingCapacity"];
+
+                    Console.WriteLine($"Charging: {isCharging}");
+                    Console.WriteLine($"Voltage: {voltage} mV");
+                    Console.WriteLine($"Remaining Capacity: {capacity} mWh");
+
+                    // 如果想列出所有可用屬性：
+                    /*
+                    foreach (PropertyData data in obj.Properties)
+                    {
+                        Console.WriteLine($"{data.Name}: {data.Value}");
+                    }
+                    */
+                }
                 //Process.Start("powercfg.exe", "/batteryreport  /output battery.xml xml").WaitForExit();
                 //var serializer = new XmlSerializer(typeof(BatteryReport));
                 //using (var reader = new StreamReader("battery.xml"))

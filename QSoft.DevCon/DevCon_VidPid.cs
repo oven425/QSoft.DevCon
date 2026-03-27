@@ -33,13 +33,12 @@ namespace QSoft.DevCon
             HidD_GetHidGuid(out var hidguid);
             try
             {
-                using FileStream fs = new(devicepath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-                //#if NET8_0_OR_GREATER
-                //            using var file = File.OpenHandle(devicepath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-                //#else
-                //            using var file = new SafeFileHandle(devicepath, FileAccess.ReadWrite, FileShare.ReadWrite);
-                //#endif
-                if (HidD_GetAttributes(fs.SafeFileHandle, out var attr))
+#if NET8_0_OR_GREATER
+                using var file = File.OpenHandle(devicepath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+#else
+                using var file = devicepath.OpenHandle();
+#endif
+                if (HidD_GetAttributes(file, out var attr))
                 {
                     return (attr.VendorID, attr.ProductID);
                 }
