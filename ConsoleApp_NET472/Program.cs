@@ -6,9 +6,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Management.Instrumentation;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using static QSoft.DevCon.DevConExtension;
 
 namespace ConsoleApp_NET472
 {
@@ -22,40 +24,36 @@ namespace ConsoleApp_NET472
             {
                 string namespacePath = @"\\.\root\wmi";
                 string queryString = "SELECT * FROM BatteryStatus";
-
                 ManagementObjectSearcher searcher = new ManagementObjectSearcher(namespacePath, queryString);
 
-                // 2. 執行查詢並遍歷結果
+                BATTERY_STATUS batterystatus_fromwmi = new BATTERY_STATUS();
                 foreach (ManagementObject obj in searcher.Get())
                 {
-                    Console.WriteLine("--- Battery Status ---");
-
-                    // 讀取屬性 (例如：是否正在充電)
-                    // 注意：WMI 傳回的是 object，需要根據文件轉型
-                    bool isCharging = (bool)obj["Charging"];
-                    uint voltage = (uint)obj["Voltage"];
-                    uint capacity = (uint)obj["RemainingCapacity"];
-
-                    Console.WriteLine($"Charging: {isCharging}");
-                    Console.WriteLine($"Voltage: {voltage} mV");
-                    Console.WriteLine($"Remaining Capacity: {capacity} mWh");
-
-                    // 如果想列出所有可用屬性：
-                    /*
-                    foreach (PropertyData data in obj.Properties)
+                    foreach (var oo in obj.Properties)
                     {
-                        Console.WriteLine($"{data.Name}: {data.Value}");
+                        System.Diagnostics.Trace.WriteLine($"{oo.Name}:{oo.Value}");
                     }
-                    */
+                    if((bool)obj["Discharging"])
+                    {
+                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_DISCHARGING;
+                    }
+                    else if((bool)obj["Charging"])
+                    {
+                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_CHARGING;
+                    }
+                    else if((bool)obj["Critical"])
+                    {
+                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_CRITICAL;
+                    }
+                    else
+                    {
+                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_POWER_ON_LINE;
+                    }
+                    batterystatus_fromwmi.Voltage = (uint)obj["Voltage"];
+                    batterystatus_fromwmi.Capacity = (uint)obj["RemainingCapacity"];
+                    batterystatus_fromwmi.Rate = (int)obj["DischargeRate"];
                 }
-                //Process.Start("powercfg.exe", "/batteryreport  /output battery.xml xml").WaitForExit();
-                //var serializer = new XmlSerializer(typeof(BatteryReport));
-                //using (var reader = new StreamReader("battery.xml"))
-                //{
-                //    var report = (BatteryReport)serializer.Deserialize(reader);
-                //    Console.WriteLine($"設計容量: {report.Batteries[0].DesignCapacity} mWh");
-                //    Console.WriteLine($"完整充電容量: {report.Batteries[0].FullChargeCapacity} mWh");
-                //}
+                
                 QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
                 var guid = "Battery".GetClassGuids().FirstOrDefault();
                 var batterys = guid.DevicesFromInterface().Select(x => new
@@ -68,20 +66,23 @@ namespace ConsoleApp_NET472
 
                 foreach (var oo in batterys)
                 {
-//                    public static SafeFileHandle OpenHandle(
-//    string path,
-//    FileMode mode = FileMode.Open,
-//    FileAccess access = FileAccess.Read,
-//    FileShare share = FileShare.Read,
-//    FileOptions options = FileOptions.None,
-//    long preallocationSize = 0
-//);
-
                     using (var fs = oo.devpath.OpenHandle())
                     {
-                        fs.GetBatteryInfo();
+                        var battery = fs.BatteryTag();
+                        battery.BatteryManufactureDate();
+                        var status  = battery.BatteryStatus();
+                        var batteryinfo = battery.BatteryInfo();
                     }
                 }
+
+                //Process.Start("powercfg.exe", "/batteryreport  /output battery.xml xml").WaitForExit();
+                //var serializer = new XmlSerializer(typeof(BatteryReport));
+                //using (var reader = new StreamReader("battery.xml"))
+                //{
+                //    var report = (BatteryReport)serializer.Deserialize(reader);
+                //    Console.WriteLine($"設計容量: {report.Batteries[0].DesignCapacity} mWh");
+                //    Console.WriteLine($"完整充電容量: {report.Batteries[0].FullChargeCapacity} mWh");
+                //}
             }
             catch (Exception ee)
             {

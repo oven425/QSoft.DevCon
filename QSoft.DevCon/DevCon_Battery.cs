@@ -222,7 +222,11 @@ namespace QSoft.DevCon
             var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref battery_manufacture_date, 1));
             var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
 #else
-            
+            using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
+            using var mem_out = new IntPtrMem<BATTERY_MANUFACTURE_DATE>(1);
+            Marshal.StructureToPtr(info, mem_in.Pointer, false);
+            var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
+            battery_manufacture_date = Marshal.PtrToStructure<BATTERY_MANUFACTURE_DATE>(mem_out.Pointer);
 #endif
 
             return battery_manufacture_date;
