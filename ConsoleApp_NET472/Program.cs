@@ -22,6 +22,12 @@ namespace ConsoleApp_NET472
         {
             try
             {
+                var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
+                foreach(var oo in batterys1)
+                {
+                    System.Diagnostics.Trace.WriteLine(oo);
+                }
+
                 string namespacePath = @"\\.\root\wmi";
                 string queryString = "SELECT * FROM BatteryStatus";
                 ManagementObjectSearcher searcher = new ManagementObjectSearcher(namespacePath, queryString);
@@ -101,7 +107,7 @@ namespace ConsoleApp_NET472
             System.Diagnostics.Trace.WriteLine(pp);
             var ffs = "Camera".GetClassGuids();
             var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
-            var ddd = ggu.GetClassDesc();
+            var ddd = ggu.ClassDesc();
             var cameraa = Guid.Parse("{E5323777-F976-4f5b-9B55-B94699C46E44}");
             var cameras = DevConExtension.KSCATEGORY_CAPTURE.DevicesFromInterface()
                 .Select(x => new
@@ -158,11 +164,11 @@ namespace ConsoleApp_NET472
                 class_guid = x.GetClassGuid(),
                 children = x.Childrens(),
                 parent = x.Parent(),
-                desc = x.GetDeviceDesc(),
+                desc = x.DeviceDesc(),
                 class_name = x.GetClassGuid().GetClassDesc(),
-                drive_version = x.GetDriverVersion(),
+                drive_version = x.DriverVersion(),
                 driver_inf = x.DriverInfSection(),
-                driver_date = x.GetDriverDate(),
+                driver_date = x.DriverDate(),
             });
 
             try
