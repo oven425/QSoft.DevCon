@@ -139,13 +139,14 @@ namespace ConsoleApp_NET472
             
             foreach (var oo in "Camera".Devices())
             {
-                var biosname = oo.BiosDeviceName();
+                var biosname = oo.BiosDeviceName_();
                 var firstinstalldate = oo.FirstInstallDate();
                 var isconnected= oo.IsConnected();
                 var panel = oo.Panel();
                 var siblings = oo.Siblings();
                 var driverprovider = oo.DriverProvider();
                 var problemcode = oo.ProblemCode();
+                var ppcode = oo.ProblemCode_().Value;
                 var infsection = oo.DriverInfSection();
                 var friendname = oo.GetFriendName();
                 //oo.SetFriendName($"USB2.0 HD UVC WebCam");

@@ -249,6 +249,9 @@ namespace QSoft.DevCon
         public static int ProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetInt32(DEVPKEY_Device_ProblemCode);
 
+        public static Query<int> ProblemCode_(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetInt32_(DEVPKEY_Device_ProblemCode);
+
         public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetBoolean(DEVPKEY_Device_IsConnected);
 
@@ -326,6 +329,9 @@ namespace QSoft.DevCon
 
         public static string BiosDeviceName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_BiosDeviceName);
+
+        public static Query<string> BiosDeviceName_(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+            => src.GetString_(DEVPKEY_Device_BiosDeviceName);
 
         public static DateTime FirstInstallDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_FirstInstallDate);

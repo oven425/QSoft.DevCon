@@ -9,6 +9,11 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
+    var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
+    foreach (var oo in batterys1)
+    {
+        System.Diagnostics.Trace.WriteLine(oo);
+    }
     QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
     var guid = "Battery".GetClassGuids().FirstOrDefault();
     var batterys = guid.DevicesFromInterface().Select(x => new

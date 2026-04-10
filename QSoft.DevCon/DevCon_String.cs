@@ -36,6 +36,28 @@ namespace QSoft.DevCon
             return str ?? "";
         }
 
+        static Query<string> GetString_(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
+        {
+            var str = "";
+#if NET8_0_OR_GREATER
+            
+            SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out var property_type, [], 0, out var reqsize, 0);
+            if (reqsize <= 2) return new Query<string>("");
+            Span<byte> span = stackalloc byte[reqsize];
+            SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out property_type, span, reqsize, out reqsize, 0);
+            str = MemoryMarshal.Cast<byte, char>(span).TrimEnd('\0').ToString();
+#else
+            SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
+            if (reqsize > 0)
+            {
+                using var mem = new IntPtrMem<char>(reqsize);
+                SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                str = Marshal.PtrToStringUni(mem.Pointer);
+            }
+#endif
+            return new Query<string>(str ?? "");
+        }
+
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var str = "";

@@ -157,6 +157,103 @@ namespace QSoft.DevCon
         public bool IsRechargeable => Technology == 1;
 
         // ════════════════════════════════════════════════════════
+        //  計算屬性 — 電池壽命估算
+        // ════════════════════════════════════════════════════════
+
+        /// <summary>EOL（壽命終止）健康度門檻。業界鋰電池標準為 80%。</summary>
+        public const double EndOfLifeHealthThreshold = 80.0;
+
+        /// <summary>
+        /// 每次充放電循環的平均衰退率 (%)。
+        /// 需要 CycleCount > 0，否則回傳 NaN。
+        /// </summary>
+        public double DegradationPerCycle =>
+            CycleCount > 0 ? Math.Round(DegradationPercent / CycleCount, 4) : double.NaN;
+
+        /// <summary>
+        /// 估計電池總壽命循環次數（從新品至 EOL 80% 健康度）。
+        /// 無法計算（CycleCount = 0 或無衰退）時回傳 null。
+        /// </summary>
+        public double? EstimatedTotalLifeCycles
+        {
+            get
+            {
+                var dpc = DegradationPerCycle;
+                if (double.IsNaN(dpc) || dpc <= 0)
+                    return null;
+                return Math.Round((100.0 - EndOfLifeHealthThreshold) / dpc, 0);
+            }
+        }
+
+        /// <summary>
+        /// 估計剩餘可用循環次數（至 EOL 80% 健康度門檻）。
+        /// 健康度已低於門檻，或無法計算衰退率時回傳 null。
+        /// </summary>
+        public double? EstimatedRemainingCycles
+        {
+            get
+            {
+                var dpc = DegradationPerCycle;
+                if (double.IsNaN(dpc) || dpc <= 0 || HealthPercent <= EndOfLifeHealthThreshold)
+                    return null;
+                return Math.Round((HealthPercent - EndOfLifeHealthThreshold) / dpc, 0);
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        //  計算屬性 — 放電模式剩餘時間（即時推算）
+        // ════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// 依目前放電速率即時推算剩餘可用時間。
+        /// 僅在放電中 (IsDischarging) 且速率有效時回傳，否則為 null。
+        /// 公式：RemainingCapacity (mWh) ÷ DischargeRateMilliwatts (mW) × 3600
+        /// </summary>
+        public TimeSpan? CalcDischargeTimeRemaining
+        {
+            get
+            {
+                if (!IsDischarging || DischargeRateMilliwatts == 0)
+                    return null;
+                var seconds = (double)RemainingCapacity / DischargeRateMilliwatts * 3600.0;
+                return TimeSpan.FromSeconds(seconds);
+            }
+        }
+
+        /// <summary>放電模式剩餘時間（分鐘）。無法估算時回傳 null。</summary>
+        public double? CalcDischargeTimeRemainingMinutes =>
+            CalcDischargeTimeRemaining.HasValue
+                ? Math.Round(CalcDischargeTimeRemaining.Value.TotalMinutes, 1)
+                : null;
+
+        // ════════════════════════════════════════════════════════
+        //  計算屬性 — 充電模式預計充滿時間（即時推算）
+        // ════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// 依目前充電速率即時推算充滿所需時間。
+        /// 僅在充電中 (IsCharging) 且速率有效、且尚未充滿時回傳，否則為 null。
+        /// 公式：(FullChargedCapacity − RemainingCapacity) (mWh) ÷ Rate (mW) × 3600
+        /// </summary>
+        public TimeSpan? CalcChargingTimeToFull
+        {
+            get
+            {
+                if (!IsCharging || Rate <= 0 || FullChargedCapacity <= RemainingCapacity)
+                    return null;
+                var capacityToFill = FullChargedCapacity - RemainingCapacity; // mWh
+                var seconds = (double)capacityToFill / Rate * 3600.0;
+                return TimeSpan.FromSeconds(seconds);
+            }
+        }
+
+        /// <summary>充電模式預計充滿時間（分鐘）。無法估算時回傳 null。</summary>
+        public double? CalcChargingTimeToFullMinutes =>
+            CalcChargingTimeToFull.HasValue
+                ? Math.Round(CalcChargingTimeToFull.Value.TotalMinutes, 1)
+                : null;
+
+        // ════════════════════════════════════════════════════════
         //  工廠方法
         // ════════════════════════════════════════════════════════
 
@@ -278,10 +375,34 @@ namespace QSoft.DevCon
                 sb.AppendLine($"  Est. Run Time       : N/A (AC connected)");
             }
 
+            if (CalcDischargeTimeRemaining.HasValue)
+            {
+                var dc = CalcDischargeTimeRemaining.Value;
+                sb.AppendLine($"  Calc. DC Remaining  : {dc.Hours}h {dc.Minutes}m {dc.Seconds}s  ({CalcDischargeTimeRemainingMinutes:F1} min)");
+            }
+
+            if (CalcChargingTimeToFull.HasValue)
+            {
+                var ch = CalcChargingTimeToFull.Value;
+                sb.AppendLine($"  Calc. Time to Full  : {ch.Hours}h {ch.Minutes}m {ch.Seconds}s  ({CalcChargingTimeToFullMinutes:F1} min)");
+            }
+
             if (!double.IsNaN(TemperatureCelsius))
                 sb.AppendLine($"  Temperature         : {TemperatureCelsius}°C / {TemperatureFahrenheit}°F");
             else
                 sb.AppendLine($"  Temperature         : N/A");
+
+            sb.AppendLine("╠══ Lifetime Estimation ════════════════════════╣");
+            if (!double.IsNaN(DegradationPerCycle) && DegradationPerCycle > 0)
+            {
+                sb.AppendLine($"  Degradation/Cycle   : {DegradationPerCycle:F4} %");
+                sb.AppendLine($"  Est. Total Cycles   : {EstimatedTotalLifeCycles?.ToString("F0") ?? "N/A"}");
+                sb.AppendLine($"  Est. Remain Cycles  : {EstimatedRemainingCycles?.ToString("F0") ?? "Below EOL threshold"}");
+            }
+            else
+            {
+                sb.AppendLine($"  Lifetime Estimation : N/A (no cycle data)");
+            }
 
             sb.AppendLine("╚══════════════════════════════════════════════╝");
             return sb.ToString();
