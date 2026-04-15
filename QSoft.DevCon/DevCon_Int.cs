@@ -19,11 +19,10 @@ namespace QSoft.DevCon
     //    }
     //}
 
-    public readonly struct Query<T>(T value)
+    public readonly ref struct Query<T>(T value, int errorcode)
     {
-        public int ErrorCode { get; } = Marshal.GetLastWin32Error();
+        public int ErrorCode { get; } = errorcode;
         public T Value { get; } = value;
-        public static implicit operator T(in Query<T> q) => q.Value;
         public readonly T ThrowIfError()
         {
             if (ErrorCode != 0)
@@ -41,12 +40,14 @@ namespace QSoft.DevCon
         public static Query<int> GetInt32_(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var str = 0;
+            int errorcode = 0;
 #if NET8_0_OR_GREATER
             SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out var property_type, [], 0, out var reqsize, 0);
             if (reqsize > 0)
             {
                 Span<byte> mem = stackalloc byte[reqsize];
                 SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out property_type, mem, reqsize, out reqsize, 0);
+                errorcode = Marshal.GetLastWin32Error();
                 str = MemoryMarshal.Read<int>(mem);
             }
 #else
@@ -55,10 +56,11 @@ namespace QSoft.DevCon
             {
                 using var mem = new IntPtrMem<byte>(reqsize);
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                errorcode = Marshal.GetLastWin32Error();
                 str = Marshal.ReadInt32(mem.Pointer);
             }
 #endif
-            return new Query<int>(str);
+            return new Query<int>(str, errorcode);
         }
 
         static int GetInt32(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)

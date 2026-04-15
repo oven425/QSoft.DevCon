@@ -39,12 +39,15 @@ namespace QSoft.DevCon
         static Query<string> GetString_(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)
         {
             var str = "";
+            var errorcode = 0;
 #if NET8_0_OR_GREATER
-            
+
             SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out var property_type, [], 0, out var reqsize, 0);
-            if (reqsize <= 2) return new Query<string>("");
+            errorcode = Marshal.GetLastWin32Error();
+            if (reqsize <= 2) return new Query<string>("", errorcode);
             Span<byte> span = stackalloc byte[reqsize];
             SetupDiGetDeviceProperty(src.dev, src.devdata, devkey, out property_type, span, reqsize, out reqsize, 0);
+            errorcode = Marshal.GetLastWin32Error();
             str = MemoryMarshal.Cast<byte, char>(span).TrimEnd('\0').ToString();
 #else
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, IntPtr.Zero, 0, out var reqsize, 0);
@@ -52,10 +55,11 @@ namespace QSoft.DevCon
             {
                 using var mem = new IntPtrMem<char>(reqsize);
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out property_type, mem.Pointer, reqsize, out reqsize, 0);
+                errorcode = Marshal.GetLastWin32Error();
                 str = Marshal.PtrToStringUni(mem.Pointer);
             }
 #endif
-            return new Query<string>(str ?? "");
+            return new Query<string>(str ?? "", errorcode);
         }
 
         static string GetString(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, DEVPROPKEY devkey)

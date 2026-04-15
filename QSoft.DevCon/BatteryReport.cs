@@ -6,10 +6,6 @@ using System.Text;
 
 namespace QSoft.DevCon
 {
-    /// <summary>
-    /// 統整所有透過 IOCTL 取得的電池資訊，提供健康度、衰退率、溫度轉換、剩餘時間等計算屬性。
-    /// 對應 WMI: Win32_Battery / BatteryStaticData / BatteryStatus / BatteryFullChargedCapacity / BatteryCycleCount。
-    /// </summary>
     public class BatteryReport
     {
         // ── 靜態資料 (對應 WMI BatteryStaticData) ──
@@ -77,14 +73,6 @@ namespace QSoft.DevCon
             DesignedCapacity > FullChargedCapacity ? DesignedCapacity - FullChargedCapacity : 0;
 
         // ════════════════════════════════════════════════════════
-        //  計算屬性 — 剩餘電量
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>目前剩餘電量百分比 (%)。對應 Win32_Battery.EstimatedChargeRemaining</summary>
-        public double ChargeRemainingPercent =>
-            FullChargedCapacity > 0 ? Math.Round((double)RemainingCapacity / FullChargedCapacity * 100, 2) : 0;
-
-        // ════════════════════════════════════════════════════════
         //  計算屬性 — 電壓 / 功率
         // ════════════════════════════════════════════════════════
 
@@ -97,48 +85,6 @@ namespace QSoft.DevCon
         /// <summary>放電速率 (mW)，正在放電時回傳正值，否則 0</summary>
         public uint DischargeRateMilliwatts => Rate < 0 ? (uint)(-Rate) : 0;
 
-        // ════════════════════════════════════════════════════════
-        //  計算屬性 — 電源狀態旗標
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>是否接上 AC 電源。對應 WMI BatteryStatus.PowerOnline</summary>
-        public bool IsPowerOnline => PowerState.HasFlag(PowerState.BATTERY_POWER_ON_LINE);
-
-        /// <summary>是否處於臨界狀態</summary>
-        public bool IsCritical => PowerState.HasFlag(PowerState.BATTERY_CRITICAL);
-
-        /// <summary>是否正在放電。對應 WMI BatteryStatus.Discharging</summary>
-        public bool IsDischarging => PowerState.HasFlag(PowerState.BATTERY_DISCHARGING);
-
-        /// <summary>是否正在充電。對應 WMI BatteryStatus.Charging</summary>
-        public bool IsCharging => PowerState.HasFlag(PowerState.BATTERY_CHARGING);
-
-        // ════════════════════════════════════════════════════════
-        //  計算屬性 — 溫度
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>溫度 (°C)。轉換公式：(tenthKelvin / 10) − 273.15</summary>
-        public double TemperatureCelsius =>
-            TemperatureTenthKelvin > 0 ? Math.Round(TemperatureTenthKelvin / 10.0 - 273.15, 2) : double.NaN;
-
-        /// <summary>溫度 (°F)</summary>
-        public double TemperatureFahrenheit =>
-            !double.IsNaN(TemperatureCelsius) ? Math.Round(TemperatureCelsius * 9.0 / 5.0 + 32, 2) : double.NaN;
-
-        // ════════════════════════════════════════════════════════
-        //  計算屬性 — 估計剩餘時間
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>是否能估計剩餘時間（0xFFFFFFFF 表示不可估計）</summary>
-        public bool CanEstimateRunTime => EstimatedTimeSeconds != 0xFFFFFFFF;
-
-        /// <summary>估計剩餘執行時間。無法估計時回傳 null。</summary>
-        public TimeSpan? EstimatedRunTime =>
-            CanEstimateRunTime ? TimeSpan.FromSeconds(EstimatedTimeSeconds) : null;
-
-        /// <summary>估計剩餘時間 (分鐘)。對應 Win32_Battery.EstimatedRunTime。</summary>
-        public double? EstimatedRunTimeMinutes =>
-            CanEstimateRunTime ? Math.Round(EstimatedTimeSeconds / 60.0, 1) : null;
 
         // ════════════════════════════════════════════════════════
         //  計算屬性 — 單位轉換 (Wh)
@@ -156,113 +102,35 @@ namespace QSoft.DevCon
         /// <summary>是否為可充電電池</summary>
         public bool IsRechargeable => Technology == 1;
 
-        // ════════════════════════════════════════════════════════
-        //  計算屬性 — 電池壽命估算
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>EOL（壽命終止）健康度門檻。業界鋰電池標準為 80%。</summary>
-        public const double EndOfLifeHealthThreshold = 80.0;
-
-        /// <summary>
-        /// 每次充放電循環的平均衰退率 (%)。
-        /// 需要 CycleCount > 0，否則回傳 NaN。
-        /// </summary>
-        public double DegradationPerCycle =>
-            CycleCount > 0 ? Math.Round(DegradationPercent / CycleCount, 4) : double.NaN;
-
-        /// <summary>
-        /// 估計電池總壽命循環次數（從新品至 EOL 80% 健康度）。
-        /// 無法計算（CycleCount = 0 或無衰退）時回傳 null。
-        /// </summary>
-        public double? EstimatedTotalLifeCycles
-        {
-            get
-            {
-                var dpc = DegradationPerCycle;
-                if (double.IsNaN(dpc) || dpc <= 0)
-                    return null;
-                return Math.Round((100.0 - EndOfLifeHealthThreshold) / dpc, 0);
-            }
-        }
-
-        /// <summary>
-        /// 估計剩餘可用循環次數（至 EOL 80% 健康度門檻）。
-        /// 健康度已低於門檻，或無法計算衰退率時回傳 null。
-        /// </summary>
-        public double? EstimatedRemainingCycles
-        {
-            get
-            {
-                var dpc = DegradationPerCycle;
-                if (double.IsNaN(dpc) || dpc <= 0 || HealthPercent <= EndOfLifeHealthThreshold)
-                    return null;
-                return Math.Round((HealthPercent - EndOfLifeHealthThreshold) / dpc, 0);
-            }
-        }
-
-        // ════════════════════════════════════════════════════════
-        //  計算屬性 — 放電模式剩餘時間（即時推算）
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// 依目前放電速率即時推算剩餘可用時間。
-        /// 僅在放電中 (IsDischarging) 且速率有效時回傳，否則為 null。
-        /// 公式：RemainingCapacity (mWh) ÷ DischargeRateMilliwatts (mW) × 3600
-        /// </summary>
-        public TimeSpan? CalcDischargeTimeRemaining
-        {
-            get
-            {
-                if (!IsDischarging || DischargeRateMilliwatts == 0)
-                    return null;
-                var seconds = (double)RemainingCapacity / DischargeRateMilliwatts * 3600.0;
-                return TimeSpan.FromSeconds(seconds);
-            }
-        }
-
-        /// <summary>放電模式剩餘時間（分鐘）。無法估算時回傳 null。</summary>
-        public double? CalcDischargeTimeRemainingMinutes =>
-            CalcDischargeTimeRemaining.HasValue
-                ? Math.Round(CalcDischargeTimeRemaining.Value.TotalMinutes, 1)
-                : null;
-
-        // ════════════════════════════════════════════════════════
-        //  計算屬性 — 充電模式預計充滿時間（即時推算）
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// 依目前充電速率即時推算充滿所需時間。
-        /// 僅在充電中 (IsCharging) 且速率有效、且尚未充滿時回傳，否則為 null。
-        /// 公式：(FullChargedCapacity − RemainingCapacity) (mWh) ÷ Rate (mW) × 3600
-        /// </summary>
-        public TimeSpan? CalcChargingTimeToFull
-        {
-            get
-            {
-                if (!IsCharging || Rate <= 0 || FullChargedCapacity <= RemainingCapacity)
-                    return null;
-                var capacityToFill = FullChargedCapacity - RemainingCapacity; // mWh
-                var seconds = (double)capacityToFill / Rate * 3600.0;
-                return TimeSpan.FromSeconds(seconds);
-            }
-        }
-
-        /// <summary>充電模式預計充滿時間（分鐘）。無法估算時回傳 null。</summary>
-        public double? CalcChargingTimeToFullMinutes =>
-            CalcChargingTimeToFull.HasValue
-                ? Math.Round(CalcChargingTimeToFull.Value.TotalMinutes, 1)
-                : null;
 
         // ════════════════════════════════════════════════════════
         //  工廠方法
         // ════════════════════════════════════════════════════════
 
+        // 儲存裝置路徑，供 Update() 內部自行開關 handle
+        private string _devicePath = "";
+
         private BatteryReport() { }
 
         /// <summary>
-        /// 從已開啟的電池裝置 Handle 取得完整報表。
+        /// 從裝置路徑建立報表。Handle 由內部管理，呼叫端無需負責生命週期。
         /// </summary>
-        public static BatteryReport FromHandle(SafeFileHandle handle)
+        public static BatteryReport FromDevicePath(string devicePath)
+        {
+            using var handle = devicePath.OpenHandle();
+            if (handle == null || handle.IsInvalid)
+                throw new InvalidOperationException($"無法開啟電池裝置：{devicePath}");
+
+            var report = FromHandle(handle);
+            report._devicePath = devicePath;
+            return report;
+        }
+
+        /// <summary>
+        /// 從已開啟的電池裝置 Handle 取得完整報表。
+        /// <para>注意：Handle 由呼叫端負責管理，Report 不會持有 Handle。</para>
+        /// </summary>
+        static BatteryReport FromHandle(SafeFileHandle handle)
         {
             var (h, tag) = handle.BatteryTag();
             var src = (h, tag);
@@ -299,6 +167,26 @@ namespace QSoft.DevCon
         }
 
         /// <summary>
+        /// 更新動態資料。Handle 由內部自行開啟與關閉，呼叫端無需管理。
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// 透過 <see cref="FromHandle"/> 建立的報表沒有裝置路徑，無法自動重新開啟 Handle。
+        /// 請改用 <see cref="Update(SafeFileHandle)"/> 或改以 <see cref="FromDevicePath"/> 建立報表。
+        /// </exception>
+        public void Update()
+        {
+            if (string.IsNullOrEmpty(_devicePath))
+                throw new InvalidOperationException(
+                    "此報表沒有裝置路徑。請使用 FromDevicePath() 建立報表，或改呼叫 Update(SafeFileHandle)。");
+
+            using var handle = _devicePath.OpenHandle();
+            if (handle == null || handle.IsInvalid)
+                throw new InvalidOperationException($"無法開啟電池裝置：{_devicePath}");
+
+            UpdateCore(handle);
+        }
+
+        /// <summary>
         /// 列舉系統中所有電池裝置並分別產生報表。
         /// </summary>
         public static BatteryReport[] GetAll()
@@ -314,11 +202,7 @@ namespace QSoft.DevCon
             {
                 try
                 {
-                    using var handle = path.devpath.OpenHandle();
-                    if (handle != null && !handle.IsInvalid)
-                    {
-                        list.Add(FromHandle(handle));
-                    }
+                    list.Add(FromDevicePath(path.devpath));
                 }
                 catch
                 {
@@ -349,61 +233,15 @@ namespace QSoft.DevCon
             sb.AppendLine($"  Full Charge Cap.    : {FullChargedCapacity,8} mWh  ({FullChargedCapacityWh:F2} Wh)");
             sb.AppendLine($"  Remaining Capacity  : {RemainingCapacity,8} mWh  ({RemainingCapacityWh:F2} Wh)");
             sb.AppendLine($"  Capacity Loss       : {CapacityLossMilliwattHours,8} mWh");
-            sb.AppendLine($"  Cycle Count         : {CycleCount}");
+            sb.AppendLine($"  Cycle Count         : {CycleCount,8}");
             sb.AppendLine("╠══ Health ═════════════════════════════════════╣");
             sb.AppendLine($"  Battery Health      : {HealthPercent,7:F2} %");
             sb.AppendLine($"  Battery Degraded    : {DegradationPercent,7:F2} %");
-            sb.AppendLine($"  Charge Remaining    : {ChargeRemainingPercent,7:F2} %");
             sb.AppendLine("╠══ Power ══════════════════════════════════════╣");
             sb.AppendLine($"  Voltage             : {VoltageMillivolts,8} mV   ({VoltageVolts:F3} V)");
             sb.AppendLine($"  Rate                : {Rate,8} mW   ({RateWatts:F2} W)");
             sb.AppendLine($"  Discharge Rate      : {DischargeRateMilliwatts,8} mW");
-            sb.AppendLine("╠══ State ══════════════════════════════════════╣");
-            sb.AppendLine($"  Power Online (AC)   : {IsPowerOnline}");
-            sb.AppendLine($"  Charging            : {IsCharging}");
-            sb.AppendLine($"  Discharging         : {IsDischarging}");
-            sb.AppendLine($"  Critical            : {IsCritical}");
-            sb.AppendLine("╠══ Runtime & Temperature ══════════════════════╣");
-
-            if (CanEstimateRunTime)
-            {
-                var rt = EstimatedRunTime!.Value;
-                sb.AppendLine($"  Est. Run Time       : {rt.Hours}h {rt.Minutes}m {rt.Seconds}s  ({EstimatedRunTimeMinutes:F1} min)");
-            }
-            else
-            {
-                sb.AppendLine($"  Est. Run Time       : N/A (AC connected)");
-            }
-
-            if (CalcDischargeTimeRemaining.HasValue)
-            {
-                var dc = CalcDischargeTimeRemaining.Value;
-                sb.AppendLine($"  Calc. DC Remaining  : {dc.Hours}h {dc.Minutes}m {dc.Seconds}s  ({CalcDischargeTimeRemainingMinutes:F1} min)");
-            }
-
-            if (CalcChargingTimeToFull.HasValue)
-            {
-                var ch = CalcChargingTimeToFull.Value;
-                sb.AppendLine($"  Calc. Time to Full  : {ch.Hours}h {ch.Minutes}m {ch.Seconds}s  ({CalcChargingTimeToFullMinutes:F1} min)");
-            }
-
-            if (!double.IsNaN(TemperatureCelsius))
-                sb.AppendLine($"  Temperature         : {TemperatureCelsius}°C / {TemperatureFahrenheit}°F");
-            else
-                sb.AppendLine($"  Temperature         : N/A");
-
-            sb.AppendLine("╠══ Lifetime Estimation ════════════════════════╣");
-            if (!double.IsNaN(DegradationPerCycle) && DegradationPerCycle > 0)
-            {
-                sb.AppendLine($"  Degradation/Cycle   : {DegradationPerCycle:F4} %");
-                sb.AppendLine($"  Est. Total Cycles   : {EstimatedTotalLifeCycles?.ToString("F0") ?? "N/A"}");
-                sb.AppendLine($"  Est. Remain Cycles  : {EstimatedRemainingCycles?.ToString("F0") ?? "Below EOL threshold"}");
-            }
-            else
-            {
-                sb.AppendLine($"  Lifetime Estimation : N/A (no cycle data)");
-            }
-
+            sb.AppendLine($"  PowerState          : {PowerState, 8}");
             sb.AppendLine("╚══════════════════════════════════════════════╝");
             return sb.ToString();
         }
@@ -412,13 +250,34 @@ namespace QSoft.DevCon
         //  輔助方法
         // ════════════════════════════════════════════════════════
 
+        /// <summary>實際執行動態資料更新的核心邏輯。</summary>
+        private void UpdateCore(SafeFileHandle handle)
+        {
+            var src = handle.BatteryTag();
+
+            // ── 即時狀態 ──
+            var status = src.BatteryStatus();
+            VoltageMillivolts = status.Voltage;
+            Rate = status.Rate;
+            RemainingCapacity = status.Capacity;
+            PowerState = status.PowerState;
+
+            // ── 估計時間與溫度 ──
+            EstimatedTimeSeconds = src.BatteryEstimatedTime();
+            TemperatureTenthKelvin = src.BatteryTemperature();
+
+            // ── 半動態（充電後可能變動）──
+            var info = src.BatteryInfo();
+            FullChargedCapacity = info.FullChargedCapacity;
+            CycleCount = info.CycleCount;
+        }
+
 #if NET8_0_OR_GREATER
         private static string ParseChemistry(BufferChemistry chemistry)
         {
             try
             {
-                ReadOnlySpan<byte> span = chemistry;
-                var str = Encoding.ASCII.GetString(span).TrimEnd('\0');
+                var str = Encoding.ASCII.GetString(chemistry);
                 return string.IsNullOrWhiteSpace(str) ? "Unknown" : str;
             }
             catch
@@ -431,7 +290,7 @@ namespace QSoft.DevCon
         {
             try
             {
-                var str = Encoding.ASCII.GetString(chemistry).TrimEnd('\0');
+                var str = Encoding.ASCII.GetString(chemistry);
                 return string.IsNullOrWhiteSpace(str) ? "Unknown" : str;
             }
             catch

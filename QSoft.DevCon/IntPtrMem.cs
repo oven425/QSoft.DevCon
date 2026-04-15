@@ -25,7 +25,7 @@ namespace QSoft.DevCon
                 return pointer;
             }
         }
-        public int Size { private set; get; } = 0;
+        public int Size {  get; } = 0;
         public IntPtrMem(int size)
         {
             var s1 = Marshal.SizeOf<T>();

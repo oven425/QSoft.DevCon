@@ -136,7 +136,26 @@ namespace ConsoleApp_NET472
             {
 
             }
-            
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                foreach (var oo in "Volume".Devices(true))
+                {
+                    var biosname = oo.BiosDeviceName_().Value;
+                    var firstinstalldate = oo.FirstInstallDate();
+                    var isconnected = oo.IsConnected();
+                    var panel = oo.Panel();
+                    var siblings = oo.Siblings();
+                    var driverprovider = oo.DriverProvider();
+                    var problemcode = oo.ProblemCode();
+                    var ppcode = oo.ProblemCode_().ThrowIfError();
+                    var infsection = oo.DriverInfSection();
+                    var friendname = oo.GetFriendName();
+                    //oo.SetFriendName($"USB2.0 HD UVC WebCam");
+                }
+            }).Wait();
+
             foreach (var oo in "Camera".Devices())
             {
                 var biosname = oo.BiosDeviceName_();
@@ -146,7 +165,7 @@ namespace ConsoleApp_NET472
                 var siblings = oo.Siblings();
                 var driverprovider = oo.DriverProvider();
                 var problemcode = oo.ProblemCode();
-                var ppcode = oo.ProblemCode_().Value;
+                var ppcode = oo.ProblemCode_();
                 var infsection = oo.DriverInfSection();
                 var friendname = oo.GetFriendName();
                 //oo.SetFriendName($"USB2.0 HD UVC WebCam");

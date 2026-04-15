@@ -14,6 +14,17 @@ try
     {
         System.Diagnostics.Trace.WriteLine(oo);
     }
+    while(true)
+    {
+        await Task.Delay(1000);
+        foreach (var oo in batterys1)
+        {
+            oo.Update();
+            System.Diagnostics.Trace.WriteLine(oo);
+        }
+    }
+    
+
     QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
     var guid = "Battery".GetClassGuids().FirstOrDefault();
     var batterys = guid.DevicesFromInterface().Select(x => new

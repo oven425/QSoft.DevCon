@@ -328,10 +328,10 @@ public struct BATTERY_INFORMATION
     public BufferReserved3 Reserved;
     public BufferChemistry Chemistry;
 #else
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-            public byte[] Reserved;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public byte[] Chemistry;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+    public byte[] Reserved;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+    public byte[] Chemistry;
 #endif
     public uint DesignedCapacity;
     public uint FullChargedCapacity;
@@ -341,6 +341,7 @@ public struct BATTERY_INFORMATION
     public uint CycleCount;
 }
 
+[Flags]
 public enum PowerState : uint
 {
     BATTERY_POWER_ON_LINE = 0x00000001,
