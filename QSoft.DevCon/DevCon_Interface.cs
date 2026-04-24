@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Xml.Linq;
 
 namespace QSoft.DevCon

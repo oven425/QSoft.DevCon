@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 
 namespace QSoft.DevCon
 {

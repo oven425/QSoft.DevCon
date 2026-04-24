@@ -3,22 +3,6 @@ using System.Runtime.InteropServices;
 
 namespace QSoft.DevCon
 {
-    //public ref struct QueryInt(int value, int errorcode)
-    //{
-    //    public int ErrorCode { private set; get; } = errorcode;
-    //    public int Value { get; private set; } = value;
-    //    public static implicit operator int(QueryInt q) => q.ThrowIfError();
-
-    //    public readonly int ThrowIfError()
-    //    {
-    //        if (ErrorCode != 0)
-    //        {
-    //            throw new System.ComponentModel.Win32Exception(ErrorCode);
-    //        }
-    //        return Value;
-    //    }
-    //}
-
     public readonly ref struct Query<T>(T value, int errorcode)
     {
         public int ErrorCode { get; } = errorcode;

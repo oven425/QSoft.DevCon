@@ -219,30 +219,30 @@ namespace QSoft.DevCon
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine("╔══════════════════════════════════════════════╗");
-            sb.AppendLine("║            Battery Report                    ║");
-            sb.AppendLine("╠══════════════════════════════════════════════╣");
+            sb.AppendLine("╔═════════════════════════════════════════════════════════════╗");
+            sb.AppendLine("║            Battery Report                                   ║");
+            sb.AppendLine("╠═════════════════════════════════════════════════════════════╣");
             sb.AppendLine($"  Device Name         : {DeviceName}");
             sb.AppendLine($"  Manufacturer        : {ManufactureName}");
             sb.AppendLine($"  Serial Number       : {SerialNumber}");
             sb.AppendLine($"  Unique ID           : {UniqueID}");
             sb.AppendLine($"  Chemistry           : {Chemistry}");
             sb.AppendLine($"  Type                : {(IsRechargeable ? "Rechargeable" : "Non-rechargeable")}");
-            sb.AppendLine("╠══ Capacity ═══════════════════════════════════╣");
+            sb.AppendLine("╠══ Capacity ══════════════════════════════════════════════════╣");
             sb.AppendLine($"  Designed Capacity   : {DesignedCapacity,8} mWh  ({DesignedCapacityWh:F2} Wh)");
             sb.AppendLine($"  Full Charge Cap.    : {FullChargedCapacity,8} mWh  ({FullChargedCapacityWh:F2} Wh)");
             sb.AppendLine($"  Remaining Capacity  : {RemainingCapacity,8} mWh  ({RemainingCapacityWh:F2} Wh)");
             sb.AppendLine($"  Capacity Loss       : {CapacityLossMilliwattHours,8} mWh");
             sb.AppendLine($"  Cycle Count         : {CycleCount,8}");
-            sb.AppendLine("╠══ Health ═════════════════════════════════════╣");
+            sb.AppendLine("╠══ Health ════════════════════════════════════════════════════╣");
             sb.AppendLine($"  Battery Health      : {HealthPercent,7:F2} %");
             sb.AppendLine($"  Battery Degraded    : {DegradationPercent,7:F2} %");
-            sb.AppendLine("╠══ Power ══════════════════════════════════════╣");
+            sb.AppendLine("╠══ Power ═════════════════════════════════════════════════════╣");
             sb.AppendLine($"  Voltage             : {VoltageMillivolts,8} mV   ({VoltageVolts:F3} V)");
             sb.AppendLine($"  Rate                : {Rate,8} mW   ({RateWatts:F2} W)");
             sb.AppendLine($"  Discharge Rate      : {DischargeRateMilliwatts,8} mW");
             sb.AppendLine($"  PowerState          : {PowerState, 8}");
-            sb.AppendLine("╚══════════════════════════════════════════════╝");
+            sb.AppendLine("╚═════════════════════════════════════════════════════════════╝");
             return sb.ToString();
         }
 
