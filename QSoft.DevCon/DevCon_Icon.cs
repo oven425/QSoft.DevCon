@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using static QSoft.DevCon.DevConExtension;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
@@ -14,7 +13,7 @@ namespace QSoft.DevCon.WPF
     {
         //public static System.Windows.Media.Imaging.BitmapSource? Icon(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         //{
-        //    if(!SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 96, 96, 0, out var iconptr))
+        //    if(SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 96, 96, 0, out var iconptr))
         //    {
         //        try
         //        {
@@ -30,17 +29,32 @@ namespace QSoft.DevCon.WPF
         //    return null;
         //}
 
-        public static IntPtr Icon(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
+        public static SafeIconHandle? Icon(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
         {
-            if (!SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 96, 96, 0, out var iconptr))
+            if (SetupDiLoadDeviceIcon(src.dev, ref src.devdata, 96, 96, 0, out var iconptr))
             {
-                return iconptr;
+                return new SafeIconHandle(iconptr);
             }
-
-            return IntPtr.Zero;
+            return null;
         }
 
     }
 
-    
+    public class SafeIconHandle : SafeHandle
+    {
+        public SafeIconHandle() : base(IntPtr.Zero, true) { }
+        public SafeIconHandle(IntPtr handle) : base(IntPtr.Zero, true)
+        {
+            SetHandle(handle);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            return DestroyIcon(handle);
+        }
+    }
+
+
 }

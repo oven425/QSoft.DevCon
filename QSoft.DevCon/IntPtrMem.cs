@@ -31,7 +31,13 @@ namespace QSoft.DevCon
             var s1 = Marshal.SizeOf<T>();
             Size = s1 * size;
             m_pBuffer = Marshal.AllocHGlobal(Size);
-            DevConExtension.ZeroMemory(m_pBuffer, Size);
+            this.Clear();
+        }
+
+        public void Clear()
+        {
+            if (Size > 0)
+                DevConExtension.ZeroMemory(m_pBuffer, Size);
         }
 
         public static implicit operator IntPtr(IntPtrMem<T> h) => h.Pointer;
@@ -40,17 +46,17 @@ namespace QSoft.DevCon
         IntPtr m_pBuffer = IntPtr.Zero;
         public void Dispose()
         {
-            //IntPtr intPtr = Interlocked.Exchange(ref m_pBuffer, IntPtr.Zero);
-            //if (intPtr != IntPtr.Zero)
-            //{
-            //    Marshal.FreeHGlobal(intPtr);
-            //}
-
-            if (m_pBuffer != IntPtr.Zero)
+            IntPtr intPtr = Interlocked.Exchange(ref m_pBuffer, IntPtr.Zero);
+            if (intPtr != IntPtr.Zero)
             {
-                Marshal.FreeHGlobal(m_pBuffer);
-                m_pBuffer = IntPtr.Zero;
+                Marshal.FreeHGlobal(intPtr);
             }
+
+            //if (m_pBuffer != IntPtr.Zero)
+            //{
+            //    Marshal.FreeHGlobal(m_pBuffer);
+            //    m_pBuffer = IntPtr.Zero;
+            //}
         }
 
         

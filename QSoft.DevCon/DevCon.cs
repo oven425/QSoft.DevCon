@@ -16,6 +16,49 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtension
     {
+        //public static void Devices(this Guid guid, Action<(IntPtr, SP_DEVINFO_DATA)> devices, bool showhiddendevice = false)
+        //{
+        //    //uint flags = DIGCF_PRESENT | DIGCF_PROFILE| DIGCF_ALLCLASSES;
+        //    uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
+        //    if (showhiddendevice)
+        //    {
+        //        flags = DIGCF_PROFILE;
+        //    }
+        //    //flags |= DIGCF_DEVICEINTERFACE;
+        //    if (guid == Guid.Empty)
+        //    {
+        //        flags |= DIGCF_ALLCLASSES;
+        //    }
+
+
+        //    uint index = 0;
+        //    IntPtr hDevInfo = SetupDiGetClassDevs(guid, IntPtr.Zero, IntPtr.Zero, flags);
+        //    if (hDevInfo == new IntPtr(-1))
+        //    {
+        //        return;
+        //    }
+        //    try
+        //    {
+        //        while (true)
+        //        {
+        //            SP_DEVINFO_DATA devinfo = new();
+        //            devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
+        //            if (!SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo))
+        //            {
+        //                break;
+        //            }
+        //            else
+        //            {
+        //                devices((hDevInfo, devinfo));
+        //            }
+        //            index++;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        SetupDiDestroyDeviceInfoList(hDevInfo);
+        //    }
+        //}
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)
         {
             //uint flags = DIGCF_PRESENT | DIGCF_PROFILE| DIGCF_ALLCLASSES;
@@ -112,13 +155,6 @@ namespace QSoft.DevCon
         static void ThrowExceptionForLastError()
         {
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
-            //var error = Marshal.GetLastWin32Error();
-            //var msg = error.GetLastErrorMessage();
-            //if(!string.IsNullOrEmpty(msg))
-            //{
-            //    var ex = new Exception(msg);
-            //    throw ex;
-            //}
         }
 
         static void ChangeState(this (IntPtr dev, SP_DEVINFO_DATA devdata) src, bool isenable)
@@ -149,13 +185,16 @@ namespace QSoft.DevCon
             var drives = System.IO.DriveInfo.GetDrives();
             var result = new List<(string letter, string target)>(drives.Length);
 #if NET8_0_OR_GREATER
+            Span<char> dst = stackalloc char[256];
+            Span<char> newc = stackalloc char[7];
             foreach (var oo in drives.Select(x => x.Name))
             {
-                Span<char> newc = stackalloc char[oo.Length];
-                MemoryExtensions.Replace(oo.AsSpan(), newc, '\\', '\0');
+                newc.Clear();
+                var nameSpan = newc[..oo.Length];
+                MemoryExtensions.Replace(oo.AsSpan(), nameSpan, '\\', '\0');
 
-                var span_in = MemoryMarshal.AsBytes(newc);
-                Span<char> dst = stackalloc char[256];
+                var span_in = MemoryMarshal.AsBytes(nameSpan);
+                dst.Clear();
                 var span_out = MemoryMarshal.Cast<char, byte>(dst);
                 var len = QueryDosDevice(span_in, span_out, 256);
                 var str = "";
@@ -167,9 +206,10 @@ namespace QSoft.DevCon
                 result.Add((oo, str));
             }
 #else
+            using var mem = new IntPtrMem<char>(256);
             foreach (var oo in drives.Select(x => x.Name))
             {
-                using var mem = new IntPtrMem<byte>(256 * 2);
+                mem.Clear();
                 QueryDosDevice(oo.Replace("\\", ""), mem.Pointer, 256);
                 string str = Marshal.PtrToStringUni(mem.Pointer) ?? "";
                 result.Add((oo, str));
@@ -249,9 +289,6 @@ namespace QSoft.DevCon
         public static int ProblemCode(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetInt32(DEVPKEY_Device_ProblemCode);
 
-        public static Query<int> ProblemCode_(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetInt32_(DEVPKEY_Device_ProblemCode);
-
         public static bool IsConnected(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetBoolean(DEVPKEY_Device_IsConnected);
 
@@ -321,17 +358,10 @@ namespace QSoft.DevCon
 #endif
         }
 
-
-
-
-
         //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/install/devpkey-device-driverversion
 
         public static string BiosDeviceName(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetString(DEVPKEY_Device_BiosDeviceName);
-
-        public static Query<string> BiosDeviceName_(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
-            => src.GetString_(DEVPKEY_Device_BiosDeviceName);
 
         public static DateTime FirstInstallDate(this (IntPtr dev, SP_DEVINFO_DATA devdata) src)
             => src.GetDateTime(DEVPKEY_Device_FirstInstallDate);

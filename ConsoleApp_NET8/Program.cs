@@ -8,6 +8,7 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
+    DevConExtension.GetVolumeName().ToArray();
     var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
 
     while(true)

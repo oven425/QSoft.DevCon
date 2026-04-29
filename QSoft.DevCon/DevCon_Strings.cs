@@ -35,7 +35,7 @@ namespace QSoft.DevCon
             SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out _, IntPtr.Zero, 0, out var reqsize, 0);
             if (reqsize > 0)
             {
-                using var mem = new IntPtrMem<byte>(reqsize * 2);
+                using var mem = new IntPtrMem<char>(reqsize);
                 SetupDiGetDeviceProperty(src.dev, ref src.devdata, ref devkey, out var property_type, mem.Pointer, reqsize, out reqsize, 0);
                 ids.AddRange(GetStrings(mem.Pointer));
             }
@@ -71,7 +71,7 @@ namespace QSoft.DevCon
 #else
             SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out var property_type, IntPtr.Zero, 0, out var reqsize);
             if (reqsize <= 0) return ids;
-            using (var mem = new IntPtrMem<byte>((int)reqsize))
+            using (var mem = new IntPtrMem<char>((int)reqsize))
             {
                 SetupDiGetDeviceRegistryProperty(src.dev, ref src.devdata, property, out property_type, mem.Pointer, reqsize, out reqsize);
                 ids.AddRange(GetStrings(mem.Pointer));

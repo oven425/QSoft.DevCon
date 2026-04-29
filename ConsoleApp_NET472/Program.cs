@@ -20,92 +20,95 @@ namespace ConsoleApp_NET472
 
         static void Main(string[] args)
         {
-            try
+
+
+
+            //try
+            //{
+            //    var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
+            //    foreach(var oo in batterys1)
+            //    {
+            //        System.Diagnostics.Trace.WriteLine(oo);
+            //    }
+
+            //    string namespacePath = @"\\.\root\wmi";
+            //    string queryString = "SELECT * FROM BatteryStatus";
+            //    ManagementObjectSearcher searcher = new ManagementObjectSearcher(namespacePath, queryString);
+
+            //    BATTERY_STATUS batterystatus_fromwmi = new BATTERY_STATUS();
+            //    foreach (ManagementObject obj in searcher.Get())
+            //    {
+            //        foreach (var oo in obj.Properties)
+            //        {
+            //            System.Diagnostics.Trace.WriteLine($"{oo.Name}:{oo.Value}");
+            //        }
+            //        if((bool)obj["Discharging"])
+            //        {
+            //            batterystatus_fromwmi.PowerState = PowerState.BATTERY_DISCHARGING;
+            //        }
+            //        else if((bool)obj["Charging"])
+            //        {
+            //            batterystatus_fromwmi.PowerState = PowerState.BATTERY_CHARGING;
+            //        }
+            //        else if((bool)obj["Critical"])
+            //        {
+            //            batterystatus_fromwmi.PowerState = PowerState.BATTERY_CRITICAL;
+            //        }
+            //        else
+            //        {
+            //            batterystatus_fromwmi.PowerState = PowerState.BATTERY_POWER_ON_LINE;
+            //        }
+            //        batterystatus_fromwmi.Voltage = (uint)obj["Voltage"];
+            //        batterystatus_fromwmi.Capacity = (uint)obj["RemainingCapacity"];
+            //        batterystatus_fromwmi.Rate = (int)obj["DischargeRate"];
+            //    }
+
+            //    QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
+            //    var guid = "Battery".GetClassGuids().FirstOrDefault();
+            //    var batterys = guid.DevicesFromInterface().Select(x => new
+            //    {
+            //        devpath = x.DevicePath(),
+            //        desc = x.As().DeviceDesc(),
+            //    });
+
+
+
+            //    foreach (var oo in batterys)
+            //    {
+            //        using (var fs = oo.devpath.OpenHandle())
+            //        {
+            //            var battery = fs.BatteryTag();
+            //            battery.BatteryManufactureDate();
+            //            var status  = battery.BatteryStatus();
+            //            var batteryinfo = battery.BatteryInfo();
+            //        }
+            //    }
+
+            //    //Process.Start("powercfg.exe", "/batteryreport  /output battery.xml xml").WaitForExit();
+            //    //var serializer = new XmlSerializer(typeof(BatteryReport));
+            //    //using (var reader = new StreamReader("battery.xml"))
+            //    //{
+            //    //    var report = (BatteryReport)serializer.Deserialize(reader);
+            //    //    Console.WriteLine($"設計容量: {report.Batteries[0].DesignCapacity} mWh");
+            //    //    Console.WriteLine($"完整充電容量: {report.Batteries[0].FullChargeCapacity} mWh");
+            //    //}
+            //}
+            //catch (Exception ee)
+            //{
+            //}
+
+            //Guid.Empty.Devices(x =>
+            //{
+
+            //});
+
+            DevConExtension.GetVolumeName().ToArray();
+
+            var aa = Guid.Empty.Devices();
+            foreach(var a in aa)
             {
-                var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
-                foreach(var oo in batterys1)
-                {
-                    System.Diagnostics.Trace.WriteLine(oo);
-                }
-
-                string namespacePath = @"\\.\root\wmi";
-                string queryString = "SELECT * FROM BatteryStatus";
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(namespacePath, queryString);
-
-                BATTERY_STATUS batterystatus_fromwmi = new BATTERY_STATUS();
-                foreach (ManagementObject obj in searcher.Get())
-                {
-                    foreach (var oo in obj.Properties)
-                    {
-                        System.Diagnostics.Trace.WriteLine($"{oo.Name}:{oo.Value}");
-                    }
-                    if((bool)obj["Discharging"])
-                    {
-                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_DISCHARGING;
-                    }
-                    else if((bool)obj["Charging"])
-                    {
-                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_CHARGING;
-                    }
-                    else if((bool)obj["Critical"])
-                    {
-                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_CRITICAL;
-                    }
-                    else
-                    {
-                        batterystatus_fromwmi.PowerState = PowerState.BATTERY_POWER_ON_LINE;
-                    }
-                    batterystatus_fromwmi.Voltage = (uint)obj["Voltage"];
-                    batterystatus_fromwmi.Capacity = (uint)obj["RemainingCapacity"];
-                    batterystatus_fromwmi.Rate = (int)obj["DischargeRate"];
-                }
-                
-                QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
-                var guid = "Battery".GetClassGuids().FirstOrDefault();
-                var batterys = guid.DevicesFromInterface().Select(x => new
-                {
-                    devpath = x.DevicePath(),
-                    desc = x.As().DeviceDesc(),
-                });
-
-
-
-                foreach (var oo in batterys)
-                {
-                    using (var fs = oo.devpath.OpenHandle())
-                    {
-                        var battery = fs.BatteryTag();
-                        battery.BatteryManufactureDate();
-                        var status  = battery.BatteryStatus();
-                        var batteryinfo = battery.BatteryInfo();
-                    }
-                }
-
-                //Process.Start("powercfg.exe", "/batteryreport  /output battery.xml xml").WaitForExit();
-                //var serializer = new XmlSerializer(typeof(BatteryReport));
-                //using (var reader = new StreamReader("battery.xml"))
-                //{
-                //    var report = (BatteryReport)serializer.Deserialize(reader);
-                //    Console.WriteLine($"設計容量: {report.Batteries[0].DesignCapacity} mWh");
-                //    Console.WriteLine($"完整充電容量: {report.Batteries[0].FullChargeCapacity} mWh");
-                //}
+                a.HardwareIDs();
             }
-            catch (Exception ee)
-            {
-            }
-            var aaa = "Camera".Devices().Select(x => new
-            {
-                name = x.Service(),
-                power = x.PowerData(),
-                mac = x.Manufacturer(),
-                pps = x.AllPropertys(),
-                id = x.DeviceInstanceId(),
-                clssdesc = x.ClassGuid().ClassDesc(),
-                installdate = x.FirstInstallDate(),
-            });
-            var pp = aaa.ToArray()[0].power.ToString();
-            System.Diagnostics.Trace.WriteLine(pp);
-            var ffs = "Camera".GetClassGuids();
             var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
             var ddd = ggu.ClassDesc();
             var cameraa = Guid.Parse("{E5323777-F976-4f5b-9B55-B94699C46E44}");
@@ -142,14 +145,14 @@ namespace ConsoleApp_NET472
                 await Task.Delay(1000);
                 foreach (var oo in "Volume".Devices(true))
                 {
-                    var biosname = oo.BiosDeviceName_().Value;
+                    var biosname = oo.BiosDeviceName();
                     var firstinstalldate = oo.FirstInstallDate();
                     var isconnected = oo.IsConnected();
                     var panel = oo.Panel();
                     var siblings = oo.Siblings();
                     var driverprovider = oo.DriverProvider();
                     var problemcode = oo.ProblemCode();
-                    var ppcode = oo.ProblemCode_().ThrowIfError();
+                    var ppcode = oo.ProblemCode();
                     var infsection = oo.DriverInfSection();
                     var friendname = oo.GetFriendName();
                     //oo.SetFriendName($"USB2.0 HD UVC WebCam");
@@ -158,14 +161,14 @@ namespace ConsoleApp_NET472
 
             foreach (var oo in "Camera".Devices())
             {
-                var biosname = oo.BiosDeviceName_();
+                var biosname = oo.BiosDeviceName();
                 var firstinstalldate = oo.FirstInstallDate();
                 var isconnected= oo.IsConnected();
                 var panel = oo.Panel();
                 var siblings = oo.Siblings();
                 var driverprovider = oo.DriverProvider();
                 var problemcode = oo.ProblemCode();
-                var ppcode = oo.ProblemCode_();
+                var ppcode = oo.ProblemCode();
                 var infsection = oo.DriverInfSection();
                 var friendname = oo.GetFriendName();
                 //oo.SetFriendName($"USB2.0 HD UVC WebCam");
