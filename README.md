@@ -66,7 +66,6 @@ var alldevices = Guid.Empty.Devices()
 
 ```
 
-
 8. Get device path
 ```c#   
 var cameras = QSoft.DevCon.DevConExtension.KSCATEGORY_VIDEO_CAMERA

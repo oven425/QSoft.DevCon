@@ -21,7 +21,22 @@ namespace ConsoleApp_NET472
         static void Main(string[] args)
         {
 
-
+            var guid = "Battery".GetClassGuids().FirstOrDefault();
+            var batterys = guid.DevicesFromInterface().Select(x => new
+            {
+                devpath = x.DevicePath(),
+                desc = x.As().DeviceDesc(),
+            });
+            foreach(var oo in batterys)
+            {
+                using (var fs = oo.devpath.OpenHandle())
+                {
+                    var battery = fs.BatteryTag();
+                    battery.BatteryManufactureDate();
+                    var status = battery.BatteryStatus();
+                    var batteryinfo = battery.BatteryInfo();
+                }
+            }
 
             //try
             //{

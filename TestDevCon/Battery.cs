@@ -16,6 +16,13 @@ namespace TestDevCon
         [Fact]
         public void Test_BatteryStaticData()
         {
+            var ioctl = BatteryReport.GetAll()
+                .Select(x => new
+                {
+                    DesignedCapacity = x.DesignedCapacity,
+                    SerialNumber = x.SerialNumber,
+                    ManufactureName = x.ManufactureName,
+                }).ToArray();
             using CimSession session = CimSession.Create(null);
             var wmi = session.QueryInstances(@"root\wmi", "WQL", "SELECT * FROM BatteryStaticData")
                 .Select(x => new
@@ -25,13 +32,7 @@ namespace TestDevCon
                     ManufactureName = x.CimInstanceProperties["ManufactureName"].Value as string,
                 }).ToArray();
 
-            var ioctl = BatteryReport.GetAll()
-                .Select(x => new
-                {
-                    DesignedCapacity = x.DesignedCapacity,
-                    SerialNumber = x.SerialNumber,
-                    ManufactureName = x.ManufactureName,
-                }).ToArray();
+            
 
             Assert.Equal(wmi.Length, ioctl.Length);
             for (int i = 0; i < wmi.Length; i++)

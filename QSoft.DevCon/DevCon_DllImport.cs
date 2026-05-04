@@ -59,6 +59,11 @@ namespace QSoft.DevCon
 
         [DllImport("kernel32.dll", EntryPoint = "RtlZeroMemory")]
         internal static extern void ZeroMemory(IntPtr dest, int size);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool DeviceIoControl(Microsoft.Win32.SafeHandles.SafeFileHandle hDevice, uint dwIoControlCode, IntPtr lpInBuffer, uint nInBufferSize, IntPtr lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
+
     }
 }
 #endif
