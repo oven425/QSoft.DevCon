@@ -1,4 +1,5 @@
-﻿using Microsoft.Management.Infrastructure;
+﻿using ConsoleApp_NET8;
+using Microsoft.Management.Infrastructure;
 using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
 using System.Runtime.InteropServices;
@@ -14,7 +15,10 @@ try
     {
         System.Diagnostics.Trace.WriteLine(oo.As().GetFriendName());
         using var handle = oo.DevicePath().OpenHandle();
-
+        handle.DESCRIPTOR();
+        handle.DeviceTemperature();
+        handle.AdapterTemperature();
+        handle.NVME_SMART();
     }
 
     var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
