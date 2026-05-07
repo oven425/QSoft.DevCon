@@ -1,7 +1,10 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
@@ -75,20 +78,64 @@ namespace ConsoleApp_NET8
 
         }
 
-
+        //https://zhung.com.tw/article/%E5%88%A9%E7%94%A8windows%E5%86%85%E5%BB%BA%E7%9A%84driver%E9%80%8F%E9%81%8Eioctl%E7%99%BC%E9%80%81nvme-command/
         public static void NVME_SMART(this SafeFileHandle src)
         {
-            var query = new STORAGE_PROPERTY_QUERY
+            var Query = new STORAGE_PROPERTY_QUERY
             {
-                PropertyId = STORAGE_PROPERTY_ID.StorageDeviceProtocolSpecificProperty,
+                PropertyId = STORAGE_PROPERTY_ID.StorageAdapterProtocolSpecificProperty,
                 QueryType = STORAGE_QUERY_TYPE.PropertyStandardQuery,
             };
-            var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref query, 1));
-            var header = new STORAGE_PROTOCOL_DATA_DESCRIPTOR();
-            var span_out_header = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref header, 1));
-            var hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_out_header, (uint)span_out_header.Length, out var reqsz, 0);
+
+            var ProtocolSpecific = new STORAGE_PROTOCOL_SPECIFIC_DATA
+            {
+                ProtocolType = STORAGE_PROTOCOL_TYPE.ProtocolTypeNvme,
+                DataType = (uint)STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage,
+                ProtocolDataRequestValue = 0,
+                ProtocolDataRequestSubValue = 2,
+                ProtocolDataOffset = (uint)Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>(),
+                ProtocolDataLength = 4096,
+            };
+            var bufferLength = (int)Marshal.OffsetOf<STORAGE_PROPERTY_QUERY>("AdditionalParameters") + Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>() + 4096;
+            Span<byte> span_in = stackalloc byte[bufferLength];
+
+            
+            MemoryMarshal.Write(span_in, in Query);
+
+            // 計算 ProtocolSpecific 的起始位置
+            int offsetProtocolSpecific =
+                (int)Marshal.OffsetOf<STORAGE_PROPERTY_QUERY>("AdditionalParameters");
+
+            // 寫入 ProtocolSpecific
+            MemoryMarshal.Write(span_in.Slice(offsetProtocolSpecific), in ProtocolSpecific);
+            var strb = new StringBuilder();
+            for(int i=0;i< span_in.Length; i++)
+            {
+                strb.AppendLine($"{i}:{span_in[i]} ");
+            }
+            File.WriteAllText("nvme.txt", strb.ToString());
+            var bufferbin = File.ReadAllBytes("buffer.bin");
+            span_in = bufferbin.AsSpan();
+            Span<byte> span_out_header = stackalloc byte[8192];
+            var hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_in, (uint)span_in.Length, out var reqsz, 0);
             var err = Marshal.GetLastWin32Error();
 
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        struct STORAGE_QUERY_WITH_PROTOCOL_SPECIFIC
+        {
+            public STORAGE_PROPERTY_QUERY Query;
+            public STORAGE_PROTOCOL_SPECIFIC_DATA ProtocolSpecific;
+        }
+
+        enum STORAGE_PROTOCOL_NVME_DATA_TYPE
+        {
+            NVMeDataTypeUnknown,
+            NVMeDataTypeIdentify,
+            NVMeDataTypeLogPage,
+            NVMeDataTypeFeature,
+            NVMeDataTypeLogPageEx,
+            NVMeDataTypeFeatureEx
         }
 
         enum STORAGE_PROTOCOL_TYPE
@@ -105,12 +152,12 @@ namespace ConsoleApp_NET8
         [StructLayout(LayoutKind.Sequential)]
         struct STORAGE_PROTOCOL_SPECIFIC_DATA
         {
-            STORAGE_PROTOCOL_TYPE ProtocolType;
-            uint DataType;
-            uint ProtocolDataRequestValue;
-            uint ProtocolDataRequestSubValue;
-            uint ProtocolDataOffset;
-            uint ProtocolDataLength;
+            public STORAGE_PROTOCOL_TYPE ProtocolType;
+            public uint DataType;
+            public uint ProtocolDataRequestValue;
+            public uint ProtocolDataRequestSubValue;
+            public uint ProtocolDataOffset;
+            public uint ProtocolDataLength;
             uint FixedProtocolReturnData;
             uint ProtocolDataRequestSubValue2;
             uint ProtocolDataRequestSubValue3;
@@ -137,7 +184,8 @@ namespace ConsoleApp_NET8
             byte Reserved0;
             uint Reserved1;
         }
-
+        [InlineArray(1)]
+        public struct byte_1 { private byte _element0; }
         [InlineArray(2)]
         public struct byte_2 { private byte _element0; }
         [InlineArray(2)]
@@ -164,7 +212,7 @@ namespace ConsoleApp_NET8
             uint Version;
             public uint Size;
         };
-        
+        const uint IOCTL_STORAGE_FIRMWARE_GET_INFO = 0x002D0C14;
         const uint IOCTL_STORAGE_QUERY_PROPERTY = 0x002D1400;
         enum STORAGE_PROPERTY_ID
         {
@@ -221,7 +269,9 @@ namespace ConsoleApp_NET8
         {
             public STORAGE_PROPERTY_ID PropertyId;
             public STORAGE_QUERY_TYPE QueryType;
-            byte AdditionalParameters;
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            //public byte[] AdditionalParameters;
+            public byte_1 AdditionalParameters;
         }
 
         public enum STORAGE_BUS_TYPE
