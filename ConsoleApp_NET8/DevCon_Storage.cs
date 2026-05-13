@@ -25,13 +25,12 @@ namespace ConsoleApp_NET8
             };
             var header = new STORAGE_DESCRIPTOR_HEADER();
             var span_in =MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref query, 1));
-            //var spin_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref desc, 1));
             var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref header, 1));
             var hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, 0);
             span_out = stackalloc byte[(int)header.Size];
             hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, 0);
             var desc = MemoryMarshal.Read<STORAGE_DEVICE_DESCRIPTOR>(span_out);
-            var offset = span_out.Slice((int)desc.ProductIdOffset);
+            var offset = span_out.Slice((int)desc.SerialNumberOffset);
             var index = offset.IndexOf((byte)0);
             offset = offset[.. index];
             var aaa = System.Text.Encoding.ASCII.GetString(offset);
@@ -79,54 +78,103 @@ namespace ConsoleApp_NET8
         }
 
         //https://zhung.com.tw/article/%E5%88%A9%E7%94%A8windows%E5%86%85%E5%BB%BA%E7%9A%84driver%E9%80%8F%E9%81%8Eioctl%E7%99%BC%E9%80%81nvme-command/
-        public static void NVME_SMART(this SafeFileHandle src)
+        public static void NVME_LogPage(this SafeFileHandle src)
+        {
+            NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, out var log);
+        }
+
+        static void NVME_DATA<T>(this SafeFileHandle src, STORAGE_PROTOCOL_NVME_DATA_TYPE type, out T result) where T : struct
         {
             var Query = new STORAGE_PROPERTY_QUERY
             {
                 PropertyId = STORAGE_PROPERTY_ID.StorageAdapterProtocolSpecificProperty,
                 QueryType = STORAGE_QUERY_TYPE.PropertyStandardQuery,
             };
-
+            var desc_len = Marshal.SizeOf<STORAGE_PROTOCOL_DATA_DESCRIPTOR>();
+            var data_len = Marshal.SizeOf<T>();
             var ProtocolSpecific = new STORAGE_PROTOCOL_SPECIFIC_DATA
             {
                 ProtocolType = STORAGE_PROTOCOL_TYPE.ProtocolTypeNvme,
-                DataType = (uint)STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage,
-                ProtocolDataRequestValue = 0,
-                ProtocolDataRequestSubValue = 2,
+                DataType = (uint)type,
+                ProtocolDataRequestValue = 2,
+                ProtocolDataRequestSubValue = 0,
                 ProtocolDataOffset = (uint)Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>(),
-                ProtocolDataLength = 4096,
+                ProtocolDataLength = (uint)data_len,
             };
-            var bufferLength = (int)Marshal.OffsetOf<STORAGE_PROPERTY_QUERY>("AdditionalParameters") + Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>() + 4096;
+            var bufferLength = (int)Marshal.OffsetOf<STORAGE_PROPERTY_QUERY>("AdditionalParameters") + Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>();
             Span<byte> span_in = stackalloc byte[bufferLength];
 
-            
             MemoryMarshal.Write(span_in, in Query);
 
-            // 計算 ProtocolSpecific 的起始位置
-            int offsetProtocolSpecific =
-                (int)Marshal.OffsetOf<STORAGE_PROPERTY_QUERY>("AdditionalParameters");
+            int offsetProtocolSpecific = (int)Marshal.OffsetOf<STORAGE_PROPERTY_QUERY>("AdditionalParameters");
 
-            // 寫入 ProtocolSpecific
-            MemoryMarshal.Write(span_in.Slice(offsetProtocolSpecific), in ProtocolSpecific);
-            var strb = new StringBuilder();
-            for(int i=0;i< span_in.Length; i++)
-            {
-                strb.AppendLine($"{i}:{span_in[i]} ");
-            }
-            File.WriteAllText("nvme.txt", strb.ToString());
-            var bufferbin = File.ReadAllBytes("buffer.bin");
-            span_in = bufferbin.AsSpan();
-            Span<byte> span_out_header = stackalloc byte[8192];
-            var hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_in, (uint)span_in.Length, out var reqsz, 0);
+            MemoryMarshal.Write(span_in[offsetProtocolSpecific..], in ProtocolSpecific);
+
+            Span<byte> span_out = stackalloc byte[data_len + desc_len];
+            var hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, 0);
+            var desc = MemoryMarshal.Read<STORAGE_PROTOCOL_DATA_DESCRIPTOR>(span_out);
+            result = MemoryMarshal.Read<T>(span_out[Marshal.SizeOf<STORAGE_PROTOCOL_DATA_DESCRIPTOR>()..]);
             var err = Marshal.GetLastWin32Error();
+        }
+
+
+
+        [InlineArray(16)]
+        public struct byte_16 { private byte _element0; }
+        [InlineArray(26)]
+        public struct byte_26 { private byte _element0; }
+        [InlineArray(296)]
+        public struct byte_296 { private byte _element0; }
+        struct NVME_HEALTH_INFO_LOG
+        {
+
+            //    union {
+
+            //struct {
+            //        UCHAR AvailableSpaceLow   : 1;                    // If set to 1, then the available spare space has fallen below the threshold.
+            //        UCHAR TemperatureThreshold : 1;                   // If set to 1, then a temperature is above an over temperature threshold or below an under temperature threshold.
+            //        UCHAR ReliabilityDegraded : 1;                    // If set to 1, then the device reliability has been degraded due to significant media related  errors or any internal error that degrades device reliability.
+            //        UCHAR ReadOnly            : 1;                    // If set to 1, then the media has been placed in read only mode
+            //        UCHAR VolatileMemoryBackupDeviceFailed    : 1;    // If set to 1, then the volatile memory backup device has failed. This field is only valid if the controller has a volatile memory backup solution.
+            //        UCHAR Reserved                            : 3;
+            //    }
+            //    DUMMYSTRUCTNAME;
+
+            //UCHAR AsUchar;
+
+            //}
+            //CriticalWarning;    // This field indicates critical warnings for the state of the  controller. Each bit corresponds to a critical warning type; multiple bits may be set.
+            byte CriticalWarning;
+            byte_2 Temperature;                 // Temperature: Contains the temperature of the overall device (controller and NVM included) in units of Kelvin. If the temperature exceeds the temperature threshold, refer to section 5.12.1.4, then an asynchronous event completion may occur
+            byte AvailableSpare;                 // Available Spare:  Contains a normalized percentage (0 to 100%) of the remaining spare capacity available
+            byte AvailableSpareThreshold;        // Available Spare Threshold:  When the Available Spare falls below the threshold indicated in this field, an asynchronous event  completion may occur. The value is indicated as a normalized percentage (0 to 100%).
+            byte PercentageUsed;                 // Percentage Used
+            byte_26 Reserved0;
+
+            byte_16 DataUnitRead;               // Data Units Read:  Contains the number of 512 byte data units the host has read from the controller; this value does not include metadata. This value is reported in thousands (i.e., a value of 1 corresponds to 1000 units of 512 bytes read)  and is rounded up.  When the LBA size is a value other than 512 bytes, the controller shall convert the amount of data read to 512 byte units. For the NVM command set, logical blocks read as part of Compare and Read operations shall be included in this value
+            byte_16 DataUnitWritten;            // Data Units Written: Contains the number of 512 byte data units the host has written to the controller; this value does not include metadata. This value is reported in thousands (i.e., a value of 1 corresponds to 1000 units of 512 bytes written)  and is rounded up.  When the LBA size is a value other than 512 bytes, the controller shall convert the amount of data written to 512 byte units. For the NVM command set, logical blocks written as part of Write operations shall be included in this value. Write Uncorrectable commands shall not impact this value.
+            byte_16 HostReadCommands;           // Host Read Commands:  Contains the number of read commands  completed by  the controller. For the NVM command set, this is the number of Compare and Read commands.
+            byte_16 HostWrittenCommands;        // Host Write Commands:  Contains the number of write commands  completed by  the controller. For the NVM command set, this is the number of Write commands.
+            byte_16 ControllerBusyTime;         // Controller Busy Time:  Contains the amount of time the controller is busy with I/O commands. The controller is busy when there is a command outstanding to an I/O Queue (specifically, a command was issued via an I/O Submission Queue Tail doorbell write and the corresponding  completion queue entry  has not been posted yet to the associated I/O Completion Queue). This value is reported in minutes.
+            byte_16 PowerCycle;                 // Power Cycles: Contains the number of power cycles.
+            byte_16 PowerOnHours;               // Power On Hours: Contains the number of power-on hours. This does not include time that the controller was powered and in a low power state condition.
+            byte_16 UnsafeShutdowns;            // Unsafe Shutdowns: Contains the number of unsafe shutdowns. This count is incremented when a shutdown notification (CC.SHN) is not received prior to loss of power.
+            byte_16 MediaErrors;                // Media Errors:  Contains the number of occurrences where the controller detected an unrecovered data integrity error. Errors such as uncorrectable ECC, CRC checksum failure, or LBA tag mismatch are included in this field.
+            byte_16 ErrorInfoLogEntryCount;     // Number of Error Information Log Entries:  Contains the number of Error Information log entries over the life of the controller
+            uint WarningCompositeTemperatureTime;     // Warning Composite Temperature Time: Contains the amount of time in minutes that the controller is operational and the Composite Temperature is greater than or equal to the Warning Composite Temperature Threshold (WCTEMP) field and less than the Critical Composite Temperature Threshold (CCTEMP) field in the Identify Controller data structure
+            uint CriticalCompositeTemperatureTime;    // Critical Composite Temperature Time: Contains the amount of time in minutes that the controller is operational and the Composite Temperature is greater the Critical Composite Temperature Threshold (CCTEMP) field in the Identify Controller data structure
+            ushort TemperatureSensor1;          // Contains the current temperature reported by temperature sensor 1.
+            ushort TemperatureSensor2;          // Contains the current temperature reported by temperature sensor 2.
+            ushort TemperatureSensor3;          // Contains the current temperature reported by temperature sensor 3.
+            ushort TemperatureSensor4;          // Contains the current temperature reported by temperature sensor 4.
+            ushort TemperatureSensor5;          // Contains the current temperature reported by temperature sensor 5.
+            ushort TemperatureSensor6;          // Contains the current temperature reported by temperature sensor 6.
+            ushort TemperatureSensor7;          // Contains the current temperature reported by temperature sensor 7.
+            ushort TemperatureSensor8;          // Contains the current temperature reported by temperature sensor 8.
+            byte_296 Reserved1;
 
         }
-        [StructLayout(LayoutKind.Sequential)]
-        struct STORAGE_QUERY_WITH_PROTOCOL_SPECIFIC
-        {
-            public STORAGE_PROPERTY_QUERY Query;
-            public STORAGE_PROTOCOL_SPECIFIC_DATA ProtocolSpecific;
-        }
+
 
         enum STORAGE_PROTOCOL_NVME_DATA_TYPE
         {

@@ -18,7 +18,7 @@ try
         handle.DESCRIPTOR();
         handle.DeviceTemperature();
         handle.AdapterTemperature();
-        handle.NVME_SMART();
+        handle.NVME_LogPage();
     }
 
     var batterys1 = QSoft.DevCon.BatteryReport.GetAll();

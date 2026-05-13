@@ -51,11 +51,11 @@ DWORD nvme_specific(HANDLE FileHandle, STORAGE_PROTOCOL_NVME_DATA_TYPE data_type
 		protocolData->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
 		protocolData->ProtocolDataLength = xfer_len;
 	}
-	unsigned char mem[8192] = { 0 };
-	::memcpy(mem, buffer, bufferLength);
-	auto ff = ::fopen("buffer.bin", "wb");
-	::fwrite(mem, 1, bufferLength, ff);
-	::fclose(ff);
+	//unsigned char mem[8192] = { 0 };
+	//::memcpy(mem, buffer, bufferLength);
+	//auto ff = ::fopen("buffer.bin", "wb");
+	//::fwrite(mem, 1, bufferLength, ff);
+	//::fclose(ff);
 	//
 	// Send request down.
 	//
@@ -99,7 +99,7 @@ DWORD nvme_specific(HANDLE FileHandle, STORAGE_PROTOCOL_NVME_DATA_TYPE data_type
 DWORD nvme_get_log_page(NVME_LOG_PAGES lid)
 {
 	HANDLE FileHandle = CreateFileA(
-		"\\\\?\\aa", GENERIC_WRITE | GENERIC_READ,
+		"\\\\?\\", GENERIC_WRITE | GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		NULL, OPEN_EXISTING, 0, NULL
 	);
@@ -116,9 +116,60 @@ DWORD nvme_get_log_page(NVME_LOG_PAGES lid)
 	return 0;
 }
 
+DWORD nvme_get_log_pageex(NVME_LOG_PAGES lid)
+{
+	HANDLE FileHandle = CreateFileA(
+		"\\\\?\\", GENERIC_WRITE | GENERIC_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL, OPEN_EXISTING, 0, NULL
+	);
+	CHAR pdata[NVME_MAX_LOG_SIZE];
+	if (nvme_specific(FileHandle, NVMeDataTypeLogPageEx, lid, 0, pdata, NVME_MAX_LOG_SIZE, NULL)) {
+		return 1;
+	}
+	switch (lid)
+	{
+	case NVME_LOG_PAGE_HEALTH_INFO:
+		PNVME_HEALTH_INFO_LOG smartInfo = (PNVME_HEALTH_INFO_LOG)pdata;
+		printf("SMART/Health Info - Temperature %d.\n", ((ULONG)smartInfo->Temperature[1] << 8 | smartInfo->Temperature[0]) - 273);
+	}
+	NVME_FIRMWARE_SLOT_INFO_LOG
+	return 0;
+}
+
+DWORD nvme_identify()
+{
+	HANDLE FileHandle = CreateFileA(
+		"\\\\.\\physicaldrive0", GENERIC_WRITE | GENERIC_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL, OPEN_EXISTING, 0, NULL
+	);
+	CHAR pdata[NVME_MAX_LOG_SIZE];
+	if (nvme_specific(FileHandle, NVMeDataTypeIdentify, NVME_IDENTIFY_CNS_CONTROLLER, 0, pdata, NVME_MAX_LOG_SIZE, NULL)) {
+		return 1;
+	}
+
+	PNVME_IDENTIFY_CONTROLLER_DATA identifyControllerData = (PNVME_IDENTIFY_CONTROLLER_DATA)pdata;
+
+	printf("[IDENTIFY] vid         : 0x%02X", identifyControllerData->VID);
+	printf("[IDENTIFY] nn          : 0x%02X", identifyControllerData->NN);
+
+	unsigned char str[41];
+	memcpy(str, identifyControllerData->SN, 20);
+	str[20] = '\0';
+	printf("[IDENTIFY] serial_num  : %s\r\n", str);
+	memcpy(str, identifyControllerData->MN, 40);
+	str[40] = '\0';
+	printf("[IDENTIFY] model_num   : %s\r\n", str);
+	memcpy(str, identifyControllerData->FR, 8);
+	str[8] = '\0';
+	printf("[IDENTIFY] firmware_rev: %s\r\n", str);
+	return 0;
+}
+
 int main()
 {
-	nvme_get_log_page(NVME_LOG_PAGE_HEALTH_INFO);
+	nvme_get_log_pageex(NVME_LOG_PAGE_HEALTH_INFO);
 	//\\?\scsi#disk&ven_nvme&prod_sk_hynix_pc711_h#5&6091cf4&0&000000#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}
     std::cout << "Hello World!\n";
 }
