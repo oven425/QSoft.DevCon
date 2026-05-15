@@ -99,7 +99,7 @@ DWORD nvme_specific(HANDLE FileHandle, STORAGE_PROTOCOL_NVME_DATA_TYPE data_type
 DWORD nvme_get_log_page(NVME_LOG_PAGES lid)
 {
 	HANDLE FileHandle = CreateFileA(
-		"\\\\?\\", GENERIC_WRITE | GENERIC_READ,
+		"\\\\?\\scsi#disk&ven_nvme&prod_sk_hynix_pc711_h#5&6091cf4&0&000000#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}", GENERIC_WRITE | GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		NULL, OPEN_EXISTING, 0, NULL
 	);
@@ -107,35 +107,31 @@ DWORD nvme_get_log_page(NVME_LOG_PAGES lid)
 	if (nvme_specific(FileHandle, NVMeDataTypeLogPage, lid, 0, pdata, NVME_MAX_LOG_SIZE, NULL)) {
 		return 1;
 	}
+	
 	switch (lid)
 	{
+	case NVME_LOG_PAGE_ERROR_INFO:
+	{
+		PNVME_ERROR_INFO_LOG errorInfo = (PNVME_ERROR_INFO_LOG)pdata;
+		printf("Error Info - Error Count %I64d.\n", errorInfo->ErrorCount);
+	}
+	break;
+	case NVME_LOG_PAGE_FIRMWARE_SLOT_INFO:
+	{
+		PNVME_FIRMWARE_SLOT_INFO_LOG firmwareSlotInfo = (PNVME_FIRMWARE_SLOT_INFO_LOG)pdata;
+		printf("Firmware Slot Info - Active Slot %d.\n", firmwareSlotInfo->AFI.ActiveSlot);
+	}
+	break;
 	case NVME_LOG_PAGE_HEALTH_INFO:
+	{
 		PNVME_HEALTH_INFO_LOG smartInfo = (PNVME_HEALTH_INFO_LOG)pdata;
 		printf("SMART/Health Info - Temperature %d.\n", ((ULONG)smartInfo->Temperature[1] << 8 | smartInfo->Temperature[0]) - 273);
+	}
+	break;
 	}
 	return 0;
 }
 
-DWORD nvme_get_log_pageex(NVME_LOG_PAGES lid)
-{
-	HANDLE FileHandle = CreateFileA(
-		"\\\\?\\", GENERIC_WRITE | GENERIC_READ,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		NULL, OPEN_EXISTING, 0, NULL
-	);
-	CHAR pdata[NVME_MAX_LOG_SIZE];
-	if (nvme_specific(FileHandle, NVMeDataTypeLogPageEx, lid, 0, pdata, NVME_MAX_LOG_SIZE, NULL)) {
-		return 1;
-	}
-	switch (lid)
-	{
-	case NVME_LOG_PAGE_HEALTH_INFO:
-		PNVME_HEALTH_INFO_LOG smartInfo = (PNVME_HEALTH_INFO_LOG)pdata;
-		printf("SMART/Health Info - Temperature %d.\n", ((ULONG)smartInfo->Temperature[1] << 8 | smartInfo->Temperature[0]) - 273);
-	}
-	NVME_FIRMWARE_SLOT_INFO_LOG
-	return 0;
-}
 
 DWORD nvme_identify()
 {
@@ -169,7 +165,7 @@ DWORD nvme_identify()
 
 int main()
 {
-	nvme_get_log_pageex(NVME_LOG_PAGE_HEALTH_INFO);
+	nvme_get_log_page(NVME_LOG_PAGE_ERROR_INFO);
 	//\\?\scsi#disk&ven_nvme&prod_sk_hynix_pc711_h#5&6091cf4&0&000000#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}
     std::cout << "Hello World!\n";
 }

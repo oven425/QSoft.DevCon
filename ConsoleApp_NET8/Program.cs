@@ -9,38 +9,41 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
-    var guid = "Volume".GetClassGuids().FirstOrDefault();
-    var disks = QSoft.DevCon.DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface();
-    foreach(var oo in disks)
+    //var guid = "Volume".GetClassGuids().FirstOrDefault();
+    //var disks = QSoft.DevCon.DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface();
+    //foreach(var oo in disks)
+    //{
+    //    System.Diagnostics.Trace.WriteLine(oo.As().GetFriendName());
+    //    using var handle = oo.DevicePath().OpenHandle();
+    //    handle.DESCRIPTOR();
+    //    handle.DeviceTemperature();
+    //    handle.AdapterTemperature();
+    //    handle.NVME_LogPage();
+    //}
+
+
+    var batterys = "Battery".GetClassGuids().FirstOrDefault()
+        .DevicesFromInterface().Select(x=>x.DevicePath());
+    foreach(var oo in batterys)
     {
-        System.Diagnostics.Trace.WriteLine(oo.As().GetFriendName());
-        using var handle = oo.DevicePath().OpenHandle();
-        handle.DESCRIPTOR();
-        handle.DeviceTemperature();
-        handle.AdapterTemperature();
-        handle.NVME_LogPage();
+        using var handle = oo.OpenHandle();
+        var battery = handle.BatteryTag();
+        battery.BatteryGranularityInformation();
     }
 
     var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
 
-    while(true)
-    {
-        await Task.Delay(1000);
-        foreach (var oo in batterys1)
-        {
-            oo.Update();
-            System.Diagnostics.Trace.WriteLine(oo);
-        }
-    }
-    
-
-    //QSoft.DevCon.DevConExtension.GetVolumeName().ToArray();
-    //var guid = "Battery".GetClassGuids().FirstOrDefault();
-    //var batterys = guid.DevicesFromInterface().Select(x => new
+    //while(true)
     //{
-    //    devpath = x.DevicePath(),
-    //    desc = x.As().DeviceDesc(),
-    //});
+    //    await Task.Delay(1000);
+    //    foreach (var oo in batterys1)
+    //    {
+    //        oo.Update();
+    //        System.Diagnostics.Trace.WriteLine(oo);
+    //    }
+    //}
+
+
 
 
     //foreach (var oo in batterys)

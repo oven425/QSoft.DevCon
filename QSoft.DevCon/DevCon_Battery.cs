@@ -13,8 +13,10 @@ public static partial class DevConExtension
     public static (SafeFileHandle handle, uint tag) BatteryTag(this SafeFileHandle src)
     {
 #if NET8_0_OR_GREATER
-        Span<byte> span_in = stackalloc byte[sizeof(uint)];
+        uint wait = 0;
+        Span<byte> span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref wait, 1));
         Span<byte> span_out = stackalloc byte[sizeof(uint)];
+        span_out.Clear();
         var hr = DeviceIoControl(src, IOCTL_BATTERY_QUERY_TAG, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
         return (src, MemoryMarshal.Read<uint>(span_out));
 
@@ -186,18 +188,23 @@ public static partial class DevConExtension
             BatteryTag = src.batteryTag,
             InformationLevel = BatteryInformationLevel.GranularityInformation
         };
+        var ss = Marshal.SizeOf<BATTERY_REPORTING_SCALE>();
 #if NET8_0_OR_GREATER
         var span_in = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref info, 1));
+        var hr1 = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, [], 0, out var reqsz, IntPtr.Zero);
         Span<byte> span_out = MemoryMarshal.AsBytes(stackalloc BATTERY_REPORTING_SCALE[5]);
-        var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-        var scale = MemoryMarshal.Cast<byte, BATTERY_REPORTING_SCALE>(span_out[..(int)reqsz]);
+        var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, IntPtr.Zero);
+        if (reqsz <= 0) return [];
+        var count = reqsz / ss;
+        var realsize = Math.Min( count * ss, reqsz);
+        var scale = MemoryMarshal.Cast<byte, BATTERY_REPORTING_SCALE>(span_out[..(int)realsize]);
         return scale.ToArray();
 #else
         using var mem_in = new IntPtrMem<BATTERY_QUERY_INFORMATION>(1);
         using var mem_out = new IntPtrMem<BATTERY_REPORTING_SCALE>(5);
         Marshal.StructureToPtr(info, mem_in.Pointer, false);
         var hr = DeviceIoControl(src.handle, IOCTL_BATTERY_QUERY_INFORMATION, mem_in.Pointer, (uint)mem_in.Size, mem_out.Pointer, (uint)mem_out.Size, out var reqsz, IntPtr.Zero);
-        var ss = Marshal.SizeOf<BATTERY_REPORTING_SCALE>();
+        if (reqsz <= 0) return [];
         var count = reqsz / ss;
         var scales = new BATTERY_REPORTING_SCALE[count];
         for (int i = 0; i < count; i++)

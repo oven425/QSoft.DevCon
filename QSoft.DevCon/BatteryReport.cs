@@ -196,7 +196,6 @@ namespace QSoft.DevCon
             var batterys = guid.DevicesFromInterface().Select(x => new
             {
                 devpath = x.DevicePath(),
-                desc = x.As().DeviceDesc(),
             });
             foreach (var path in batterys)
             {
