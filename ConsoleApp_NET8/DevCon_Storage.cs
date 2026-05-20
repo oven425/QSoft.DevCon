@@ -30,11 +30,20 @@ namespace ConsoleApp_NET8
             span_out = stackalloc byte[(int)header.Size];
             hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, 0);
             var desc = MemoryMarshal.Read<STORAGE_DEVICE_DESCRIPTOR>(span_out);
-            var offset = span_out.Slice((int)desc.SerialNumberOffset);
-            var index = offset.IndexOf((byte)0);
-            offset = offset[.. index];
-            var aaa = System.Text.Encoding.ASCII.GetString(offset);
-            
+
+            var serilanumber = Span2String(span_out, (int)desc.SerialNumberOffset);
+             var vendorid = Span2String(span_out, (int)desc.VendorIdOffset);
+             var productid = Span2String(span_out, (int)desc.ProductIdOffset);
+             var revision = Span2String(span_out, (int)desc.ProductRevisionOffset);
+        }
+
+
+        static string Span2String(Span<byte> src, int offset)
+        {
+            var buffer = src.Slice(offset);
+            var index = buffer.IndexOf((byte)0);
+            buffer = buffer[..index];
+            return System.Text.Encoding.ASCII.GetString(buffer);
         }
 
         public static void DeviceTemperature(this SafeFileHandle src)
@@ -97,7 +106,7 @@ namespace ConsoleApp_NET8
                 ProtocolType = STORAGE_PROTOCOL_TYPE.ProtocolTypeNvme,
                 DataType = (uint)type,
                 ProtocolDataRequestValue = 2,
-                ProtocolDataRequestSubValue = 0,
+                ProtocolDataRequestSubValue = 0xFFFFFFFF,
                 ProtocolDataOffset = (uint)Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>(),
                 ProtocolDataLength = (uint)data_len,
             };

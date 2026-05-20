@@ -9,17 +9,17 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
-    //var guid = "Volume".GetClassGuids().FirstOrDefault();
-    //var disks = QSoft.DevCon.DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface();
-    //foreach(var oo in disks)
-    //{
-    //    System.Diagnostics.Trace.WriteLine(oo.As().GetFriendName());
-    //    using var handle = oo.DevicePath().OpenHandle();
-    //    handle.DESCRIPTOR();
-    //    handle.DeviceTemperature();
-    //    handle.AdapterTemperature();
-    //    handle.NVME_LogPage();
-    //}
+    var guid = "Volume".GetClassGuids().FirstOrDefault();
+    var disks = QSoft.DevCon.DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface();
+    foreach (var oo in disks)
+    {
+        System.Diagnostics.Trace.WriteLine(oo.As().GetFriendName());
+        using var handle = oo.DevicePath().OpenHandle();
+        handle.DESCRIPTOR();
+        handle.DeviceTemperature();
+        handle.AdapterTemperature();
+        handle.NVME_LogPage();
+    }
 
 
     var batterys = "Battery".GetClassGuids().FirstOrDefault()
