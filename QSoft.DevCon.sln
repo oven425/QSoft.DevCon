@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDevCon", "TestDevCon\Te
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleApplication_NVME", "ConsoleApplication_NVME\ConsoleApplication_NVME.vcxproj", "{534D1AEA-FAEA-4A1C-917C-410FEF458A71}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleApplication_SMBIOS", "ConsoleApplication_SMBIOS\ConsoleApplication_SMBIOS.vcxproj", "{DAC43945-BB88-476D-BA2B-BCFB0E04A948}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{534D1AEA-FAEA-4A1C-917C-410FEF458A71}.Release|x64.Build.0 = Release|x64
 		{534D1AEA-FAEA-4A1C-917C-410FEF458A71}.Release|x86.ActiveCfg = Release|Win32
 		{534D1AEA-FAEA-4A1C-917C-410FEF458A71}.Release|x86.Build.0 = Release|Win32
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Debug|Any CPU.Build.0 = Debug|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Debug|x64.ActiveCfg = Debug|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Debug|x64.Build.0 = Debug|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Debug|x86.ActiveCfg = Debug|Win32
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Debug|x86.Build.0 = Debug|Win32
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Release|Any CPU.ActiveCfg = Release|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Release|Any CPU.Build.0 = Release|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Release|x64.ActiveCfg = Release|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Release|x64.Build.0 = Release|x64
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Release|x86.ActiveCfg = Release|Win32
+		{DAC43945-BB88-476D-BA2B-BCFB0E04A948}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
