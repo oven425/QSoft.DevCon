@@ -8,6 +8,11 @@
 int main()
 {
     DWORD signature = 'RSMB'; // 也可以寫成 0x52534D42 ('B' 'M' 'S' 'R')
+    DWORD size = EnumSystemFirmwareTables(signature, NULL, 0);
+    std::vector<DWORD> tableIds(size / sizeof(DWORD));
+    EnumSystemFirmwareTables(signature, tableIds.data(), size);
+
+
     UINT bufSize = GetSystemFirmwareTable(signature, 0, NULL, 0);
 
     if (bufSize == 0) {
@@ -21,7 +26,7 @@ int main()
         std::cerr << "複製 SMBIOS 資料失敗，錯誤代碼: " << GetLastError() << std::endl;
         return 1;
     }
-
+#pragma pack(push, 1)
     struct RawSMBIOSData
     {
         BYTE    Used20CallingMethod;
@@ -29,13 +34,37 @@ int main()
         BYTE    SMBIOSMinorVersion;
         BYTE    DmiRevision;
         DWORD   Length;
+        BYTE SMBIOSTableData[1];
     };
+
+    struct SMBIOSHeader {
+        BYTE Type;
+        BYTE Length;
+        WORD Handle;
+    };
+#pragma pack(pop)
 	auto rawbios = (RawSMBIOSData*)buffer.data();
-	for (auto i = buffer.begin()+8; i != buffer.end(); ++i)
+
+    int allcount = 0;
+    for (auto i = 8; i < buffer.size(); i++)
     {
-        auto type = *i;
-		auto len = *(i + 1);
-        i = i + len-2;
+        allcount = allcount + 1;
+        auto type = buffer[i];
+       
+        auto len = buffer[i+1];
+        printf("Type: %d, Length: %d\n", type, len);
+        i = i + len;
+        for (int j = i; j < buffer.size(); j++)
+        {
+            auto s1 = buffer[j];
+            auto s2 = buffer[j + 1];
+            if (s1 == 0 && s2 == 0)
+            {
+                i = j + 1;
+                break;
+            }
+        }
+
     }
      printf("\n");
      return 0;
