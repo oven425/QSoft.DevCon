@@ -9,6 +9,7 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
+    DevCon_SMBIOS.RSMB();
     var guid = "Volume".GetClassGuids().FirstOrDefault();
     var disks = QSoft.DevCon.DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface();
     foreach (var oo in disks)
