@@ -39,13 +39,14 @@ DWORD nvme_specific(HANDLE FileHandle, STORAGE_PROTOCOL_NVME_DATA_TYPE data_type
 	protocolDataDescr = (PSTORAGE_PROTOCOL_DATA_DESCRIPTOR)buffer;
 	protocolData = (PSTORAGE_PROTOCOL_SPECIFIC_DATA)query->AdditionalParameters;
 
-	query->PropertyId = StorageAdapterProtocolSpecificProperty;
+	query->PropertyId = StorageDeviceProtocolSpecificProperty;
 	query->QueryType = PropertyStandardQuery;
 
 	protocolData->ProtocolType = ProtocolTypeNvme;
 	protocolData->DataType = data_type;
 	protocolData->ProtocolDataRequestValue = req_val;
 	protocolData->ProtocolDataRequestSubValue = req_sub_val;
+	protocolData->ProtocolDataRequestSubValue4 = 0x00000001;
 	if (xfer_len)
 	{
 		protocolData->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
@@ -99,7 +100,7 @@ DWORD nvme_specific(HANDLE FileHandle, STORAGE_PROTOCOL_NVME_DATA_TYPE data_type
 DWORD nvme_get_log_page(NVME_LOG_PAGES lid)
 {
 	HANDLE FileHandle = CreateFileA(
-		"\\\\?\\scsi#disk&ven_nvme&prod_sk_hynix_pc711_h#5&6091cf4&0&000000#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}", GENERIC_WRITE | GENERIC_READ,
+		"\\\\.\\physicaldrive0", GENERIC_WRITE | GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		NULL, OPEN_EXISTING, 0, NULL
 	);
@@ -110,6 +111,11 @@ DWORD nvme_get_log_page(NVME_LOG_PAGES lid)
 	
 	switch (lid)
 	{
+	case NVME_LOG_PAGE_SUPPORTED_LOG_PAGES:
+	{
+
+	}
+	break;
 	case NVME_LOG_PAGE_ERROR_INFO:
 	{
 		PNVME_ERROR_INFO_LOG errorInfo = (PNVME_ERROR_INFO_LOG)pdata;
@@ -165,7 +171,7 @@ DWORD nvme_identify()
 
 int main()
 {
-	nvme_get_log_page(NVME_LOG_PAGE_ERROR_INFO);
+	nvme_get_log_page(NVME_LOG_PAGE_SUPPORTED_LOG_PAGES);
 	//\\?\scsi#disk&ven_nvme&prod_sk_hynix_pc711_h#5&6091cf4&0&000000#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}
     std::cout << "Hello World!\n";
 }

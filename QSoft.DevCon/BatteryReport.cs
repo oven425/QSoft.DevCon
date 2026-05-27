@@ -4,25 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace QSoft.DevCon
+namespace QSoft.DevCon.Battery
 {
     public class BatteryReport
     {
-        // ── 靜態資料 (對應 WMI BatteryStaticData) ──
         public string DeviceName { get; private set; } = "";
         public string ManufactureName { get; private set; } = "";
         public string SerialNumber { get; private set; } = "";
         public string UniqueID { get; private set; } = "";
         public string Chemistry { get; private set; } = "";
 
-        // ── 設計規格 (對應 BATTERY_INFORMATION) ──
-        /// <summary>原廠設計容量 (mWh)。對應 WMI BatteryStaticData.DesignedCapacity</summary>
         public uint DesignedCapacity { get; private set; }
-
-        /// <summary>目前完全充電容量 (mWh)。對應 WMI BatteryFullChargedCapacity.FullChargedCapacity</summary>
         public uint FullChargedCapacity { get; private set; }
-
-        /// <summary>充放電循環次數。對應 WMI BatteryCycleCount.CycleCount</summary>
         public uint CycleCount { get; private set; }
 
         public uint DefaultAlert1 { get; private set; }
@@ -30,30 +23,21 @@ namespace QSoft.DevCon
         public uint CriticalBias { get; private set; }
         public BatteryCapabilities Capabilities { get; private set; }
 
-        /// <summary>0 = 一次性電池, 1 = 可充電電池</summary>
         public byte Technology { get; private set; }
 
-        // ── 即時狀態 (對應 WMI BatteryStatus) ──
-        /// <summary>目前電壓 (mV)。對應 WMI BatteryStatus.Voltage</summary>
         public uint VoltageMillivolts { get; private set; }
 
-        /// <summary>充放電速率 (mW)。正值=充電，負值=放電。對應 WMI BatteryStatus.DischargeRate</summary>
         public int Rate { get; private set; }
 
-        /// <summary>目前剩餘容量 (mWh)。對應 WMI BatteryStatus.RemainingCapacity</summary>
         public uint RemainingCapacity { get; private set; }
 
-        /// <summary>電源狀態旗標</summary>
         public PowerState PowerState { get; private set; }
 
-        // ── 估計時間與溫度 ──
-        /// <summary>估計剩餘時間 (秒)。0xFFFFFFFF 表示無法估計（已接上 AC）。對應 WMI BatteryRuntime.EstimatedRuntime</summary>
         public uint EstimatedTimeSeconds { get; private set; }
 
         /// <summary>溫度 (十分之一 Kelvin)</summary>
         public uint TemperatureTenthKelvin { get; private set; }
 
-        // ── 粒度資訊 ──
         public BATTERY_REPORTING_SCALE[] GranularityInformation { get; private set; } = [];
 
         // ════════════════════════════════════════════════════════
@@ -111,10 +95,6 @@ namespace QSoft.DevCon
         private string _devicePath = "";
 
         private BatteryReport() { }
-
-        /// <summary>
-        /// 從裝置路徑建立報表。Handle 由內部管理，呼叫端無需負責生命週期。
-        /// </summary>
         public static BatteryReport FromDevicePath(string devicePath)
         {
             using var handle = devicePath.OpenHandle();
@@ -126,10 +106,6 @@ namespace QSoft.DevCon
             return report;
         }
 
-        /// <summary>
-        /// 從已開啟的電池裝置 Handle 取得完整報表。
-        /// <para>注意：Handle 由呼叫端負責管理，Report 不會持有 Handle。</para>
-        /// </summary>
         static BatteryReport FromHandle(SafeFileHandle handle)
         {
             var (h, tag) = handle.BatteryTag();
@@ -166,13 +142,6 @@ namespace QSoft.DevCon
             };
         }
 
-        /// <summary>
-        /// 更新動態資料。Handle 由內部自行開啟與關閉，呼叫端無需管理。
-        /// </summary>
-        /// <exception cref="InvalidOperationException">
-        /// 透過 <see cref="FromHandle"/> 建立的報表沒有裝置路徑，無法自動重新開啟 Handle。
-        /// 請改用 <see cref="Update(SafeFileHandle)"/> 或改以 <see cref="FromDevicePath"/> 建立報表。
-        /// </exception>
         public void Update()
         {
             if (string.IsNullOrEmpty(_devicePath))
@@ -211,10 +180,6 @@ namespace QSoft.DevCon
             return [.. list];
         }
 
-        // ════════════════════════════════════════════════════════
-        //  格式化輸出（類似網頁的 PowerShell 輸出）
-        // ════════════════════════════════════════════════════════
-
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -245,27 +210,19 @@ namespace QSoft.DevCon
             return sb.ToString();
         }
 
-        // ════════════════════════════════════════════════════════
-        //  輔助方法
-        // ════════════════════════════════════════════════════════
-
-        /// <summary>實際執行動態資料更新的核心邏輯。</summary>
         private void UpdateCore(SafeFileHandle handle)
         {
             var src = handle.BatteryTag();
 
-            // ── 即時狀態 ──
             var status = src.BatteryStatus();
             VoltageMillivolts = status.Voltage;
             Rate = status.Rate;
             RemainingCapacity = status.Capacity;
             PowerState = status.PowerState;
 
-            // ── 估計時間與溫度 ──
             EstimatedTimeSeconds = src.BatteryEstimatedTime();
             TemperatureTenthKelvin = src.BatteryTemperature();
 
-            // ── 半動態（充電後可能變動）──
             var info = src.BatteryInfo();
             FullChargedCapacity = info.FullChargedCapacity;
             CycleCount = info.CycleCount;

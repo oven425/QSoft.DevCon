@@ -87,16 +87,21 @@ namespace ConsoleApp_NET8
         }
 
         //https://zhung.com.tw/article/%E5%88%A9%E7%94%A8windows%E5%86%85%E5%BB%BA%E7%9A%84driver%E9%80%8F%E9%81%8Eioctl%E7%99%BC%E9%80%81nvme-command/
-        public static void NVME_LogPage(this SafeFileHandle src)
+        public static void NVME_LogPage(this SafeFileHandle src, NVME_LOG_PAGES page)
         {
-            NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, out var log);
+            NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, page, out var log);
         }
 
-        static void NVME_DATA<T>(this SafeFileHandle src, STORAGE_PROTOCOL_NVME_DATA_TYPE type, out T result) where T : struct
+        public static void NVME_SupportLogPage(this SafeFileHandle src, NVME_LOG_PAGES page)
+        {
+            NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_SUPPORTED_LOG_PAGES, out var log);
+        }
+
+        static void NVME_DATA<T>(this SafeFileHandle src, STORAGE_PROTOCOL_NVME_DATA_TYPE type, NVME_LOG_PAGES page, out T result) where T : struct
         {
             var Query = new STORAGE_PROPERTY_QUERY
             {
-                PropertyId = STORAGE_PROPERTY_ID.StorageAdapterProtocolSpecificProperty,
+                PropertyId = STORAGE_PROPERTY_ID.StorageDeviceProtocolSpecificProperty,
                 QueryType = STORAGE_QUERY_TYPE.PropertyStandardQuery,
             };
             var desc_len = Marshal.SizeOf<STORAGE_PROTOCOL_DATA_DESCRIPTOR>();
@@ -105,8 +110,8 @@ namespace ConsoleApp_NET8
             {
                 ProtocolType = STORAGE_PROTOCOL_TYPE.ProtocolTypeNvme,
                 DataType = (uint)type,
-                ProtocolDataRequestValue = 2,
-                ProtocolDataRequestSubValue = 0xFFFFFFFF,
+                ProtocolDataRequestValue = (uint)page,
+                ProtocolDataRequestSubValue =0,
                 ProtocolDataOffset = (uint)Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>(),
                 ProtocolDataLength = (uint)data_len,
             };
@@ -126,7 +131,37 @@ namespace ConsoleApp_NET8
             var err = Marshal.GetLastWin32Error();
         }
 
+        public enum NVME_LOG_PAGES
+        {
+            NVME_LOG_PAGE_SUPPORTED_LOG_PAGES = 0x00,
+            NVME_LOG_PAGE_ERROR_INFO = 0x01,
+            NVME_LOG_PAGE_HEALTH_INFO = 0x02,
+            NVME_LOG_PAGE_FIRMWARE_SLOT_INFO = 0x03,
+            NVME_LOG_PAGE_CHANGED_NAMESPACE_LIST = 0x04,
+            NVME_LOG_PAGE_COMMAND_EFFECTS = 0x05,
+            NVME_LOG_PAGE_DEVICE_SELF_TEST = 0x06,
+            NVME_LOG_PAGE_TELEMETRY_HOST_INITIATED = 0x07,
+            NVME_LOG_PAGE_TELEMETRY_CTLR_INITIATED = 0x08,
+            NVME_LOG_PAGE_ENDURANCE_GROUP_INFORMATION = 0x09,
+            NVME_LOG_PAGE_PREDICTABLE_LATENCY_NVM_SET = 0x0A,
+            NVME_LOG_PAGE_PREDICTABLE_LATENCY_EVENT_AGGREGATE = 0x0B,
+            NVME_LOG_PAGE_ASYMMETRIC_NAMESPACE_ACCESS = 0x0C,
+            NVME_LOG_PAGE_PERSISTENT_EVENT_LOG = 0x0D,
+            NVME_LOG_PAGE_LBA_STATUS_INFORMATION = 0x0E,     // NVM Express NVM Command Set
+            NVME_LOG_PAGE_ENDURANCE_GROUP_EVENT_AGGREGATE = 0x0F,
+            NVME_LOG_PAGE_MEDIA_UNIT_STATUS = 0x10,
+            NVME_LOG_PAGE_SUPPORTED_CAPACITY_CONFIGURATION_LIST = 0X11,
+            NVME_LOG_PAGE_FEATURE_IDENTIFIERS_SUPPORTED_AND_EFFECTS = 0x12,
+            NVME_LOG_PAGE_NVME_MI_COMMANDS_SUPPORTED_AND_EFFECTS = 0x13,
+            NVME_LOG_PAGE_COMMAND_AND_FEATURE_LOCKDOWN = 0x14,
+            NVME_LOG_PAGE_BOOT_PARTITON = 0x15,
+            NVME_LOG_PAGE_ROTATIONAL_MEDIA_INFORMATION = 0x16,
+            NVME_LOG_PAGE_DISCOVERY = 0x70,
+            NVME_LOG_PAGE_RESERVATION_NOTIFICATION = 0x80,
+            NVME_LOG_PAGE_SANITIZE_STATUS = 0x81,
+            NVME_LOG_PAGE_CHANGED_ZONE_LIST = 0xBF,     // NVM Express Zoned Namespace Command Set
 
+        };
 
         [InlineArray(16)]
         public struct byte_16 { private byte _element0; }

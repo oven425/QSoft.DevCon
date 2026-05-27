@@ -19,7 +19,7 @@ try
         handle.DESCRIPTOR();
         handle.DeviceTemperature();
         handle.AdapterTemperature();
-        handle.NVME_LogPage();
+        handle.NVME_LogPage(DevCon_Disk.NVME_LOG_PAGES.NVME_LOG_PAGE_HEALTH_INFO);
     }
 
 
@@ -32,7 +32,7 @@ try
         battery.BatteryGranularityInformation();
     }
 
-    var batterys1 = QSoft.DevCon.BatteryReport.GetAll();
+    var batterys1 = QSoft.DevCon.Battery.BatteryReport.GetAll();
 
     //while(true)
     //{

@@ -239,23 +239,6 @@ public static partial class DevConExtension
 
         return battery_manufacture_date;
     }
-
-    public static void GetBatteryInfo(this SafeFileHandle src)
-    {
-        var battery = src.BatteryTag();
-        var batterystatus = battery.BatteryStatus();
-        var batterinfo = battery.BatteryInfo();
-        var batterysn = battery.BatterySerialNumber();
-        var batterydevicename = battery.BatteryDeviceName();
-        var batterymn = battery.BatteryManufactureName();
-        var batteryid = battery.BatteryUniqueID();
-        var batteryest = battery.BatteryEstimatedTime();
-        var batterytemp = battery.BatteryTemperature();
-        var batterygray = battery.BatteryGranularityInformation();
-        var battermd = battery.BatteryManufactureDate();
-    }
-
-
         
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct BATTERY_QUERY_INFORMATION
@@ -283,13 +266,14 @@ public static partial class DevConExtension
         
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct BATTERY_REPORTING_SCALE
 {
     public uint Granularity;
     public uint Capacity;
 };
 
-
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct BATTERY_MANUFACTURE_DATE
 {
     public byte Day;
