@@ -4,6 +4,7 @@
 #include <iostream>
 #include <windows.h>
 #include <vector>
+#include <string>
 #include <map>
 #include <span>
 typedef unsigned __int64 QWORD;
@@ -850,6 +851,21 @@ struct Type127_EndOfTable_v2_0 {
     // 無數據字段，只是標記結束
 };
 
+std::vector<std::string> ParseStrings(const std::vector<std::span<BYTE>>& data)
+{
+    std::vector<std::string> datas;
+
+    return datas;
+}
+
+void Type0(const std::vector<std::span<BYTE>>& data)
+{
+    switch (data.size())
+    {
+
+    }
+}
+
 int main()
 {
     DWORD signature = 'RSMB'; // 也可以寫成 0x52534D42 ('B' 'M' 'S' 'R')
@@ -891,8 +907,7 @@ int main()
 	auto rawbios = (RawSMBIOSData*)buffer.data();
     auto span_raw = std::span(buffer).subspan(8);
     
-    //std::map<byte, int> types;
-    std::map<byte, std::vector<std::span<BYTE>>> types1;
+    std::map<byte, std::vector<std::span<BYTE>>> types;
     int allcount = 0;
     int bb = 0;
     for (auto i = 0; i < span_raw.size(); i++)
@@ -900,7 +915,6 @@ int main()
         bb = i;
         allcount = allcount + 1;
         auto type = span_raw[i];
-        //types[type]++;
         auto len = span_raw[i+1];
         printf("Type: %d, Length: %d\n", type, len);
         i = i + len;
@@ -912,7 +926,7 @@ int main()
             if (s1 == 0 && s2 == 0)
             {
                 auto aa = span_raw.subspan(bb, j-bb);
-                types1[type].push_back(aa);
+                types[type].push_back(aa);
 
                 i = j + 1;
                 break;
@@ -920,9 +934,22 @@ int main()
         }
 
     }
-    for (auto i = types1.begin(); i != types1.end(); i++)
+    for (auto i = types.begin(); i != types.end(); i++)
     {
         printf("Type: %d, count: %I64d\n", i->first, i->second.size());
+        for (auto j = 0; j < i->second.size(); j++)
+        {
+            switch (i->first)
+            {
+            case 0:
+            {
+				Type0(i->second);
+            }
+            break;
+            }
+        }
+
+        
     }
      printf("\n");
      return 0;

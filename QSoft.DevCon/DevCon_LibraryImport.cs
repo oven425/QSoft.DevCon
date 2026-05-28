@@ -11,7 +11,7 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtension
     {
-        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDevsW")]
+        [LibraryImport("setupapi.dll", EntryPoint = "SetupDiGetClassDevsW", SetLastError = true)]
         internal static partial IntPtr SetupDiGetClassDevs(in Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
         [LibraryImport("setupapi.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

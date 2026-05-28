@@ -171,8 +171,7 @@ DWORD nvme_identify()
 
 int main()
 {
-	nvme_get_log_page(NVME_LOG_PAGE_SUPPORTED_LOG_PAGES);
-	//\\?\scsi#disk&ven_nvme&prod_sk_hynix_pc711_h#5&6091cf4&0&000000#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}
+	nvme_get_log_page(NVME_LOG_PAGE_FIRMWARE_SLOT_INFO);
     std::cout << "Hello World!\n";
 }
 

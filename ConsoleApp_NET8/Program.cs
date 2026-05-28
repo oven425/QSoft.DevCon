@@ -9,7 +9,10 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
-    DevCon_SMBIOS.RSMB();
+    var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
+    var ddd = ggu.ClassDesc();
+
+    //DevCon_SMBIOS.RSMB();
     var guid = "Volume".GetClassGuids().FirstOrDefault();
     var disks = QSoft.DevCon.DevConExtension.GUID_DEVINTERFACE_DISK.DevicesFromInterface();
     foreach (var oo in disks)

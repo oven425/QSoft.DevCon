@@ -311,9 +311,9 @@ namespace QSoft.DevCon
 #if NET8_0_OR_GREATER
             SetupDiGetClassDescription(guid, [], 0, out var reqsize);
             if (reqsize <= 1) return "";
-            Span<byte> span = stackalloc byte[(int)(reqsize-1)*2];
+            Span<byte> span = stackalloc byte[(int)(reqsize)*2];
             SetupDiGetClassDescription(guid, span, reqsize, out reqsize);
-            str = System.Text.Encoding.Unicode.GetString(span);
+            str = MemoryMarshal.Cast<byte, char>(span).TrimEnd('\0').ToString();
 #else
             SetupDiGetClassDescription(guid, IntPtr.Zero, 0, out var reqsize);
             if (reqsize <= 1) return "";
@@ -321,7 +321,6 @@ namespace QSoft.DevCon
             SetupDiGetClassDescription(guid, mem.Pointer, reqsize, out reqsize);
             str = Marshal.PtrToStringUni(mem.Pointer, (int)reqsize - 1);
 #endif
-
             return str;
         }
 

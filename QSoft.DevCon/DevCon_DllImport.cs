@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 #if !NET8_0_OR_GREATER
 namespace QSoft.DevCon
 {
-    public partial class DevConExtension
+    public static partial class DevConExtension
     {
 
-        [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern IntPtr SetupDiGetClassDevs(in Guid ClassGuid, IntPtr Enumerator, IntPtr hwndParent, uint Flags);
         [DllImport("setupapi.dll", SetLastError = true)]
         internal static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);

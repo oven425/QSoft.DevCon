@@ -19,10 +19,10 @@ namespace QSoft.DevCon
     {
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata, SP_DEVICE_INTERFACE_DATA interfacedata)> DevicesFromInterface(this Guid guid, bool showhiddendevice = false)
         {
-            uint flags = DIGCF_PRESENT;
+            uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
             if (showhiddendevice)
             {
-                flags |= DIGCF_PROFILE;
+                flags = DIGCF_PROFILE;
             }
             flags |= DIGCF_DEVICEINTERFACE;
             //if (guid == Guid.Empty)
@@ -115,9 +115,9 @@ namespace QSoft.DevCon
         {
 
 #if NET8_0_OR_GREATER
-            return File.OpenHandle(src, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File.OpenHandle(src, FileMode.Open, FileAccess.Read, FileShare.Read|FileShare.Write);
 #else
-            var handle = CreateFile(src, GENERIC_READ, FILE_SHARE_READ, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
+            var handle = CreateFile(src, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
             if (handle.IsInvalid)
             {
                 throw new System.ComponentModel.Win32Exception();
