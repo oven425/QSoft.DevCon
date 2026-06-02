@@ -35,7 +35,7 @@ try
         battery.BatteryGranularityInformation();
     }
 
-    var batterys1 = QSoft.DevCon.Battery.BatteryReport.GetAll();
+    //var batterys1 = QSoft.DevCon.Battery.BatteryReport.GetAll();
 
     //while(true)
     //{

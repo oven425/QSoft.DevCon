@@ -87,4 +87,16 @@ foreach (var oo in "Camera".Devices())
 }
 ```
 
+10. Query battery info
+```c#
+var batterys = "Battery".GetClassGuids().FirstOrDefault()
+        .DevicesFromInterface().Select(x=>x.DevicePath());
+    foreach(var oo in batterys)
+    {
+        using var handle = oo.OpenHandle();
+        var battery = handle.BatteryTag();
+        battery.BatteryGranularityInformation();
+    }
+```
+
 PS: Thanks for [Simple Device Manager](https://www.codeproject.com/Articles/14469/Simple-Device-Manager).

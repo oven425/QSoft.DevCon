@@ -1,1 +1,0 @@
-nuget pack QSoft.DevCon.nuspec

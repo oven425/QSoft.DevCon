@@ -1,5 +1,6 @@
 ﻿using Microsoft.Management.Infrastructure;
 using QSoft.DevCon;
+using QSoft.DevCon.Battery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
