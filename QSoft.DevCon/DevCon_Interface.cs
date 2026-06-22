@@ -115,7 +115,7 @@ namespace QSoft.DevCon
         {
 
 #if NET8_0_OR_GREATER
-            return File.OpenHandle(src, FileMode.Open, FileAccess.Read, FileShare.Read|FileShare.Write);
+            return File.OpenHandle(src, FileMode.Open, FileAccess.ReadWrite, FileShare.Read|FileShare.Write);
 #else
             var handle = CreateFile(src, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
             if (handle.IsInvalid)

@@ -9,7 +9,7 @@
     <PackageIcon>48607350112_057637c3b5_o.jpg</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>SetupApi, Enable/Disable device, c#, Linq </PackageTags>
+    <PackageTags>SetupApi, Enable/Disable device, Battery</PackageTags>
     <RepositoryUrl>https://github.com/oven425/QSoft.DevCon.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/oven425/QSoft.DevCon</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

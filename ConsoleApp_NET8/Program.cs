@@ -22,7 +22,9 @@ try
         handle.DESCRIPTOR();
         handle.DeviceTemperature();
         handle.AdapterTemperature();
-        handle.NVME_LogPage(DevCon_Disk.NVME_LOG_PAGES.NVME_LOG_PAGE_HEALTH_INFO);
+        //handle.Nvme_HealthInfoLog();
+        handle.Nvme_ErrorInfoLog();
+        handle.Nvme_FirmwareSlotInfo();
     }
 
 
@@ -32,6 +34,8 @@ try
     {
         using var handle = oo.OpenHandle();
         var battery = handle.BatteryTag();
+        var manufacture_name = battery.BatteryManufactureName();
+        var info = battery.BatteryInfo();
         battery.BatteryGranularityInformation();
     }
 

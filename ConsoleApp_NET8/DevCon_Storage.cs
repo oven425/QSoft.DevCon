@@ -31,8 +31,8 @@ namespace ConsoleApp_NET8
             hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out reqsz, 0);
             var desc = MemoryMarshal.Read<STORAGE_DEVICE_DESCRIPTOR>(span_out);
 
-            var serilanumber = Span2String(span_out, (int)desc.SerialNumberOffset);
              var vendorid = Span2String(span_out, (int)desc.VendorIdOffset);
+            var serilanumber = Span2String(span_out, (int)desc.SerialNumberOffset);
              var productid = Span2String(span_out, (int)desc.ProductIdOffset);
              var revision = Span2String(span_out, (int)desc.ProductRevisionOffset);
         }
@@ -87,14 +87,14 @@ namespace ConsoleApp_NET8
         }
 
         //https://zhung.com.tw/article/%E5%88%A9%E7%94%A8windows%E5%86%85%E5%BB%BA%E7%9A%84driver%E9%80%8F%E9%81%8Eioctl%E7%99%BC%E9%80%81nvme-command/
-        public static void NVME_LogPage(this SafeFileHandle src, NVME_LOG_PAGES page)
+        public static void Nvme_HealthInfoLog(this SafeFileHandle src)
         {
-            NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, page, out var log);
+            NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_HEALTH_INFO, out var log);
         }
 
-        public static void NVME_SupportLogPage(this SafeFileHandle src, NVME_LOG_PAGES page)
+        public static void NVME_SupportLogPage(this SafeFileHandle src)
         {
-            NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_SUPPORTED_LOG_PAGES, out var log);
+            NVME_DATA<NVME_SUPPORTED_LOG_PAGE_DATA>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_SUPPORTED_LOG_PAGES, out var a);
         }
 
         static void NVME_DATA<T>(this SafeFileHandle src, STORAGE_PROTOCOL_NVME_DATA_TYPE type, NVME_LOG_PAGES page, out T result) where T : struct
@@ -114,6 +114,7 @@ namespace ConsoleApp_NET8
                 ProtocolDataRequestSubValue =0,
                 ProtocolDataOffset = (uint)Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>(),
                 ProtocolDataLength = (uint)data_len,
+                ProtocolDataRequestSubValue4 = 1
             };
             var bufferLength = (int)Marshal.OffsetOf<STORAGE_PROPERTY_QUERY>("AdditionalParameters") + Marshal.SizeOf<STORAGE_PROTOCOL_SPECIFIC_DATA>();
             Span<byte> span_in = stackalloc byte[bufferLength];
@@ -126,9 +127,72 @@ namespace ConsoleApp_NET8
 
             Span<byte> span_out = stackalloc byte[data_len + desc_len];
             var hr = DeviceIoControl(src, IOCTL_STORAGE_QUERY_PROPERTY, span_in, (uint)span_in.Length, span_out, (uint)span_out.Length, out var reqsz, 0);
+            var err = Marshal.GetLastWin32Error();
             var desc = MemoryMarshal.Read<STORAGE_PROTOCOL_DATA_DESCRIPTOR>(span_out);
             result = MemoryMarshal.Read<T>(span_out[Marshal.SizeOf<STORAGE_PROTOCOL_DATA_DESCRIPTOR>()..]);
-            var err = Marshal.GetLastWin32Error();
+            
+        }
+
+        [InlineArray(22)]
+        public struct byte_22 { private byte _element0; }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct NVME_ERROR_INFO_LOG
+        {
+            public ulong ErrorCount;               // 0  錯誤計數
+            public ushort SQID;                     // 8  Submission Queue ID
+            public ushort CMDID;                    // 10 Command ID
+            public ushort StatusField;              // 12 [0]=Phase, [15:1]=Status Code
+            public ushort ParameterErrorLocation;  // 14 參數錯誤位置
+            public ulong Lba;                      // 16 邏輯區塊位址
+            public uint NameSpace;               // 24 Namespace
+            public byte VendorInfoValid;         // 28 廠商資訊是否有效
+            public byte Trtype;                  // 29 Transport Type (NVMe 1.4+)
+            public ushort Reserved0;               // 30
+            public ulong CommandSpecificInfo;     // 32 命令特定資訊
+            public ushort TrtypeSpecificInfo;      // 40 Transport Type 特定資訊
+            byte_22 Reserved1;               // 42
+
+            public bool Phase => (StatusField & 0x0001) != 0;
+            public ushort StatusCode => (ushort)((StatusField >> 1) & 0x7FFF);
+        }
+
+        public static void Nvme_ErrorInfoLog(this SafeFileHandle src)
+        {
+            NVME_DATA<NVME_ERROR_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_ERROR_INFO, out var log);
+        }
+
+        [InlineArray(7)] public struct byte_7 { private byte _element0; }
+        [InlineArray(8)] public struct byte_8 { private byte _element0; }
+        [InlineArray(448)] struct byte_448 { private byte _element0; }
+
+        // 7 個插槽 × 8 bytes = 56 bytes
+        [InlineArray(7)]
+        struct NVME_FRS_ARRAY { private byte_8 _element0; }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct NVME_FIRMWARE_SLOT_INFO_LOG
+        {
+            public byte AFI;        // 0  Active Firmware Info
+                                    //    [2:0] = ActiveSlot (1-7)
+                                    //    [6:4] = PendingActivateSlot (NVMe 1.2+)
+            byte_7 Reserved0;  // 1
+            public NVME_FRS_ARRAY FRS;     // 8  Firmware Revision Slot 1~7（各 8 bytes ASCII）
+            byte_448 Reserved1;  // 64
+
+            public int ActiveSlot => (AFI >> 0) & 0x07;  // 目前作用中插槽
+            public int PendingActivateSlot => (AFI >> 4) & 0x07;  // 下次重啟後生效插槽
+            public string GetRevision(int slot)
+            {
+                ref byte_8 frs = ref FRS[slot - 1];
+                var span = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref frs, 1));
+                return System.Text.Encoding.ASCII.GetString(span).TrimEnd('\0', ' ');
+            }
+        }
+
+        public static void Nvme_FirmwareSlotInfo(this SafeFileHandle src)
+        {
+            NVME_DATA<NVME_FIRMWARE_SLOT_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_FIRMWARE_SLOT_INFO, out var log);
         }
 
         public enum NVME_LOG_PAGES
@@ -163,12 +227,33 @@ namespace ConsoleApp_NET8
 
         };
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct NVME_SUPPORTED_LOG_PAGE_DATA   // 4 bytes
+        {
+            public uint AsUlong;
+
+            public bool LSUPP => (AsUlong & (1u << 0)) != 0; // Log Page Supported
+            public bool IOS => (AsUlong & (1u << 1)) != 0; // I/O Command Set Specific
+            public bool EXS => (AsUlong & (1u << 2)) != 0; // Extended Data Structures
+        }
+
+        [InlineArray(256)]
+        struct NVME_SUPPORTED_LOG_PAGES_ARRAY { private NVME_SUPPORTED_LOG_PAGE_DATA _element0; }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct NVME_SUPPORTED_LOG_PAGES       // 256 × 4 = 1024 bytes
+        {
+            public NVME_SUPPORTED_LOG_PAGES_ARRAY LogPageData;
+        }
+
         [InlineArray(16)]
         public struct byte_16 { private byte _element0; }
         [InlineArray(26)]
         public struct byte_26 { private byte _element0; }
         [InlineArray(296)]
         public struct byte_296 { private byte _element0; }
+
+        [StructLayout(LayoutKind.Sequential)]
         struct NVME_HEALTH_INFO_LOG
         {
 
@@ -253,7 +338,7 @@ namespace ConsoleApp_NET8
             uint FixedProtocolReturnData;
             uint ProtocolDataRequestSubValue2;
             uint ProtocolDataRequestSubValue3;
-            uint ProtocolDataRequestSubValue4;
+            public uint ProtocolDataRequestSubValue4;
         }
         [StructLayout(LayoutKind.Sequential)]
         struct STORAGE_PROTOCOL_DATA_DESCRIPTOR
