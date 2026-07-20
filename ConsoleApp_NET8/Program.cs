@@ -22,7 +22,7 @@ try
         handle.DESCRIPTOR();
         handle.DeviceTemperature();
         handle.AdapterTemperature();
-        //handle.Nvme_HealthInfoLog();
+        handle.Nvme_HealthInfoLog();
         handle.Nvme_ErrorInfoLog();
         handle.Nvme_FirmwareSlotInfo();
     }
@@ -62,6 +62,7 @@ try
 }
 catch(Exception ee)
 {
+    System.Diagnostics.Trace.WriteLine(ee.Message);
 }
 
 ////USB xHCI 相容的主機控制器

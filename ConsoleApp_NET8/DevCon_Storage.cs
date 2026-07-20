@@ -87,9 +87,10 @@ namespace ConsoleApp_NET8
         }
 
         //https://zhung.com.tw/article/%E5%88%A9%E7%94%A8windows%E5%86%85%E5%BB%BA%E7%9A%84driver%E9%80%8F%E9%81%8Eioctl%E7%99%BC%E9%80%81nvme-command/
-        public static void Nvme_HealthInfoLog(this SafeFileHandle src)
+        public static HealthInfo Nvme_HealthInfoLog(this SafeFileHandle src)
         {
             NVME_DATA<NVME_HEALTH_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_HEALTH_INFO, out var log);
+            return new(log);
         }
 
         public static void NVME_SupportLogPage(this SafeFileHandle src)
@@ -254,7 +255,7 @@ namespace ConsoleApp_NET8
         public struct byte_296 { private byte _element0; }
 
         [StructLayout(LayoutKind.Sequential)]
-        struct NVME_HEALTH_INFO_LOG
+        internal struct NVME_HEALTH_INFO_LOG
         {
 
             //    union {
@@ -273,11 +274,11 @@ namespace ConsoleApp_NET8
 
             //}
             //CriticalWarning;    // This field indicates critical warnings for the state of the  controller. Each bit corresponds to a critical warning type; multiple bits may be set.
-            byte CriticalWarning;
-            byte_2 Temperature;                 // Temperature: Contains the temperature of the overall device (controller and NVM included) in units of Kelvin. If the temperature exceeds the temperature threshold, refer to section 5.12.1.4, then an asynchronous event completion may occur
-            byte AvailableSpare;                 // Available Spare:  Contains a normalized percentage (0 to 100%) of the remaining spare capacity available
+            public byte CriticalWarning;
+            public byte_2 Temperature;                 // Temperature: Contains the temperature of the overall device (controller and NVM included) in units of Kelvin. If the temperature exceeds the temperature threshold, refer to section 5.12.1.4, then an asynchronous event completion may occur
+            public byte AvailableSpare;                 // Available Spare:  Contains a normalized percentage (0 to 100%) of the remaining spare capacity available
             byte AvailableSpareThreshold;        // Available Spare Threshold:  When the Available Spare falls below the threshold indicated in this field, an asynchronous event  completion may occur. The value is indicated as a normalized percentage (0 to 100%).
-            byte PercentageUsed;                 // Percentage Used
+            public byte PercentageUsed;                 // Percentage Used
             byte_26 Reserved0;
 
             byte_16 DataUnitRead;               // Data Units Read:  Contains the number of 512 byte data units the host has read from the controller; this value does not include metadata. This value is reported in thousands (i.e., a value of 1 corresponds to 1000 units of 512 bytes read)  and is rounded up.  When the LBA size is a value other than 512 bytes, the controller shall convert the amount of data read to 512 byte units. For the NVM command set, logical blocks read as part of Compare and Read operations shall be included in this value
@@ -505,5 +506,23 @@ namespace ConsoleApp_NET8
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode, ReadOnlySpan<byte> lpInBuffer, uint nInBufferSize, Span<byte> lpOutBuffer, uint nOutBufferSize, out uint lpBytesReturned, IntPtr lpOverlapped);
 
+        public readonly struct HealthInfo
+        {
+            public byte CriticalWarning { get; }
+            public double Temperature { get; }
+            public byte AvailableSpare { get; }
+            public byte PercentageUsed { get; }
+
+            internal HealthInfo(in NVME_HEALTH_INFO_LOG log)
+            {
+                CriticalWarning = log.CriticalWarning;
+                Temperature = BitConverter.ToInt16(log.Temperature) - 273.15;
+                AvailableSpare = log.AvailableSpare;
+                PercentageUsed = log.PercentageUsed;
+            }
+        }
+
     }
+
+    
 }
