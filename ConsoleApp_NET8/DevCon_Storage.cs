@@ -2,14 +2,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Sockets;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
+using static ConsoleApp_NET8.DevCon_Disk.HealthInfo;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ConsoleApp_NET8
@@ -169,10 +172,10 @@ namespace ConsoleApp_NET8
 
         // 7 個插槽 × 8 bytes = 56 bytes
         [InlineArray(7)]
-        struct NVME_FRS_ARRAY { private byte_8 _element0; }
+        internal struct NVME_FRS_ARRAY { public byte_8 _element0; }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct NVME_FIRMWARE_SLOT_INFO_LOG
+        internal struct NVME_FIRMWARE_SLOT_INFO_LOG
         {
             public byte AFI;        // 0  Active Firmware Info
                                     //    [2:0] = ActiveSlot (1-7)
@@ -180,20 +183,12 @@ namespace ConsoleApp_NET8
             byte_7 Reserved0;  // 1
             public NVME_FRS_ARRAY FRS;     // 8  Firmware Revision Slot 1~7（各 8 bytes ASCII）
             byte_448 Reserved1;  // 64
-
-            public int ActiveSlot => (AFI >> 0) & 0x07;  // 目前作用中插槽
-            public int PendingActivateSlot => (AFI >> 4) & 0x07;  // 下次重啟後生效插槽
-            public string GetRevision(int slot)
-            {
-                ref byte_8 frs = ref FRS[slot - 1];
-                var span = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref frs, 1));
-                return System.Text.Encoding.ASCII.GetString(span).TrimEnd('\0', ' ');
-            }
         }
 
-        public static void Nvme_FirmwareSlotInfo(this SafeFileHandle src)
+        public static FirmwareSlotInfo Nvme_FirmwareSlotInfo(this SafeFileHandle src)
         {
             NVME_DATA<NVME_FIRMWARE_SLOT_INFO_LOG>(src, STORAGE_PROTOCOL_NVME_DATA_TYPE.NVMeDataTypeLogPage, NVME_LOG_PAGES.NVME_LOG_PAGE_FIRMWARE_SLOT_INFO, out var log);
+            return new(log);
         }
 
         public enum NVME_LOG_PAGES
@@ -281,7 +276,7 @@ namespace ConsoleApp_NET8
             public byte PercentageUsed;                 // Percentage Used
             byte_26 Reserved0;
 
-            byte_16 DataUnitRead;               // Data Units Read:  Contains the number of 512 byte data units the host has read from the controller; this value does not include metadata. This value is reported in thousands (i.e., a value of 1 corresponds to 1000 units of 512 bytes read)  and is rounded up.  When the LBA size is a value other than 512 bytes, the controller shall convert the amount of data read to 512 byte units. For the NVM command set, logical blocks read as part of Compare and Read operations shall be included in this value
+            public byte_16 DataUnitRead;               // Data Units Read:  Contains the number of 512 byte data units the host has read from the controller; this value does not include metadata. This value is reported in thousands (i.e., a value of 1 corresponds to 1000 units of 512 bytes read)  and is rounded up.  When the LBA size is a value other than 512 bytes, the controller shall convert the amount of data read to 512 byte units. For the NVM command set, logical blocks read as part of Compare and Read operations shall be included in this value
             byte_16 DataUnitWritten;            // Data Units Written: Contains the number of 512 byte data units the host has written to the controller; this value does not include metadata. This value is reported in thousands (i.e., a value of 1 corresponds to 1000 units of 512 bytes written)  and is rounded up.  When the LBA size is a value other than 512 bytes, the controller shall convert the amount of data written to 512 byte units. For the NVM command set, logical blocks written as part of Write operations shall be included in this value. Write Uncorrectable commands shall not impact this value.
             byte_16 HostReadCommands;           // Host Read Commands:  Contains the number of read commands  completed by  the controller. For the NVM command set, this is the number of Compare and Read commands.
             byte_16 HostWrittenCommands;        // Host Write Commands:  Contains the number of write commands  completed by  the controller. For the NVM command set, this is the number of Write commands.
@@ -293,14 +288,14 @@ namespace ConsoleApp_NET8
             byte_16 ErrorInfoLogEntryCount;     // Number of Error Information Log Entries:  Contains the number of Error Information log entries over the life of the controller
             uint WarningCompositeTemperatureTime;     // Warning Composite Temperature Time: Contains the amount of time in minutes that the controller is operational and the Composite Temperature is greater than or equal to the Warning Composite Temperature Threshold (WCTEMP) field and less than the Critical Composite Temperature Threshold (CCTEMP) field in the Identify Controller data structure
             uint CriticalCompositeTemperatureTime;    // Critical Composite Temperature Time: Contains the amount of time in minutes that the controller is operational and the Composite Temperature is greater the Critical Composite Temperature Threshold (CCTEMP) field in the Identify Controller data structure
-            ushort TemperatureSensor1;          // Contains the current temperature reported by temperature sensor 1.
-            ushort TemperatureSensor2;          // Contains the current temperature reported by temperature sensor 2.
-            ushort TemperatureSensor3;          // Contains the current temperature reported by temperature sensor 3.
-            ushort TemperatureSensor4;          // Contains the current temperature reported by temperature sensor 4.
-            ushort TemperatureSensor5;          // Contains the current temperature reported by temperature sensor 5.
-            ushort TemperatureSensor6;          // Contains the current temperature reported by temperature sensor 6.
-            ushort TemperatureSensor7;          // Contains the current temperature reported by temperature sensor 7.
-            ushort TemperatureSensor8;          // Contains the current temperature reported by temperature sensor 8.
+            public ushort TemperatureSensor1;          // Contains the current temperature reported by temperature sensor 1.
+            public ushort TemperatureSensor2;          // Contains the current temperature reported by temperature sensor 2.
+            public ushort TemperatureSensor3;          // Contains the current temperature reported by temperature sensor 3.
+            public ushort TemperatureSensor4;          // Contains the current temperature reported by temperature sensor 4.
+            public ushort TemperatureSensor5;          // Contains the current temperature reported by temperature sensor 5.
+            public ushort TemperatureSensor6;          // Contains the current temperature reported by temperature sensor 6.
+            public ushort TemperatureSensor7;          // Contains the current temperature reported by temperature sensor 7.
+            public ushort TemperatureSensor8;          // Contains the current temperature reported by temperature sensor 8.
             byte_296 Reserved1;
 
         }
@@ -512,13 +507,67 @@ namespace ConsoleApp_NET8
             public double Temperature { get; }
             public byte AvailableSpare { get; }
             public byte PercentageUsed { get; }
-
+            public BigInteger DataUnitRead { get; }
+            readonly public ImmutableArray<ushort> Temperatures { get; }
             internal HealthInfo(in NVME_HEALTH_INFO_LOG log)
             {
                 CriticalWarning = log.CriticalWarning;
                 Temperature = BitConverter.ToInt16(log.Temperature) - 273.15;
                 AvailableSpare = log.AvailableSpare;
                 PercentageUsed = log.PercentageUsed;
+                DataUnitRead = new BigInteger(log.DataUnitRead);
+                Temperatures = 
+                    [
+                        ss(log.TemperatureSensor1),
+                        ss(log.TemperatureSensor2),
+                        ss(log.TemperatureSensor3),
+                        ss(log.TemperatureSensor4),
+                        ss(log.TemperatureSensor5),
+                        ss(log.TemperatureSensor6),
+                    ];
+            }
+
+            static ushort ss(ushort data)
+            {
+                if(data == 0) return 0;
+                return (ushort)(data - 273);
+            }
+
+            public readonly struct FirmwareSlotInfo
+            {
+                public int ActiveSlot { get; }
+                public int PendingActivateSlot { get; }
+                //Firmware Revision Slot
+                readonly public ImmutableArray<string> RevisionSlots { get; }
+                internal FirmwareSlotInfo(NVME_FIRMWARE_SLOT_INFO_LOG data)
+                {
+                    this.ActiveSlot = (data.AFI >> 0) & 0x07;
+                    this.PendingActivateSlot = (data.AFI >> 4) & 0x07;
+                    
+                    
+                    RevisionSlots = 
+                        [
+                            System.Text.Encoding.ASCII.GetString(data.FRS[0]),
+                            System.Text.Encoding.ASCII.GetString(data.FRS[1]),
+                            System.Text.Encoding.ASCII.GetString(data.FRS[2]),
+                            System.Text.Encoding.ASCII.GetString(data.FRS[3]),
+                            System.Text.Encoding.ASCII.GetString(data.FRS[4]),
+                            System.Text.Encoding.ASCII.GetString(data.FRS[5]),
+                            System.Text.Encoding.ASCII.GetString(data.FRS[6]),
+                        ];
+                }
+
+                static string cast(Span<byte> data)
+                {
+
+                    return System.Text.Encoding.ASCII.GetString(data);
+                }
+                //public string GetRevision(int slot)
+                //{
+                //    ref byte_8 frs = ref FRS[slot - 1];
+                //    var span = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref frs, 1));
+                //    return System.Text.Encoding.ASCII.GetString(span).TrimEnd('\0', ' ');
+                //}
             }
         }
 

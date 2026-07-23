@@ -22,9 +22,9 @@ try
         handle.DESCRIPTOR();
         handle.DeviceTemperature();
         handle.AdapterTemperature();
-        handle.Nvme_HealthInfoLog();
+        var healthinfo = handle.Nvme_HealthInfoLog();
         handle.Nvme_ErrorInfoLog();
-        handle.Nvme_FirmwareSlotInfo();
+        var firmareslotinfo =  handle.Nvme_FirmwareSlotInfo();
     }
 
 
