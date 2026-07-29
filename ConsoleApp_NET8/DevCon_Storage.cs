@@ -43,7 +43,7 @@ namespace ConsoleApp_NET8
 
         static string Span2String(Span<byte> src, int offset)
         {
-            var buffer = src.Slice(offset);
+            var buffer = src[offset..];
             var index = buffer.IndexOf((byte)0);
             buffer = buffer[..index];
             return System.Text.Encoding.ASCII.GetString(buffer);
