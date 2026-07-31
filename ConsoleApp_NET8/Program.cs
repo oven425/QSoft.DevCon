@@ -13,7 +13,8 @@ try
     foreach(var oo in DevCon_IEM.Guid_IEM.DevicesFromInterface())
     {
         var iemhandle = oo.DevicePath().OpenHandle();
-        iemhandle.Version();
+        iemhandle.EMIVersion();
+        iemhandle.EMIMetadata_v2();
     }
     var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
     var ddd = ggu.ClassDesc();
