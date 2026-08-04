@@ -2,6 +2,7 @@
 using Microsoft.Management.Infrastructure;
 using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
+using QSoft.DevCon.IEM;
 using System.Runtime.InteropServices;
 using System.Text;
 using static QSoft.DevCon.DevConExtensiona;
@@ -9,13 +10,22 @@ using static QSoft.DevCon.DevConExtensiona;
 
 try
 {
-    
-    foreach(var oo in DevCon_IEM.Guid_IEM.DevicesFromInterface())
+    for(int i=0; i<10; i++)
     {
-        var iemhandle = oo.DevicePath().OpenHandle();
-        iemhandle.EMIVersion();
-        iemhandle.EMIMetadata_v2();
+        foreach (var oo in DevCon_IEM.Guid_IEM.DevicesFromInterface())
+        {
+            using var iemhandle = oo.DevicePath().OpenHandle();
+            iemhandle.EMIVersion();
+            var meta = iemhandle.EMIMetadata_v2();
+            var measure = iemhandle.EMI_Get_Measurement(meta.Channels.Length);
+            foreach (var zz in meta.Channels.Zip(measure))
+            {
+                System.Diagnostics.Trace.WriteLine($"{zz.First}: {zz.Second.Time} {zz.Second.Energy}");
+            }
+        }
+        await Task.Delay(1000);
     }
+    
     var ggu = Guid.Parse("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
     var ddd = ggu.ClassDesc();
 

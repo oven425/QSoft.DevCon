@@ -11,7 +11,7 @@ using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleApp_NET8
+namespace QSoft.DevCon.IEM
 {
     //https://learn.microsoft.com/zh-tw/windows-hardware/drivers/powermeter/energy-meter-interface
     static unsafe public partial class DevCon_IEM
@@ -20,13 +20,12 @@ namespace ConsoleApp_NET8
         {
             ushort version = 0;
             var span_out = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref version, 1));
-            var hr = DeviceIoControl(src, IOCTL_EMI_GET_VERSION, [], 0, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
-            var err = Marshal.GetLastWin32Error();
+            DeviceIoControl(src, IOCTL_EMI_GET_VERSION, [], 0, span_out, (uint)span_out.Length, out var reqsz, IntPtr.Zero);
             return version;
         }
 
 
-        public static void EMIMetadata_v2(this SafeFileHandle src)
+        public static EMI_Metadata EMIMetadata_v2(this SafeFileHandle src)
         {
             int metasize = 0;
             var span_out_metasize = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref metasize, 1));
@@ -36,16 +35,56 @@ namespace ConsoleApp_NET8
             var err = Marshal.GetLastWin32Error();
             var meta = MemoryMarshal.AsRef<EMI_METADATA_V2>(span_out);
             span_out = span_out[Unsafe.SizeOf<EMI_METADATA_V2>()..];
+            var channelNames = new string[meta.ChannelCount];
             for(int i=0;i<meta.ChannelCount;i++)
             {
                 var channel = MemoryMarshal.AsRef<EMI_CHANNEL_V2>(span_out);
                 var str = MemoryMarshal.Cast<byte, char>(span_out.Slice(4, channel.ChannelNameSize)).TrimEnd('\0');
+                channelNames[i] = new string(str);
                 span_out = span_out[(4 + channel.ChannelNameSize+2)..];
             }
+            var oem = new string(meta.HardwareOEM, 0, 16).TrimEnd('\0');
+            var model = new string(meta.HardwareModel, 0, 16).TrimEnd('\0');
+            EMI_Metadata me = new EMI_Metadata(oem, model, channelNames);
+
+            return me;
+
         }
 
-        
+        public readonly struct EMI_Metadata(string oem, string model, string[] channels)
+        {
+            readonly public string OEM = oem;
+            readonly public string Model = model;
+            readonly public string[] Channels = channels;
+        }
 
+
+        public static EMI_Measurement[] EMI_Get_Measurement(this SafeFileHandle src, int count)
+        {
+            Span<EMI_CHANNEL_MEASUREMENT_DATA> ss = stackalloc EMI_CHANNEL_MEASUREMENT_DATA[count];
+            var span_out_metasize = MemoryMarshal.AsBytes(ss);
+            var hr = DeviceIoControl(src, IOCTL_EMI_GET_MEASUREMENT, [], 0, span_out_metasize, (uint)span_out_metasize.Length, out var reqsz, IntPtr.Zero);
+
+            var mds = new EMI_Measurement[count];
+            for(int i=0;i<count;i++)
+            {
+                mds[i] = new EMI_Measurement(ss[i].AbsoluteEnergy, TimeSpan.FromTicks((long)ss[i].AbsoluteTime));
+            }
+            return mds;
+        }
+
+        public readonly struct EMI_Measurement(ulong energy, TimeSpan time)
+        {
+            readonly public ulong Energy = energy;
+            readonly public TimeSpan Time = time;
+        }
+
+
+        struct EMI_CHANNEL_MEASUREMENT_DATA
+        {
+            public ulong AbsoluteEnergy;
+            public ulong AbsoluteTime;
+        };
 
 
         public enum EMI_MEASUREMENT_UNIT
@@ -77,8 +116,8 @@ namespace ConsoleApp_NET8
 
         struct EMI_METADATA_V2
         {
-            fixed char HardwareOEM[16];
-            fixed char HardwareModel[16];
+            public fixed char HardwareOEM[16];
+            public fixed char HardwareModel[16];
             ushort HardwareRevision;
             public ushort ChannelCount;
             //EMI_CHANNEL_V2 Channels[ANYSIZE_ARRAY];
@@ -87,6 +126,7 @@ namespace ConsoleApp_NET8
         const uint IOCTL_EMI_GET_VERSION = 0x00224000;
         const uint IOCTL_EMI_GET_METADATA_SIZE = 0x00224004;
         const uint IOCTL_EMI_GET_METADATA = 0x00224008;
+        const uint IOCTL_EMI_GET_MEASUREMENT = 0x0022400c;
         const ushort EMI_VERSION_V2 = 2;
         public static Guid Guid_IEM = new Guid("{45BD8344-7ED6-49cf-A440-C276C933B053}");
         [LibraryImport("kernel32.dll", SetLastError = true)]
