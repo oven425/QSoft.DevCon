@@ -2,17 +2,16 @@
 using Microsoft.Management.Infrastructure;
 using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
-using QSoft.DevCon.IEM;
+using QSoft.DevCon.EMI;
 using System.Runtime.InteropServices;
 using System.Text;
-using static QSoft.DevCon.DevConExtensiona;
 
 
 try
 {
     for(int i=0; i<10; i++)
     {
-        foreach (var oo in DevCon_IEM.Guid_IEM.DevicesFromInterface())
+        foreach (var oo in DevCon_EMI.Guid_EMI.DevicesFromInterface())
         {
             using var iemhandle = oo.DevicePath().OpenHandle();
             iemhandle.EMIVersion();

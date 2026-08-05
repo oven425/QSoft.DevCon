@@ -99,4 +99,10 @@ var batterys = "Battery".GetClassGuids().FirstOrDefault()
     }
 ```
 
+11. Query EMI
+```c#
+
+
+```
+
 PS: Thanks for [Simple Device Manager](https://www.codeproject.com/Articles/14469/Simple-Device-Manager).
