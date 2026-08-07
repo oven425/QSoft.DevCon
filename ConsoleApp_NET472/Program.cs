@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using QSoft.DevCon;
+using QSoft.DevCon.EMI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,7 +21,24 @@ namespace ConsoleApp_NET472
 
         static void Main(string[] args)
         {
-
+            for (int i = 0; i < 10; i++)
+            {
+                foreach (var oo in DevCon_EMI.Guid_EMI.DevicesFromInterface())
+                {
+                    using (var iemhandle = oo.DevicePath().OpenHandle())
+                    {
+                        iemhandle.EMIVersion();
+                        var meta = iemhandle.EMIMetadata_v2();
+                        var measure = iemhandle.EMI_Get_Measurement(meta.Channels.Length);
+                        foreach (var zz in meta.Channels.Zip(measure, (x,y)=>new { First = x, Second=y}))
+                        {
+                            System.Diagnostics.Trace.WriteLine($"{zz.First}: {zz.Second.Time} {zz.Second.Energy}");
+                        }
+                    }
+                        
+                }
+                Task.Delay(1000).Wait();
+            }
             var guid = "Battery".GetClassGuids().FirstOrDefault();
             var batterys = guid.DevicesFromInterface().Select(x => new
             {

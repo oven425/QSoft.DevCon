@@ -42,9 +42,9 @@ namespace QSoft.DevCon.EMI
             {
                 var channelPointer = IntPtr.Add(mem_metadata.Pointer, offset);
                 var channel = Marshal.PtrToStructure<EMI_CHANNEL_V2>(channelPointer);
-                var nameLength = Math.Max(0, channel.ChannelNameSize / sizeof(char) - 1);
-                channelNames[i] = Marshal.PtrToStringUni(IntPtr.Add(channelPointer, Marshal.SizeOf<EMI_CHANNEL_V2>()), nameLength) ?? string.Empty;
-                offset += Marshal.SizeOf<EMI_CHANNEL_V2>() + channel.ChannelNameSize;
+                offset = offset+Marshal.SizeOf<EMI_CHANNEL_V2>()-4;
+                channelNames[i] = Marshal.PtrToStringUni(IntPtr.Add(mem_metadata.Pointer, offset)) ?? string.Empty;
+                offset += channel.ChannelNameSize+2;
             }
 
             return new EMI_Metadata(meta.HardwareOEM.TrimEnd('\0'), meta.HardwareModel.TrimEnd('\0'), channelNames);
