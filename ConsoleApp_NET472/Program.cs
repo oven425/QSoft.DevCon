@@ -21,7 +21,7 @@ namespace ConsoleApp_NET472
 
         static void Main(string[] args)
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 foreach (var oo in DevCon_EMI.Guid_EMI.DevicesFromInterface())
                 {
@@ -37,7 +37,7 @@ namespace ConsoleApp_NET472
                     }
                         
                 }
-                Task.Delay(1000).Wait();
+                Task.Delay(100).Wait();
             }
             var guid = "Battery".GetClassGuids().FirstOrDefault();
             var batterys = guid.DevicesFromInterface().Select(x => new

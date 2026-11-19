@@ -16,49 +16,6 @@ namespace QSoft.DevCon
 {
     static public partial class DevConExtension
     {
-        //public static void Devices(this Guid guid, Action<(IntPtr, SP_DEVINFO_DATA)> devices, bool showhiddendevice = false)
-        //{
-        //    //uint flags = DIGCF_PRESENT | DIGCF_PROFILE| DIGCF_ALLCLASSES;
-        //    uint flags = DIGCF_PRESENT | DIGCF_PROFILE;
-        //    if (showhiddendevice)
-        //    {
-        //        flags = DIGCF_PROFILE;
-        //    }
-        //    //flags |= DIGCF_DEVICEINTERFACE;
-        //    if (guid == Guid.Empty)
-        //    {
-        //        flags |= DIGCF_ALLCLASSES;
-        //    }
-
-
-        //    uint index = 0;
-        //    IntPtr hDevInfo = SetupDiGetClassDevs(guid, IntPtr.Zero, IntPtr.Zero, flags);
-        //    if (hDevInfo == new IntPtr(-1))
-        //    {
-        //        return;
-        //    }
-        //    try
-        //    {
-        //        while (true)
-        //        {
-        //            SP_DEVINFO_DATA devinfo = new();
-        //            devinfo.cbSize = (uint)Marshal.SizeOf(devinfo);
-        //            if (!SetupDiEnumDeviceInfo(hDevInfo, index, ref devinfo))
-        //            {
-        //                break;
-        //            }
-        //            else
-        //            {
-        //                devices((hDevInfo, devinfo));
-        //            }
-        //            index++;
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        SetupDiDestroyDeviceInfoList(hDevInfo);
-        //    }
-        //}
         public static IEnumerable<(IntPtr dev, SP_DEVINFO_DATA devdata)> Devices(this Guid guid, bool showhiddendevice = false)
         {
             //uint flags = DIGCF_PRESENT | DIGCF_PROFILE| DIGCF_ALLCLASSES;
