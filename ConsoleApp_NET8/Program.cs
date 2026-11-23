@@ -6,6 +6,8 @@ using QSoft.DevCon.EMI;
 using System.Runtime.InteropServices;
 using System.Text;
 
+var disk = File.OpenHandle(@"\\.\C:", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+disk.Test();
 
 try
 {

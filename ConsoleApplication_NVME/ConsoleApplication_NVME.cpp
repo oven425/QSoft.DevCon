@@ -171,6 +171,7 @@ DWORD nvme_identify()
 
 int main()
 {
+	auto aa = FSCTL_ENUM_USN_DATA;
 	nvme_get_log_page(NVME_LOG_PAGE_FIRMWARE_SLOT_INFO);
     std::cout << "Hello World!\n";
 }
