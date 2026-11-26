@@ -7,7 +7,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 var disk = File.OpenHandle(@"\\.\C:", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-disk.Test();
+var read = disk.QUERY_USN_JOURNAL();
+disk.READ_USN_JOURNAL(read);
+disk.ENUM_USN_DATA();
 
 try
 {

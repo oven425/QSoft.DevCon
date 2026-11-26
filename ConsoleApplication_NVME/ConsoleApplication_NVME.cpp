@@ -11,7 +11,7 @@ DWORD nvme_specific(HANDLE FileHandle, STORAGE_PROTOCOL_NVME_DATA_TYPE data_type
 	PVOID buffer = NULL;
 	ULONG bufferLength = 0;
 	ULONG returnedLength = 0;
-	USN_RECORD_V2
+
 	PSTORAGE_PROPERTY_QUERY query = NULL;
 	PSTORAGE_PROTOCOL_SPECIFIC_DATA protocolData = NULL;
 	PSTORAGE_PROTOCOL_DATA_DESCRIPTOR protocolDataDescr = NULL;
@@ -172,6 +172,8 @@ DWORD nvme_identify()
 int main()
 {
 	auto aa = FSCTL_ENUM_USN_DATA;
+	auto a1 = FSCTL_QUERY_USN_JOURNAL;
+	auto a2 = FSCTL_READ_USN_JOURNAL;
 	nvme_get_log_page(NVME_LOG_PAGE_FIRMWARE_SLOT_INFO);
     std::cout << "Hello World!\n";
 }
